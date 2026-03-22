@@ -203,4 +203,64 @@ migrate((db) => {
 - 🔄 Lambert: Preparing hybrid test suite (automated + manual)
 - ✅ Ripley: All architectural decisions documented and team-approved
 
+### 2026-03-23 — Critical Fix: Anonymous Access Rules Enabled
+
+**Problem:**
+Victor couldn't create events because PocketBase collection rules were set to `null`, which means admin-only access. The app is designed for "zéro compte obligatoire" (zero required accounts) from the cahier des charges, but users were getting "Only superusers can perform this action" errors.
+
+**Root Cause:**
+- In PocketBase, `null` rules = admin-only access
+- Empty string `""` rules = public/anonymous access
+- All three collections (events, participants, items) had `listRule`, `viewRule`, `createRule`, `updateRule`, `deleteRule` set to `null`
+- This blocked all anonymous operations including event creation
+
+**Solution:**
+Updated all migration files to use `""` (empty string) for public access:
+
+```javascript
+"listRule": "",
+"viewRule": "",
+"createRule": "",
+"updateRule": "",
+"deleteRule": ""
+```
+
+**Files Updated:**
+- `backend/pb_migrations/1705276800_created_events.js`
+- `backend/pb_migrations/1705276860_created_participants.js`
+- `backend/pb_migrations/1705276920_created_items.js`
+- `backend/API_RULES.md` (documentation corrected)
+
+**PocketBase Rule Semantics:**
+- `null` = admin-only access (403 for anonymous users)
+- `""` = public access (anyone can perform action)
+- Custom expressions = conditional access (e.g., `"device_id = @request.data.device_id"`)
+
+**Migration Challenges Encountered:**
+1. Migrations only run once at database creation
+2. Attempted to create update migration using `Dao` API - failed (Dao not available in migration context)
+3. Solution: Deleted database and reran migrations with corrected rules
+4. Database backup created before deletion (`pb_data/data.db.backup`)
+
+**Verification:**
+- ✅ PocketBase starts successfully
+- ✅ Anonymous event creation works via API
+- ✅ No authentication required for basic CRUD operations
+- ✅ Aligns with "zero friction" MVP requirement
+
+**Next Phase:**
+For production, we'll implement device-based access control rules:
+- Update: Only owner (matched by device_id) can update
+- Delete: Only owner or event host can delete
+- Current MVP: Full public access for rapid development
+
+**Key Learning:**
+When debugging PocketBase access issues, always check if rules are `null` (blocked) vs `""` (open). The empty string is crucial for anonymous access patterns.
+
+**Documentation:**
+- ✅ Decision merged to .squad/decisions.md
+- ✅ Orchestration logged
+- ✅ Session logged
+- ✅ Backend ready for team testing
+
 
