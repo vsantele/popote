@@ -106,4 +106,101 @@
 - Lambert can write integration tests against the API contracts
 - All team members have clear decision rationale and approval status
 
+### 2026-03-22 — PocketBase v0.36.7 Migration API Fixed
+
+**Problem:**
+Critical error preventing backend startup:
+```
+Error: failed to apply migration 1705276800_created_events.js: ReferenceError: Dao is not defined
+```
+
+Migration files were using incorrect PocketBase v0.36 API:
+- Using `new Collection()` which doesn't exist in v0.36
+- Using `(app)` parameter instead of `(db)` 
+- Using `app.save()` instead of proper v0.36 methods
+
+**Root Cause:**
+- PocketBase v0.36+ uses `db.importCollections()` API, not `new Collection()` 
+- Migration signature changed from `migrate((app) =>` to `migrate((db) =>`
+- Collection schema uses `schema` array (not `fields`), with field properties nested in `options` object
+- Indexes cannot be created inline with `importCollections` - they fail with "no such column" errors
+
+**Correct PocketBase v0.36 Migration Format:**
+```javascript
+migrate((db) => {
+  const collection = {
+    "name": "collection_name",
+    "type": "base",
+    "schema": [
+      {
+        "name": "field_name",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": 100
+        }
+      }
+    ],
+    "indexes": [],  // Keep empty, indexes fail with importCollections
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  }
+  
+  return db.importCollections([collection], false)
+}, (db) => {
+  return db.deleteCollection("collection_name")
+})
+```
+
+**Key API Changes Applied:**
+1. **Parameter:** `migrate((db) =>` not `migrate((app) =>`
+2. **Schema:** Use `"schema"` array, not `"fields"`
+3. **Options:** Nest field properties in `"options": {}`
+4. **Import:** Use `db.importCollections([collection], false)`
+5. **Delete:** Use `db.deleteCollection("name")`
+6. **Indexes:** Leave `"indexes": []` empty (avoid "no such column" errors)
+
+**Files Fixed:**
+- `backend/pb_migrations/1705276800_created_events.js`
+- `backend/pb_migrations/1705276860_created_participants.js`
+- `backend/pb_migrations/1705276920_created_items.js`
+
+**Verification:**
+- ✅ All 3 migrations apply successfully
+- ✅ Collections created with correct schema and relations
+- ✅ Backend starts without errors
+- ✅ Server runs on http://127.0.0.1:8091
+
+**Resources:**
+- PocketBase v0.36 official JavaScript migration docs
+- Web search for `db.importCollections` syntax and index handling
+
+### 2026-03-22 — Team Coordination Update: Frontend Ready for Integration
+
+**Status:** ✅ Phase 1 Complete  
+**Coordination:** Dallas completed Flutter compilation fixes
+
+**Frontend Ready:**
+- Flutter app compiles successfully with Material 3 design
+- GoRouter configured for deep linking (`https://popote.io/s/{shareCode}`)
+- Riverpod provider structure set up for real-time SSE subscriptions
+- Device ID persistence implemented for anonymous auth
+- AddItemSheet widget created for item creation flow
+
+**Next Steps for Kane:**
+- Verify API responses match PocketBase service expectations
+- Monitor real-time SSE subscription performance
+- Coordinate with Lambert for integration test execution
+- Plan staging deployment with Dallas
+
+**Team Status:**
+- ✅ Kane: Backend fully operational on :8090, API ready
+- ✅ Dallas: Flutter app compiling, ready for backend integration
+- 🔄 Lambert: Preparing hybrid test suite (automated + manual)
+- ✅ Ripley: All architectural decisions documented and team-approved
+
 

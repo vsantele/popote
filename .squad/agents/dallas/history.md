@@ -137,3 +137,70 @@
 - Validate deep linking in test environments
 - Begin automated test suite execution
 
+### 2026-03-22: Fixed Flutter Compilation Errors
+
+**What was broken:**
+- Missing `lib/widgets/add_item_sheet.dart` file causing import errors
+- `createEvent()` method expected `Map<String, dynamic>` but received `Event` object
+- `ItemCategory` type not recognized in event_screen.dart (treated as type instead of string)
+- Missing `Categories.emoji()` and `Categories.label()` helper methods
+- Category sorting failed because `.index` was called on string category values
+- Missing `localStorageServiceProvider` in app_providers.dart
+
+**How I fixed it:**
+1. **Created AddItemSheet widget** (`lib/widgets/add_item_sheet.dart`):
+   - Bottom sheet for adding items to events
+   - Category selection with FilterChips for all 7 categories
+   - Participant selection with dropdown or new participant input flow
+   - Form validation and error handling
+   - Integration with Riverpod providers for data submission
+
+2. **Fixed PocketBaseService.createEvent()**:
+   - Changed signature from `Map<String, dynamic>` to `dynamic`
+   - Added type checking to handle both `Event` objects and `Map<String, dynamic>`
+   - Converts Event to Map using `toJson()` when needed
+   - Implemented the actual PocketBase call (removed UnimplementedError)
+
+3. **Fixed ItemCategory type issues**:
+   - Created `ItemCategory` enum in constants.dart for type safety
+   - Changed event_screen.dart to use `<String, List<Item>>` instead of `<ItemCategory, List<Item>>`
+   - Updated sorting to use `Categories.all.indexOf()` for proper ordering
+
+4. **Added Categories helper methods**:
+   - Added `Categories.emoji()` and `Categories.label()` as aliases to existing methods
+   - These methods extract emoji and label text from category strings
+
+5. **Fixed provider issues**:
+   - Added `localStorageServiceProvider` to app_providers.dart
+   - Fixed unused variable warnings in event_providers.dart
+   - Updated add_item_sheet to use `deviceIdProvider.future` instead of static method call
+
+6. **Cleanup**:
+   - Deleted unused `lib/config/routes.dart` file (app uses router.dart with GoRouter)
+   - Removed unused imports from add_item_sheet.dart
+
+**Result:** All compilation errors resolved. Only 3 info-level warnings remain (deprecated withOpacity, prefer_const_constructors) which don't block compilation.
+
+### 2026-03-22 — Team Coordination Update: Backend Ready for Integration
+
+**Status:** ✅ Phase 1 Complete  
+**Coordination:** Kane completed PocketBase v0.36.7 migration fixes
+
+**Backend Ready:**
+- PocketBase server running on http://127.0.0.1:8090
+- All 3 collections (events, participants, items) created successfully
+- Share code generation and auto-host creation working
+- API contracts documented in backend/API_EXAMPLES.md
+
+**Next Steps for Dallas:**
+- Integrate PocketBase service methods using Kane's API contracts
+- Test real-time SSE subscriptions with StreamProvider
+- Validate deep linking handler with share codes
+- Prepare for Lambert's integration test suite
+
+**Team Status:**
+- ✅ Dallas: Flutter app compiling, ready for backend integration
+- ✅ Kane: Backend fully operational, API ready
+- 🔄 Lambert: Preparing test automation against live API
+- ✅ Ripley: All architectural decisions documented and approved
+
