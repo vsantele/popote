@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "assignments": [
+    {
+      "assignment_id": "popote-initial",
+      "universe": "alien_1979",
+      "agent_count": 6,
+      "timestamp": "2026-03-22T21:29:39Z",
+      "snapshot": [
+        {"name": "Ripley", "role": "Lead"},
+        {"name": "Dallas", "role": "Flutter Dev"},
+        {"name": "Kane", "role": "Backend Dev"},
+        {"name": "Lambert", "role": "Tester"},
+        {"name": "Scribe", "role": "Session Logger"},
+        {"name": "Ralph", "role": "Work Monitor"}
+      ]
+    }
+  ]
+}
