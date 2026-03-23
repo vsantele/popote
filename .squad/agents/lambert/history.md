@@ -279,3 +279,69 @@ pnpm test:coverage     # Coverage report
 
 ## Implementation phase completed - stack ready for testing
 
+### 2026-03-23: Fixed Critical SvelteKit Routing Conflict
+
+**Context:**
+Victor reported critical bug: `Files prefixed with + are reserved (saw src/routes/+page.test.ts)` — app wouldn't start.
+
+**Root Cause:**
+SvelteKit's file-based router reserves `+` prefix for routes. Test files like `src/routes/+page.test.ts` were conflicting with routing system.
+
+**Solution Implemented:**
+1. **Moved ALL test files out of `src/routes/`** to dedicated `tests/` directory:
+   - `src/routes/+page.test.ts` → `tests/routes/home.test.ts`
+   - `src/routes/api/events/+server.test.ts` → `tests/api/events.test.ts`
+   - `src/routes/api/items/+server.test.ts` → `tests/api/items.test.ts`
+   - `src/lib/auth.test.ts` → `tests/lib/auth.test.ts`
+   - `db/utils.test.ts` → `tests/lib/device.test.ts`
+
+2. **Updated test file structure:**
+   ```
+   app/
+   ├── tests/               # All test files (outside routes)
+   │   ├── lib/
+   │   ├── routes/
+   │   └── api/
+   └── src/
+       └── routes/          # NO test files here
+   ```
+
+3. **Updated Vitest config:** Changed `include` pattern to `tests/**/*.test.ts`
+
+4. **Fixed all imports:** Updated imports to reflect new paths (e.g., `../../src/routes/+page.svelte`)
+
+5. **Updated documentation:**
+   - `app/TEST_README.md` — Updated architecture diagram and file paths
+   - `.squad/decisions/inbox/lambert-test-file-structure.md` — Documented decision
+
+**Verification:**
+- ✅ Dev server starts without errors (`npm run dev`)
+- ✅ Test structure follows SvelteKit conventions
+- ✅ All 54 automated tests ready to run
+
+**Key Learning:**
+SvelteKit's file-based routing is STRICT — ANY file with `+` prefix in `src/routes/` is treated as a route file. Test files MUST live outside `src/routes/` (e.g., in `tests/` directory) to avoid routing conflicts. This is a hard requirement in SvelteKit, not a preference.
+
+**Files Changed:**
+- Moved 5 test files to new structure
+- Updated `app/vitest.config.ts`
+- Updated `app/TEST_README.md`
+- Created `.squad/decisions/inbox/lambert-test-file-structure.md`
+- Updated `.squad/agents/lambert/history.md`
+
+**Status:** Bug fixed — app now starts successfully. Victor can run `npm run dev` to verify.
+
+---
+
+## 2026-03-23: Test Structure Fix Completed
+
+**Status:** ✅ COMPLETED — SvelteKit routing conflict resolved
+
+**Lambert's Work:**
+- Fixed critical app startup bug caused by test files in `src/routes/`
+- Moved 5 test files to dedicated `tests/` directory
+- Updated Vitest configuration and all imports
+- Updated documentation and decision records
+- Verified app starts successfully
+
+**Test structure fix completed** — Scribe logged and merged decisions.

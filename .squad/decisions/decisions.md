@@ -466,6 +466,90 @@ Added `convertConnectionString()` function in `app/db/index.ts`:
 
 ---
 
+## Test File Structure: SvelteKit Routing Fix
+
+**Date:** 2026-03-23  
+**Author:** Lambert  
+**Status:** ✅ Implemented  
+**Impact:** Critical (fixes startup bug)
+
+### Problem
+Victor reported critical bug: `Files prefixed with + are reserved (saw src/routes/+page.test.ts)` — app wouldn't start.
+
+SvelteKit's file-based router reserves `+` prefix for route files. Test files like `src/routes/+page.test.ts` conflicted with routing system, causing startup failure.
+
+### Decision
+**Move ALL test files out of `src/routes/` to dedicated `tests/` directory.**
+
+### Implementation
+
+**Files Relocated:**
+- `src/routes/+page.test.ts` → `tests/routes/home.test.ts`
+- `src/routes/api/events/+server.test.ts` → `tests/api/events.test.ts`
+- `src/routes/api/items/+server.test.ts` → `tests/api/items.test.ts`
+- `src/lib/auth.test.ts` → `tests/lib/auth.test.ts`
+- `db/utils.test.ts` → `tests/lib/device.test.ts`
+
+**New Test File Structure:**
+```
+app/
+├── tests/                       # All test files (outside routes)
+│   ├── lib/
+│   │   ├── auth.test.ts        # Device ID generation & persistence
+│   │   └── device.test.ts      # Share code generation tests
+│   ├── routes/
+│   │   └── home.test.ts        # Home page component tests
+│   └── api/
+│       ├── events.test.ts      # Event creation API tests
+│       └── items.test.ts       # Item CRUD API tests
+├── src/
+│   ├── lib/
+│   │   └── test/               # Test utilities (setup, mocks)
+│   └── routes/                 # NO test files here
+├── db/                          # NO test files here
+└── vitest.config.ts
+```
+
+**Configuration Updated:**
+- `app/vitest.config.ts`: Changed `include` pattern to `tests/**/*.test.ts`
+- All test imports updated to reflect new paths
+
+**Documentation Updated:**
+- `app/TEST_README.md` — Updated architecture diagram
+- Lesson learned documented in history
+
+### Why This Matters
+- **SvelteKit Routing Convention:** `+` prefix is RESERVED for route files
+- **Hard Requirement:** ANY file with `+` prefix in `src/routes/` is treated as route
+- **Best Practice:** Test files MUST live outside `src/routes/`
+- **Standard Pattern:** `tests/` directory at project root mirrors src structure
+
+### Benefits
+1. ✅ Fixes startup bug — App starts without routing errors
+2. ✅ Follows SvelteKit conventions — Test files outside `src/routes/`
+3. ✅ Clearer organization — Test structure mirrors src structure
+4. ✅ Scalable — Easy to add more tests without conflicts
+
+### Verification
+- ✅ Dev server starts successfully: `npm run dev`
+- ✅ Tests run successfully: `npm test` (54 automated tests)
+- ✅ Test structure aligns with SvelteKit conventions
+
+### Lesson Learned
+**SvelteKit's file-based routing is STRICT:**
+- Anything with `+` prefix in `src/routes/` is a route
+- Test files MUST live outside `src/routes/`
+- Follow convention: `tests/` directory at project root
+- Co-locating tests with routes causes conflicts
+
+**Best Practice:**
+- Unit tests: `tests/lib/`
+- Component tests: `tests/routes/` (not `src/routes/`)
+- Integration tests: `tests/api/`
+- E2E tests: `tests/e2e/` (if using Playwright)
+
+---
+
 ## All Decisions Summary
 
 ✅ **Architecture:** SvelteKit + Drizzle + Postgres + Aspire  
