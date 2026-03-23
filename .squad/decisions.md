@@ -1,8 +1,36 @@
 # Squad Decisions
 
+---
+
+## ⚠️ ARCHITECTURE PIVOT — 2026-03-22
+
+**Victor pivoted the project from Flutter+PocketBase to SvelteKit+Drizzle+Postgres.**
+
+**Old stack (moved to `old/`):**
+- Flutter (mobile app)
+- PocketBase (SQLite backend with JS hooks)
+- Riverpod state management
+- Deep linking (GoRouter)
+
+**New stack:**
+- SvelteKit (TypeScript PWA)
+- Drizzle ORM (type-safe database access)
+- Postgres (orchestrated via Aspire)
+- shadcn-svelte (UI components, already setup)
+- PWA support (offline, installable)
+- Observability (Aspire built-in)
+
+**Reason:** Mobile-first PWA with SvelteKit is lighter, faster to iterate, and aligns better with "everywhere access" goal.
+
+**Migration Plan:** See `docs/migration-plan.md`
+
+**All decisions below marked as SUPERSEDED are from the old Flutter+PocketBase architecture.**
+
+---
+
 ## Active Decisions
 
-### 1. State Management: Riverpod
+### 1. State Management: Riverpod [SUPERSEDED]
 
 **Status:** Approved  
 **Proposed by:** Ripley (Lead)  
@@ -36,9 +64,9 @@ Use **Riverpod** for state management (not Provider or GetX).
 
 ---
 
-### 2. Deep Linking & Share Code Strategy
+### 2. Deep Linking & Share Code Strategy [SUPERSEDED]
 
-**Status:** Approved  
+**Status:** Approved (Flutter implementation superseded)  
 **Proposed by:** Ripley (Lead)  
 **Date:** 2026-03-22  
 **Impact:** High (affects invite UX and backend)
@@ -84,9 +112,9 @@ Use **6-8 character alphanumeric share codes** combined with **platform-native d
 
 ---
 
-### 3. Backend Architecture: PocketBase with JS Hooks
+### 3. Backend Architecture: PocketBase with JS Hooks [SUPERSEDED]
 
-**Status:** Approved  
+**Status:** Approved (PocketBase replaced by Postgres + Drizzle)  
 **Implemented by:** Kane (Backend)  
 **Date:** 2026-03-22  
 **Impact:** High (defines backend infrastructure)
@@ -136,62 +164,232 @@ Use **PocketBase JavaScript hooks** for backend business logic instead of extern
 
 ---
 
-### 4. Test Strategy: Hybrid Automated + Manual
+### 4. Test Strategy: Hybrid Automated + Manual [SUPERSEDED]
 
-**Status:** Approved  
+**Status:** Superseded by SvelteKit testing strategy (2026-03-23)  
 **Proposed by:** Lambert (QA Lead)  
 **Date:** 2026-03-22  
-**Impact:** Medium (defines test methodology)
+**Impact:** Medium (formerly defined test methodology)
 
-Adopt a **hybrid testing approach** combining automation and manual validation.
+**Deprecated Decision:**
+Hybrid testing approach combining Flutter widget tests + manual validation.
 
-**Testing Strategy:**
+**Why Superseded:**
+- Architecture pivot to SvelteKit requires Vitest + Playwright
+- Testing tools changed but strategy remains (80% automated, 20% manual)
+- Real-time sync validation approach enhanced for polling/WebSocket
+- Old test plan archived for reference
 
-1. **Automated Testing (Unit + Integration)**
-   - Unit tests: Data models, validation logic, Riverpod state
-   - Widget tests: Individual Flutter screens and components
-   - Integration tests: Happy path flows (create → share → join → add)
-   - Run on every commit via CI/CD (GitHub Actions)
+**New Test Strategy Status:**
+- ✅ Test plan updated for SvelteKit + Drizzle stack
+- ✅ Test pyramid designed (40% unit, 30% component, 25% integration, 5% E2E)
+- ✅ Performance validation approach documented
+- ⏸️ Implementation awaiting Victor's approval
 
-2. **Manual Testing (Real-time + UX)**
-   - Real-time sync: Requires 2+ physical devices to validate < 2s sync
-   - Share link behavior: Test actual SMS, WhatsApp, email clients
-   - Accessibility: VoiceOver/TalkBack navigation
-   - Performance benchmarks: Timed manually or with profiling tools
+---
 
-3. **Test Execution Phases**
-   - Phase 1: Core flows (creation, join, add)
-   - Phase 2: Real-time sync validation
-   - Phase 3: Edge cases (network, invalid inputs)
-   - Phase 4: Performance benchmarks
-   - Phase 5: Cross-platform validation
+## NEW ARCHITECTURE DECISIONS (SvelteKit + Drizzle + Postgres)
 
-**Success Criteria to Validate:**
-- Event creation: < 30 seconds
-- Join + add item: < 20 seconds
-- Real-time sync: item appears in < 2 seconds
-- Zero signup required at any point
+**Status:** Proposed — Awaiting Victor's review of `docs/migration-plan.md` and `docs/questions-for-victor.md`
 
-**Test Coverage:**
-- 13 user flows (PRD-mapped)
-- 31 edge cases and stress scenarios
-- Performance benchmarks on real devices
+### 5. SvelteKit State Management: Svelte 5 Runes
 
-**Trade-offs:**
-- Manual testing requires 2+ physical devices (iOS + Android)
-- Performance benchmarking adds time to test cycles
-- Real-time sync tests may be flaky (network-dependent)
+**Proposed by:** Ripley (Lead)  
+**Date:** 2026-03-22  
+**Status:** ⏳ Awaiting approval
+
+Use **Svelte 5 runes** (`$state`, `$derived`) for local reactive state + **context API** for shared state across components.
 
 **Rationale:**
-- Performance criteria are measurable (must collect actual timing data)
-- Real-time sync cannot be fully automated (requires multi-device testing)
-- Automation prevents regressions (core flows)
-- Manual validation for UX (share links, accessibility)
+- Svelte 5 runes provide reactive state without boilerplate (simpler than Riverpod)
+- Context API allows passing stores down component tree
+- Server/client split is natural in SvelteKit (load functions for server data)
+- No external state library needed (built into Svelte 5)
+
+**Implementation:**
+```typescript
+// lib/stores/event-store.svelte.ts
+export class EventStore {
+  event = $state<Event | null>(null);
+  participants = $state<Participant[]>([]);
+  items = $state<Item[]>([]);
+  
+  addItem(item: Item) { this.items = [...this.items, item]; }
+  removeItem(id: string) { this.items = this.items.filter(i => i.id !== id); }
+}
+```
+
+**Migration from Riverpod:**
+- `FutureProvider` → SvelteKit `load` function
+- `StreamProvider` → Polling or WebSocket store
+- `StateProvider` → `$state` rune
 
 **Approval Status:**
-- ✅ Dallas (Frontend lead)
-- ✅ Kane (Backend lead)
-- ✅ Victor (Product)
+- ⏳ Victor (Product)
+- ⏳ Dallas (Frontend, if involved in SvelteKit)
+
+---
+
+### 6. Database: Drizzle ORM + Postgres
+
+**Proposed by:** Ripley (Lead)  
+**Date:** 2026-03-22  
+**Status:** ⏳ Awaiting approval
+
+Use **Drizzle ORM** with **Postgres** for type-safe database access.
+
+**Rationale:**
+- Type safety: Drizzle generates TypeScript types from schema
+- Migration tooling: `drizzle-kit` generates migrations from schema changes
+- Postgres: Production-ready, ACID-compliant, better scalability than SQLite
+- Aspire orchestration: Postgres container managed by Aspire (no manual setup)
+
+**Schema Design:**
+- Same data model as PocketBase (events, participants, items)
+- UUID primary keys (Postgres standard)
+- Cascade deletes preserved
+- Categories as text enum (validated by Zod)
+
+**Migration Workflow:**
+1. Define schema in `app/src/lib/db/schema.ts`
+2. Run `drizzle-kit generate` to create migrations
+3. Run `drizzle-kit migrate` to apply to Postgres
+
+**Approval Status:**
+- ⏳ Victor (Product)
+- ⏳ Kane (Backend, if involved in new stack)
+
+---
+
+### 7. Device ID Strategy: localStorage (Browser)
+
+**Proposed by:** Ripley (Lead)  
+**Date:** 2026-03-22  
+**Status:** ⏳ Awaiting approval
+
+Use **localStorage** to persist device ID for anonymous auth (browser-based).
+
+**Rationale:**
+- PWA runs in browser, localStorage is persistent across sessions
+- Same pattern as Flutter's SharedPreferences
+- No account required (anonymous users with stable device ID)
+- Web Crypto API provides `crypto.randomUUID()`
+
+**Implementation:**
+```typescript
+export function getDeviceId(): string {
+  let deviceId = localStorage.getItem('deviceId');
+  if (!deviceId) {
+    deviceId = crypto.randomUUID();
+    localStorage.setItem('deviceId', deviceId);
+  }
+  return deviceId;
+}
+```
+
+**Trade-offs:**
+- ⚠️ If user clears browser storage, device ID is lost (same as uninstalling Flutter app)
+- ✅ No server-side session management needed
+
+**Approval Status:**
+- ⏳ Victor (Product)
+
+---
+
+### 8. PWA Configuration: @vite-pwa/sveltekit
+
+**Proposed by:** Ripley (Lead)  
+**Date:** 2026-03-22  
+**Status:** ⏳ Awaiting approval
+
+Use **@vite-pwa/sveltekit** for PWA support (offline, installable).
+
+**Rationale:**
+- Zero-config PWA generation with Vite plugin
+- Offline support (service worker caching)
+- Install prompt on mobile (iOS/Android)
+- No app store distribution required
+
+**Features:**
+- Manifest.json auto-generated
+- Service worker for offline caching
+- Install prompt UI (custom banner)
+- Works on desktop, mobile, tablet
+
+**Deep Linking:**
+- No platform-specific config needed (standard HTTPS URLs)
+- URL format: `https://popote.io/s/{shareCode}`
+- SvelteKit routing: `app/src/routes/s/[code]/+page.server.ts`
+
+**Approval Status:**
+- ⏳ Victor (Product)
+
+---
+
+### 9. Real-Time Sync: 5-Second Polling (MVP)
+
+**Proposed by:** Ripley (Lead)  
+**Date:** 2026-03-22  
+**Status:** ⏳ Awaiting approval
+
+Use **5-second polling** for real-time sync (MVP). Upgrade to WebSockets if latency becomes issue.
+
+**Rationale:**
+- Simplest to implement (no server changes)
+- Good enough for MVP (5s latency acceptable for meal planning)
+- Can upgrade to WebSockets later if needed
+- No connection management complexity
+
+**Implementation:**
+```typescript
+export function createPollStore(eventId: string, intervalMs = 5000) {
+  let items = $state<Item[]>([]);
+  
+  async function refresh() {
+    const res = await fetch(`/api/events/${eventId}`);
+    const data = await res.json();
+    items = data.items;
+  }
+  
+  setInterval(refresh, intervalMs);
+  return { items };
+}
+```
+
+**Upgrade Path:**
+- If user feedback demands lower latency: WebSockets with `ws` library
+- SvelteKit supports WebSocket endpoints (straightforward integration)
+
+**Approval Status:**
+- ⏳ Victor (Product)
+
+---
+
+### 10. Observability: Aspire Built-In (OpenTelemetry)
+
+**Proposed by:** Ripley (Lead)  
+**Date:** 2026-03-22  
+**Status:** ⏳ Awaiting approval
+
+Use **Aspire's built-in observability** (OpenTelemetry) for traces, logs, metrics.
+
+**Rationale:**
+- Aspire provides dashboard out-of-the-box
+- Traces, logs, metrics unified in Aspire dashboard
+- SvelteKit server logs automatically collected
+- Postgres queries traced via Drizzle integration
+- No additional setup required
+
+**What to Instrument:**
+- Event creation (timing, errors)
+- Share code generation (collision rate)
+- Real-time sync (update latency)
+- Database queries (slow query detection)
+
+**Approval Status:**
+- ⏳ Victor (Product)
+
+---
 
 ## Governance
 

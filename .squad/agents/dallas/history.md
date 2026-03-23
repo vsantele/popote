@@ -3,19 +3,19 @@
 ## Project Context
 
 - **Project:** popote
-- **Stack:** Flutter (mobile), PocketBase (backend)
-- **Description:** Application d'organisation de repas collaboratifs type "auberge espagnole" — zéro friction, mobile-first, temps réel
+- **Stack:** SvelteKit (TypeScript), shadcn-svelte (UI), PocketBase (backend)
+- **Description:** Application d'organisation de repas collaboratifs type "auberge espagnole" — zéro friction, web-first (PWA), temps réel
 - **User:** Victor
 - **Created:** 2026-03-22
+- **Migration:** Flutter → SvelteKit (2026-03-23)
 
-**My focus:** Flutter UI, Material 3, state management (Riverpod/Provider), share functionality, deep linking
+**My focus:** SvelteKit frontend, shadcn-svelte components, state management (Svelte 5 runes), PWA, device ID management
 
 **Key UI screens:**
-- E1: Accueil (liste des soirées)
-- E2: Création de soirée (formulaire minimal)
-- E3: Vue soirée (central — toggle par catégorie/personne)
-- E4: Ajout d'item (bottom sheet)
-- E5: Détail personne (optionnel v1)
+- `/` — Home (create or join event)
+- `/create` — Create event form
+- `/e/[code]` — Event detail with items (toggle category/person view)
+- Add item dialog (modal)
 
 ## Learnings
 
@@ -203,4 +203,137 @@
 - ✅ Kane: Backend fully operational, API ready
 - 🔄 Lambert: Preparing test automation against live API
 - ✅ Ripley: All architectural decisions documented and approved
+
+### 2026-03-23 — SvelteKit Migration & Frontend Architecture
+
+**Task:** Migrate from Flutter to SvelteKit + TypeScript with shadcn-svelte
+
+**Context:**
+- Reviewed old Flutter app structure in `old/popote_app/`
+- Analyzed PocketBase API from `old/backend/API_EXAMPLES.md`
+- Team decided to migrate to SvelteKit for broader reach (PWA vs native apps)
+
+**Architecture Decisions:**
+
+1. **State Management:**
+   - ✅ Svelte 5 runes (`$state`, `$derived`, `$effect`) for reactivity
+   - ✅ SvelteKit load functions for SSR + data fetching
+   - ✅ Native EventSource for SSE real-time updates
+   - ❌ NO external state libraries needed (Svelte handles it natively)
+
+2. **Device ID Strategy:**
+   - ✅ localStorage for device ID persistence
+   - ✅ No cookies needed (device ID not sensitive)
+   - Pattern: Generate UUID on first visit, store for all future events
+
+3. **PWA Configuration:**
+   - ✅ manifest.json created with app metadata
+   - ✅ Service worker strategy planned (offline-first for assets, network-first for API)
+   - ✅ Meta tags for iOS/Android PWA support in layout
+
+4. **Real-time Sync:**
+   - Pattern: SSE via EventSource → update Svelte $state
+   - Subscribes to PocketBase `/api/realtime` endpoint
+   - Filters updates by event ID client-side
+   - Auto-reconnect on connection loss (future enhancement)
+
+5. **shadcn-svelte Components:**
+   - ✅ Installed: button, card, input, label, select, dialog, badge, separator, toggle-group, sheet
+   - Uses Tailwind CSS with custom popote theme color (#FF6B35)
+   - Nova style variant with lucide icons
+
+6. **Observability:**
+   - Simple logger utility (console in dev, beacon to backend in prod)
+   - Error boundaries via SvelteKit `+error.svelte`
+   - Performance monitoring via Navigation Timing API
+   - No heavy APM tooling for MVP
+
+**Files Created:**
+
+**Type Definitions:**
+- `app/src/lib/types/index.ts` — Event, Participant, Item models + CATEGORIES constants
+
+**Utilities:**
+- `app/src/lib/utils/device-id.ts` — Device ID and user name localStorage management
+- `app/src/lib/utils/logger.ts` — Logging with production error reporting
+
+**Services:**
+- `app/src/lib/services/pocketbase.ts` — PocketBase API client (fetch wrappers for all collections)
+
+**Routes:**
+- `app/src/routes/+page.svelte` — Home: create or join event
+- `app/src/routes/+layout.svelte` — Root layout with PWA meta tags, performance monitoring
+- `app/src/routes/create/+page.svelte` — Create event form
+- `app/src/routes/e/[code]/+page.server.ts` — Load event by share code (SSR)
+- `app/src/routes/e/[code]/+page.svelte` — Event detail with items list, add item dialog, view toggle
+
+**PWA:**
+- `app/static/manifest.json` — PWA manifest (standalone app, #FF6B35 theme)
+- `app/.env.example` — Environment config template
+
+**UI Features Implemented:**
+- Home page with create/join cards
+- Create event form with validation
+- Event detail page with:
+  - Event header (name, date, location, share code, share button)
+  - View toggle (category vs person)
+  - Add item dialog with participant creation
+  - Items grouped by category or person
+  - Empty state handling
+
+**Key Patterns:**
+- Svelte 5 runes for reactive state (`$state`, `$derived`)
+- SvelteKit load functions for SSR data fetching
+- shadcn-svelte Dialog for add item modal
+- Toggle Group for view mode switching
+- Device ID generation and persistence in localStorage
+- PocketBase API integration via fetch
+
+**Migration from Flutter:**
+| Flutter | SvelteKit | Notes |
+|---------|-----------|-------|
+| Riverpod providers | Svelte runes + stores | Simpler, less boilerplate |
+| GoRouter | File-based routing | More intuitive |
+| FutureProvider | load functions | Better SSR |
+| StreamProvider | EventSource + $effect | Similar pattern |
+| Material 3 | shadcn-svelte + Tailwind | More customizable |
+| SharedPreferences | localStorage | Same concept |
+| APK/IPA | PWA | No app store needed |
+
+**TODO for Next Session:**
+- [ ] Implement real-time SSE subscription in event detail page
+- [ ] Create service worker for offline support
+- [ ] Add error handling UI (toast notifications?)
+- [ ] Test PWA install flow on mobile devices
+- [ ] Add loading states and skeleton screens
+- [ ] Implement item deletion (for item owner)
+- [ ] Add participant count badge
+- [ ] Create placeholder PWA icons (icon-192.png, icon-512.png)
+
+**Coordination Notes:**
+- Backend API ready (Kane's PocketBase at http://127.0.0.1:8090)
+- All PocketBase endpoints implemented in `pocketbase.ts`
+- Data models match backend schema exactly
+- Share code flow matches team decisions (6-8 char alphanumeric)
+
+**Questions/Blockers:**
+- None — all architectural decisions made autonomously
+- If questions arise, will append to `docs/questions-for-victor.md`
+
+**Design Document:**
+- Created `.squad/decisions/inbox/dallas-frontend-architecture.md` with full architectural decisions, patterns, and implementation checklist
+
+---
+
+## Architecture Pivot Completed — 2026-03-23
+
+**Status:** ✅ Pivot approved and documented
+
+All team members have assessed migration strategy and completed architectural assessments:
+- Ripley: Migration plan and architecture design complete
+- Kane: Backend architecture and Drizzle schema designed
+- Dallas: Frontend architecture and SvelteKit structure designed
+- Lambert: Test strategy adapted for new stack
+
+All decisions are documented in `.squad/decisions.md` and implementation plans are ready for Victor's approval.
 
