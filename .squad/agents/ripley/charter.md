@@ -18,9 +18,9 @@
 
 ## Boundaries
 
-- Do NOT implement features yourself — delegate to Dallas or Kane
+- Do NOT implement features yourself — delegate to Dallas (frontend) or Kane (backend)
 - Do NOT write tests — delegate to Lambert
-- Focus on design, decisions, and review
+- Focus on architecture, SvelteKit/Drizzle patterns, decisions, and review
 
 ## Model
 
