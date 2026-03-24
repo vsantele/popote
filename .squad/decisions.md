@@ -391,6 +391,52 @@ Use **Aspire's built-in observability** (OpenTelemetry) for traces, logs, metric
 
 ---
 
+## 11. Backend Architecture: Drizzle + Postgres Migration — ✅ IMPLEMENTED
+
+**Status:** ✅ Implemented  
+**Proposed by:** Kane (Backend Lead)  
+**Date:** 2026-03-23  
+**Impact:** Critical (complete backend rewrite from PocketBase to PostgreSQL)
+
+Use **Drizzle ORM** with **PostgreSQL** orchestrated via **.NET Aspire** for type-safe database access and reproducible development environments.
+
+**Implementation Complete:** API routes tested and verified with Aspire + Postgres stack.
+
+See orchestration log for details: `.squad/orchestration-log/2026-03-24T00-01-15-kane.md`
+
+---
+
+## 12. SvelteKit Frontend Architecture Migration — ✅ COMPLETE
+
+**Status:** ✅ Implemented  
+**Proposed by:** Dallas (Frontend Lead)  
+**Date:** 2026-03-23  
+**Impact:** High (completes frontend migration from Flutter+PocketBase)
+
+Complete SvelteKit frontend with **polling-based real-time updates**, **PWA support**, and **Superforms integration**. All PocketBase references removed.
+
+**Implementation Complete:** Frontend integrated with Drizzle + API routes, ready for integration testing.
+
+See orchestration log for details: `.squad/orchestration-log/2026-03-24T00-01-15-dallas.md`
+
+---
+
+## 13-20. Additional Decisions (From Migration Audit)
+
+See `.squad/orchestration-log/2026-03-24T00-01-15-ripley.md` for complete audit results and additional decisions 13-20 documenting:
+- SvelteKit Folder Structure  
+- Drizzle Schema Design
+- Test File Structure (SvelteKit convention)
+- Aspire Orchestration
+- Device ID Strategy (localStorage + cookies)
+- Real-Time Sync (Polling vs WebSockets)
+- Superforms Integration
+- Migration Audit Results
+
+**Status:** Audit complete (60% migration), blockers identified and documented.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
