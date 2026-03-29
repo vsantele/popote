@@ -437,6 +437,46 @@ See `.squad/orchestration-log/2026-03-24T00-01-15-ripley.md` for complete audit 
 
 ---
 
+---
+
+## 21. Streamlined Name Collection Flow — ⏳ AWAITING APPROVAL
+
+**Proposed by:** Dallas (Frontend Lead)  
+**Date:** 2026-03-29  
+**Status:** ⏳ Awaiting Victor's approval  
+**Impact:** Medium (improves UX, affects join flow)
+
+Restructured name collection to ask users for their name at the right time:
+- **Hosts**: Provide name when creating event (unchanged)
+- **Guests**: Provide name ONCE when joining via share code (new `/join/[code]` route)
+- **Adding items**: Never asks for name (uses stored userName from cookie)
+
+**Benefits:**
+- ✅ Name collected once at natural entry point (when joining)
+- ✅ Adding items is faster (no name field)
+- ✅ Clear distinction between "joining an event" and "adding items"
+
+**Implementation:**
+- New route: `/join/[code]` with guest name form
+- Creates participant record in database
+- Stores userName in httpOnly cookie
+- Redirects to event page after join
+- Home join button redirects to `/join/[code]`
+- Event detail guards against users without userName
+
+**Trade-offs:**
+- ⚠️ Additional route pattern (mitigated by intuitive UX)
+- ⚠️ Cookie dependency (same pattern as existing deviceId cookie)
+
+**Testing Status:**
+- ✅ Dev server, TypeScript compilation verified
+- ⏳ Manual integration testing pending
+
+**Approval Status:**
+- ⏳ Victor (Product Owner)
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

@@ -3,7 +3,7 @@
 ## Project Context
 
 - **Project:** popote
-- **Stack:** SvelteKit (TypeScript), shadcn-svelte (UI), PocketBase (backend)
+- **Stack:** SvelteKit (TypeScript), shadcn-svelte (UI), Drizzle ORM + Postgres (backend)
 - **Description:** Application d'organisation de repas collaboratifs type "auberge espagnole" — zéro friction, web-first (PWA), temps réel
 - **User:** Victor
 - **Created:** 2026-03-22
@@ -14,11 +14,73 @@
 **Key UI screens:**
 
 - `/` — Home (create or join event)
-- `/create` — Create event form
+- `/create` — Create event form (host provides name)
+- `/join/[code]` — Join event form (guest provides name once)
 - `/e/[code]` — Event detail with items (toggle category/person view)
-- Add item dialog (modal)
+- Add item dialog (modal, no name required)
 
 ## Learnings
+
+### 2026-03-29: Streamlined Name Collection Flow
+
+**Context:** Victor requested to fix the name collection UX:
+- Host should keep name from room creation
+- Guests should provide name ONCE when joining (not when adding items)
+- Adding items should never ask for name
+
+**Implementation:**
+
+1. ✅ Created new `/join/[code]` route:
+   - `+page.svelte` — Simple form asking for guest name
+   - `+page.server.ts` — Validates event exists, creates participant, stores userName in cookie
+   - Redirects to event page after successful join
+   - Smart redirect: if userName cookie exists, skip straight to event
+
+2. ✅ Updated home page (`/+page.svelte`):
+   - "Join event" now redirects to `/join/[code]` instead of `/e/[code]`
+   - Forces name collection before viewing event
+
+3. ✅ Updated event detail page (`/e/[code]`):
+   - Server (`+page.server.ts`):
+     - Added check: if no userName cookie and not host, redirect to `/join/[code]`
+     - Removed userName pre-fill logic from form init
+   - Client (`+page.svelte`):
+     - Removed `participant_name` field from add item dialog
+     - Form now only asks for item details (name, category, quantity)
+
+4. ✅ Updated add item schema (`item.schema.ts`):
+   - Removed `participant_name` field requirement
+   - Schema now only validates item data
+
+5. ✅ Updated addItem action (`/e/[code]/+page.server.ts`):
+   - Changed logic to use userName from cookies instead of form data
+   - Added defensive check: creates participant if doesn't exist (edge case)
+   - Returns 401 error if no userName/deviceId (should never happen with load guard)
+
+**Flow Summary:**
+
+- **Host**: Provides name on `/create` → stored in cookie → can add items freely
+- **Guest**: Joins via code → redirected to `/join/[code]` → provides name → stored in cookie → redirected to event → can add items freely
+- **Adding Items**: No name field, uses stored userName from cookie automatically
+
+**Key Files Modified:**
+- `app/src/routes/+page.svelte` — Updated join redirect
+- `app/src/routes/join/[code]/+page.svelte` — New join form (created)
+- `app/src/routes/join/[code]/+page.server.ts` — New join logic (created)
+- `app/src/routes/e/[code]/+page.svelte` — Removed name field from item form
+- `app/src/routes/e/[code]/+page.server.ts` — Added name guard in load, updated addItem action
+- `app/src/lib/schemas/item.schema.ts` — Removed participant_name field
+
+**Benefits:**
+- Improved UX: Users only provide name once at the right time
+- Cleaner item form: Faster to add items without repetitive name entry
+- Better flow: Clear distinction between joining and participating
+- Secure: userName stored in httpOnly cookie (server-side)
+
+**Testing:**
+- Dev server starts successfully ✅
+- TypeScript compiles without errors in new routes ✅
+- Routes follow SvelteKit conventions ✅
 
 ### 2026-03-24: Superforms Integration
 

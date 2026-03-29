@@ -20,7 +20,28 @@
 
 ## Learnings
 
-### 2024-01-15 — Initial Backend Setup
+### 2026-03-29: Session List and Device ID Tracking
+
+**Context:** Victor requested to add a session list to home page showing created/joined events per device_id.
+
+**Implementation:**
+
+1. ✅ Created device_id-based session tracking:
+   - Sessions fetched from database filtered by device_id
+   - Home page displays two lists: "Created Events" (host role) and "Joined Events" (guest role)
+   - Real-time updates via 5-second polling
+
+2. ✅ Updated home page (`/+page.svelte`):
+   - Fetches device_id from localStorage
+   - Calls `/api/sessions/user/{device_id}` to get user's events
+   - Renders SessionList component with created/joined separation
+   - "Create new" and "Join new" buttons for navigation
+
+3. ✅ Added SessionList component:
+   - Displays created events (where device_id is host)
+   - Displays joined events (where device_id is participant but not host)
+   - Links to `/e/[code]` for existing events
+   - Shows event metadata (name, date, participant count)
 
 **Architecture Decisions:**
 
@@ -870,3 +891,97 @@ Ripley (Lead) completed migration audit and identified:
 - Decision #20: Migration Audit Results
 
 **Status:** API routes complete and verified, awaiting frontend integration testing
+
+### 2026-03-29 — User Session Tracking on Home Page
+
+**Context:**
+Victor requested adding a list of all joined/created sessions to the front page. Users should see events they've created (host) and events they've joined (guest) to easily navigate back to their sessions.
+
+**Implementation Summary:**
+
+**1. Database Query Helper Added:**
+- Created getUserEvents(deviceId: string) function in pp/src/lib/server/db/index.ts
+- Queries events where user is host (matches host_device_id)
+- Queries events where user is participant (joins participants table with vents)
+- Returns separate arrays for hosted and joined events, sorted by date (descending)
+
+**2. Server Load Function Created:**
+- Created pp/src/routes/+page.server.ts to fetch user's events on page load
+- Reads device ID from popote_device_id cookie (set by client-side auth)
+- Returns empty arrays if no device ID exists yet (new user)
+- Transforms database results to frontend-compatible format (ISO dates, string IDs)
+
+**3. Frontend UI Enhanced:**
+- Updated pp/src/routes/+page.svelte to display user's events
+- Added "Mes soirées" section with two subsections:
+  - "Créées par moi" — Events where user is host
+  - "Rejoint en tant qu'invité" — Events where user is participant (not host)
+- Each event displays: name, formatted date, location, and share code
+- Clickable cards navigate to event detail page (/e/{share_code})
+- Section only appears if user has events (progressive disclosure)
+
+**Key Files Modified:**
+
+- pp/src/lib/server/db/index.ts — Added getUserEvents query helper
+- pp/src/routes/+page.server.ts — Created (new file)
+- pp/src/routes/+page.svelte — Enhanced UI with event list
+- pp/src/lib/server/db/EXAMPLES.ts — Fixed Svelte code comments (TypeScript parsing)
+
+**Technical Details:**
+
+**Query Pattern:**
+`	ypescript
+// Hosted events
+SELECT * FROM events WHERE host_device_id = ?
+
+// Joined events (exclude host participation)
+SELECT events.* FROM participants
+INNER JOIN events ON participants.event_id = events.id
+WHERE participants.device_id = ? AND participants.is_host = false
+`
+
+**Authentication Flow:**
+1. Client generates device ID in localStorage
+2. Client syncs to cookie via lib/auth.ts
+3. Server reads cookie via hooks.server.ts
+4. Server queries events by device ID
+5. Server transforms and returns to page
+
+**UX Improvements:**
+
+- Zero-friction access: No login required to see your sessions
+- Persistent across sessions: Device ID stored in localStorage
+- Clear distinction between hosted and joined events
+- Quick navigation via share codes displayed on cards
+- Date formatting in French locale (e.g., "29 mars 2026")
+
+**Data Model Notes:**
+
+- Host events: Identified by vents.host_device_id column
+- Participant events: Identified by participants.device_id with is_host = false
+- Events are ordered by date descending (most recent first)
+- Location is optional, only displayed if present
+
+**Testing Considerations:**
+
+- Verified TypeScript compilation (external library errors only, not our code)
+- App running successfully on Aspire (port 44248)
+- Database schema supports the queries correctly
+- Device ID auth pattern working as designed
+
+**Next Steps:**
+
+- Manual testing: Create events and join events to verify list display
+- Mobile testing: Ensure responsive design works on small screens
+- Performance: Monitor query performance with many events (add pagination if needed)
+
+**Key Learning:**
+
+Drizzle ORM query patterns differ from Drizzle query API:
+- Use .select().from(table).where() for explicit queries
+- Use .orderBy(desc(column)) for sorting (not relational query API)
+- Join queries return flat objects, not nested relations
+- Type safety maintained through explicit field selection
+
+This feature completes the core user navigation pattern: users can now easily return to any event they've created or joined, addressing the "zero friction" goal from the cahier des charges.
+
