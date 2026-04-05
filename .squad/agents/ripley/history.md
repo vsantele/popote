@@ -19,6 +19,42 @@
 - Partage via lien unique (`https://popote.io/s/{shareCode}`)
 - PWA for everywhere access (desktop, mobile, tablet)
 
+## Core Context
+
+### 2026-03-22 — Initial Architecture Phase (Flutter+PocketBase, archived)
+
+**Summary of archived work:**
+
+Designed and approved architecture for Flutter+PocketBase stack before architecture pivot to SvelteKit+Drizzle+Postgres on 2026-03-23. This section captures key decisions that informed the new architecture.
+
+**Architecture Phase 1 choices:**
+- **State Management:** Riverpod (compiled, async/streaming support)
+- **Backend:** PocketBase with JS hooks (SQLite, REST API, native SSE)
+- **Navigation:** GoRouter (native deep-linking for share codes)
+- **Device ID:** localStorage (zero-account signup)
+- **Real-time:** StreamProvider wrapping PocketBase SSE
+- **Timeline:** 7 weeks (Foundation → Core → Sync → Polish → Deployment)
+
+**Team coordination:**
+- Kane: PocketBase backend complete (share code hooks, auto-participant creation)
+- Dallas: Flutter scaffolding with Riverpod patterns, ready for integration
+- Lambert: Test strategy (hybrid approach) with 13 user flows and 31 edge cases
+
+**Architecture Pivot (2026-03-23):**
+- Victor pivoted to SvelteKit+Drizzle+Postgres for faster iteration, better type safety
+- Data model fully transfers (events, participants, items, same relationships)
+- Business logic patterns transfer (share codes, validation, cascade deletes)
+- UX flows unchanged (user experience identical, implementation changes)
+- Key insight: Old implementation is a valuable reference. Pivot is technology shift, not product redesign.
+
+**Impact:**
+- All Flutter+PocketBase decisions documented in `.squad/decisions.md` (marked SUPERSEDED)
+- Old code archived in `old/popote_app/` (Flutter) and `old/backend/` (PocketBase)
+- SvelteKit equivalent decisions created (Svelte 5 runes, Postgres+Drizzle, @vite-pwa/sveltekit, polling)
+- 7-week timeline still achievable (faster SvelteKit iteration)
+
+---
+
 ## Learnings
 
 **Architecture Phase 1 - 2026-03-22:**
