@@ -7,10 +7,6 @@ const builder = await createBuilder()
 
 await builder.addDockerComposeEnvironment("compose")
 
-// Add your resources here, for example:
-// const redis = await builder.addContainer("cache", "redis:latest");
-// const postgres = await builder.addPostgres("db");
-
 const postgres = await builder
   .addPostgres("db")
   .withDataVolume({ isReadOnly: false })
