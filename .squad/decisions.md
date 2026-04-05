@@ -477,6 +477,78 @@ Restructured name collection to ask users for their name at the right time:
 
 ---
 
+## 22. Optimistic UI Updates for Item Creation — ⏳ AWAITING APPROVAL
+
+**Proposed by:** Dallas (Frontend Lead)  
+**Date:** 2026-04-05  
+**Status:** ⏳ Awaiting team review  
+**Impact:** Medium (improves perceived performance)
+
+Use **optimistic UI updates** for item creation to eliminate perceived lag from polling delays.
+
+**Context:**
+Victor requested removal of polling delay when adding items. Previously, after submitting an item:
+1. Form submitted to server
+2. Dialog stayed open showing "Ajout..." spinner
+3. Server processed request
+4. `invalidateAll()` triggered
+5. Next poll cycle fetched new item (5-second delay)
+6. Dialog closed
+
+This created a noticeable delay between clicking "Add" and seeing the item appear.
+
+**Implementation:**
+1. On form submit, immediately create optimistic item with temporary ID
+2. Add optimistic item to UI via store
+3. Close dialog instantly (no waiting)
+4. Server processes in background
+5. Next poll replaces temp item with real one
+
+**Code Pattern:**
+```typescript
+onSubmit: () => {
+  const optimisticItem = {
+    id: `temp-${Date.now()}`,
+    participant: currentParticipant?.id || "",
+    name: $form.name || "",
+    category: $form.category || "plat",
+    quantity: $form.quantity || undefined,
+  }
+  
+  realtime.addItem(optimisticItem)
+  dialogOpen = false // Close immediately
+}
+```
+
+**Benefits:**
+- ✅ **Instant feedback**: Item appears immediately when user clicks "Add"
+- ✅ **No perceived lag**: Dialog closes instantly, no spinner wait
+- ✅ **Better UX**: Feels native and responsive
+- ✅ **Still reliable**: Server confirmation happens in background
+
+**Trade-offs:**
+- ⚠️ Optimistic item uses temporary ID (replaced on next poll)
+- ⚠️ If server fails, item remains until next poll reveals error
+- ⚠️ Requires careful state management
+
+**Rollback Plan:**
+If issues arise, revert to previous pattern:
+- Remove optimistic logic from `onSubmit`
+- Move dialog close back to `onUpdated` handler
+- Keep polling unchanged
+
+**Alternatives Considered:**
+1. **WebSocket push**: Would eliminate polling entirely, but increases complexity
+2. **Manual refresh button**: Poor UX, shifts burden to user
+3. **Longer polling interval**: Reduces server load but worsens UX
+
+**Approval Status:**
+- ⏳ Victor (Product Owner)
+- ⏳ Kane (Backend)
+- ⏳ Ripley (Architect)
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

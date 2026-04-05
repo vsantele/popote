@@ -132,4 +132,74 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - TypeScript compiles without errors in new routes ✅
 - Routes follow SvelteKit conventions ✅
 
+### 2026-04-05: Enhanced UX with Past Sessions, Name Persistence, and Optimistic Updates
+
+**Context:** Victor requested several frontend improvements:
+1. Display joined sessions on frontpage (filtered by deviceId)
+2. Create past sessions page reachable from homepage
+3. Save user name in localStorage for future use in create/join forms
+4. Remove polling delay when adding items (optimistic updates)
+
+**Implementation:**
+
+1. ✅ **Homepage Enhancement**:
+   - Updated `app/src/routes/+page.svelte` — Added "Historique" button to navigate to past sessions
+   - Updated `app/src/routes/+page.server.ts` — Pass `upcoming: true` to only show future events
+   - Changed section title to "Mes soirées en cours" for clarity
+
+2. ✅ **Past Sessions Page**:
+   - Created `app/src/routes/past-sessions/+page.svelte` — Display all past events (hosted + joined)
+   - Created `app/src/routes/past-sessions/+page.server.ts` — Load past events with `upcoming: false`
+   - Updated `app/src/lib/server/db/index.ts` — Modified `getUserEvents()` to accept `upcoming` parameter
+   - Filter logic: Compare event date with current time to split upcoming/past events
+
+3. ✅ **localStorage Name Persistence**:
+   - Updated `app/src/routes/create/+page.svelte`:
+     - Pre-fill host name from localStorage on mount
+     - Save host name to localStorage on form submit (via `setUserName()`)
+   - Updated `app/src/routes/join/[code]/+page.svelte`:
+     - Pre-fill guest name from localStorage on mount
+     - Save guest name to localStorage on form submit (via `setUserName()`)
+   - Uses existing `app/src/lib/utils/device-id.ts` utilities (getUserName/setUserName)
+
+4. ✅ **Optimistic UI Updates**:
+   - Updated `app/src/routes/e/[code]/+page.svelte`:
+     - Changed superForm `onSubmit` to immediately add optimistic item to UI
+     - Close dialog instantly (no waiting for server)
+     - Create temporary item with `temp-${timestamp}` ID
+     - Uses `realtime.addItem()` for instant feedback
+   - Updated `app/src/routes/e/[code]/+page.server.ts`:
+     - Added `currentParticipant` to load return data
+     - Used by frontend to populate optimistic item participant field
+
+**Key Files Modified:**
+- `app/src/routes/+page.svelte` — Added past sessions link
+- `app/src/routes/+page.server.ts` — Filter to upcoming events only
+- `app/src/routes/past-sessions/+page.svelte` — New past sessions view (created)
+- `app/src/routes/past-sessions/+page.server.ts` — New past sessions loader (created)
+- `app/src/lib/server/db/index.ts` — Enhanced getUserEvents with date filtering
+- `app/src/routes/create/+page.svelte` — localStorage name persistence
+- `app/src/routes/join/[code]/+page.svelte` — localStorage name persistence
+- `app/src/routes/e/[code]/+page.svelte` — Optimistic item updates
+- `app/src/routes/e/[code]/+page.server.ts` — Return currentParticipant
+
+**Benefits:**
+- ✅ No polling delay: Items appear instantly when added (optimistic updates)
+- ✅ Better organization: Upcoming vs past events clearly separated
+- ✅ Faster forms: Name pre-filled from localStorage on create/join
+- ✅ Improved navigation: Easy access to event history from homepage
+- ✅ Persistent preferences: User name saved across sessions in browser
+
+**User Flow:**
+1. User creates event → name saved to localStorage → pre-filled on next create
+2. User joins event → name saved to localStorage → pre-filled on next join
+3. User adds item → item appears instantly (optimistic) → server confirms in background
+4. User views homepage → sees only upcoming events → can access past via "Historique"
+5. User views past sessions → sees all historical events they hosted or joined
+
+**Testing:**
+- Code follows SvelteKit conventions ✅
+- TypeScript types correct ✅
+- Optimistic updates use realtime store API ✅
+
 
