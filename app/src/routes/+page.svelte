@@ -99,8 +99,17 @@
       {#if data.hosted.length > 0 || data.joined.length > 0}
         <Card>
           <CardHeader>
-            <CardTitle>Mes soirées</CardTitle>
-            <CardDescription>Retrouvez vos événements</CardDescription>
+            <div class="flex items-center justify-between">
+              <div>
+                <CardTitle>Mes soirées</CardTitle>
+                <CardDescription
+                  >Retrouvez vos événements en cours</CardDescription
+                >
+              </div>
+              <Button href="/past-sessions" variant="outline" size="sm">
+                Historique
+              </Button>
+            </div>
           </CardHeader>
           <CardContent class="space-y-3">
             {#if data.hosted.length > 0}

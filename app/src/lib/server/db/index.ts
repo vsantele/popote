@@ -1,23 +1,23 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema';
-import { env } from '$env/dynamic/private';
-import { eq, and, desc } from 'drizzle-orm';
-import { events, participants, items } from './schema';
-import { generateUniqueShareCode } from './utils';
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
+import * as schema from "./schema"
+import { env } from "$env/dynamic/private"
+import { eq, and, desc } from "drizzle-orm"
+import { events, participants, items } from "./schema"
+import { generateUniqueShareCode } from "./utils"
 
 /**
  * Database client for SvelteKit application
- * 
+ *
  * Singleton pattern: Connection is created once and reused
- * 
+ *
  * Aspire Integration:
  *   - Connection string from env.ConnectionStrings__popotedb
  *   - Automatically injected when running under Aspire
  */
 
-let client: ReturnType<typeof postgres> | null = null;
-let db: ReturnType<typeof drizzle> | null = null;
+let client: ReturnType<typeof postgres> | null = null
+let db: ReturnType<typeof drizzle> | null = null
 
 /**
  * Convert .NET connection string format to PostgreSQL URL
@@ -26,94 +26,97 @@ let db: ReturnType<typeof drizzle> | null = null;
  */
 function convertConnectionString(connectionString: string): string {
   // If already in URL format, return as-is
-  if (connectionString.startsWith('postgres://') || connectionString.startsWith('postgresql://')) {
-    return connectionString;
+  if (
+    connectionString.startsWith("postgres://") ||
+    connectionString.startsWith("postgresql://")
+  ) {
+    return connectionString
   }
 
   // Parse .NET connection string format
-  const params: Record<string, string> = {};
-  connectionString.split(';').forEach(part => {
-    const [key, value] = part.split('=');
+  const params: Record<string, string> = {}
+  connectionString.split(";").forEach((part) => {
+    const [key, value] = part.split("=")
     if (key && value) {
-      params[key.trim()] = value.trim();
+      params[key.trim()] = value.trim()
     }
-  });
+  })
 
-  const host = params.Host || 'localhost';
-  const port = params.Port || '5432';
-  const database = params.Database;
-  const username = params.Username || params.User;
-  const password = params.Password;
+  const host = params.Host || "localhost"
+  const port = params.Port || "5432"
+  const database = params.Database
+  const username = params.Username || params.User
+  const password = params.Password
 
   if (!database || !username) {
-    throw new Error('Invalid connection string: missing Database or Username');
+    throw new Error("Invalid connection string: missing Database or Username")
   }
 
-  return `postgresql://${username}:${password}@${host}:${port}/${database}`;
+  return `postgresql://${username}:${password}@${host}:${port}/${database}`
 }
 
 export function getDb() {
   if (!db) {
-    const connectionString = 
-      env.ConnectionStrings__popotedb || 
-      env.DATABASE_URL;
+    const connectionString = env.ConnectionStrings__popotedb || env.DATABASE_URL
 
     if (!connectionString) {
-      throw new Error('Database connection string not found. Check Aspire configuration.');
+      throw new Error(
+        "Database connection string not found. Check Aspire configuration.",
+      )
     }
 
     // Convert connection string format if needed
-    const pgUrl = convertConnectionString(connectionString);
+    const pgUrl = convertConnectionString(connectionString)
 
     // Create postgres connection pool
-    client = postgres(pgUrl);
-    db = drizzle(client, { schema });
+    client = postgres(pgUrl)
+    db = drizzle(client, { schema })
   }
 
-  return db;
+  return db
 }
 
 // Cleanup on shutdown (for graceful server shutdown)
 export async function closeDb() {
   if (client) {
-    await client.end();
-    client = null;
-    db = null;
+    await client.end()
+    client = null
+    db = null
   }
 }
 
 // Export typed database instance
-export type Database = ReturnType<typeof getDb>;
+export type Database = ReturnType<typeof getDb>
 
 /**
  * Query helpers for page routes (replaces PocketBase service)
  */
 
 export async function getEventByShareCode(shareCode: string) {
-  const database = getDb();
+  const database = getDb()
   return await database.query.events.findFirst({
     where: eq(events.shareCode, shareCode.toUpperCase()),
     with: {
       participants: true,
       items: {
         with: {
-          participant: true
-        }
-      }
-    }
-  });
+          participant: true,
+        },
+      },
+    },
+  })
 }
 
 export async function createEventWithHost(eventData: {
-  name: string;
-  date: Date;
-  location?: string;
-  description?: string;
-  hostName: string;
-  hostDeviceId: string;
+  name: string
+  date: Date
+  location?: string
+  description?: string
+  hostName: string
+  hostDeviceId: string
 }) {
-  const database = getDb();
-  const shareCode = await generateUniqueShareCode();
+  const database = getDb()
+  const shareCode = await generateUniqueShareCode()
 
   // Create event
   const [newEvent] = await database
@@ -128,7 +131,7 @@ export async function createEventWithHost(eventData: {
       shareCode,
       updatedAt: new Date(),
     })
-    .returning();
+    .returning()
 
   // Auto-create host participant
   await database.insert(participants).values({
@@ -137,49 +140,48 @@ export async function createEventWithHost(eventData: {
     deviceId: eventData.hostDeviceId,
     isHost: true,
     updatedAt: new Date(),
-  });
+  })
 
   return {
-    id: newEvent.id,
     share_code: newEvent.shareCode,
     ...newEvent,
-  };
+  }
 }
 
 export async function getParticipantsByEventId(eventId: number) {
-  const database = getDb();
+  const database = getDb()
   return await database.query.participants.findMany({
-    where: eq(participants.eventId, eventId)
-  });
+    where: eq(participants.eventId, eventId),
+  })
 }
 
 export async function getItemsByEventId(eventId: number) {
-  const database = getDb();
+  const database = getDb()
   return await database.query.items.findMany({
     where: eq(items.eventId, eventId),
     with: {
-      participant: true
-    }
-  });
+      participant: true,
+    },
+  })
 }
 
 export async function findOrCreateParticipant(
   eventId: number,
   deviceId: string,
-  name: string
+  name: string,
 ) {
-  const database = getDb();
-  
+  const database = getDb()
+
   // Try to find existing participant
   const existing = await database.query.participants.findFirst({
     where: and(
       eq(participants.eventId, eventId),
-      eq(participants.deviceId, deviceId)
-    )
-  });
+      eq(participants.deviceId, deviceId),
+    ),
+  })
 
   if (existing) {
-    return existing;
+    return existing
   }
 
   // Create new participant
@@ -192,20 +194,20 @@ export async function findOrCreateParticipant(
       isHost: false,
       updatedAt: new Date(),
     })
-    .returning();
+    .returning()
 
-  return newParticipant;
+  return newParticipant
 }
 
 export async function createItemForParticipant(itemData: {
-  eventId: number;
-  participantId: number;
-  name: string;
-  category: string;
-  quantity?: string;
+  eventId: number
+  participantId: number
+  name: string
+  category: string
+  quantity?: string
 }) {
-  const database = getDb();
-  
+  const database = getDb()
+
   const [newItem] = await database
     .insert(items)
     .values({
@@ -216,25 +218,29 @@ export async function createItemForParticipant(itemData: {
       quantity: itemData.quantity || null,
       updatedAt: new Date(),
     })
-    .returning();
+    .returning()
 
-  return newItem;
+  return newItem
 }
 
 /**
  * Get all events for a user (both hosted and joined)
  * Returns events where user is either the host or a participant
  */
-export async function getUserEvents(deviceId: string) {
-  const database = getDb();
-  
+export async function getUserEvents(
+  deviceId: string,
+  upcoming: boolean = true,
+) {
+  const database = getDb()
+  const now = new Date()
+
   // Get events where user is host
   const hostedEvents = await database
     .select()
     .from(events)
     .where(eq(events.hostDeviceId, deviceId))
-    .orderBy(desc(events.date));
-  
+    .orderBy(desc(events.date))
+
   // Get events where user is a participant (not host)
   const participatedEvents = await database
     .select({
@@ -247,18 +253,24 @@ export async function getUserEvents(deviceId: string) {
       hostDeviceId: events.hostDeviceId,
       shareCode: events.shareCode,
       createdAt: events.createdAt,
-      updatedAt: events.updatedAt
+      updatedAt: events.updatedAt,
     })
     .from(participants)
     .innerJoin(events, eq(participants.eventId, events.id))
-    .where(and(
-      eq(participants.deviceId, deviceId),
-      eq(participants.isHost, false)
-    ))
-    .orderBy(desc(events.date));
-  
+    .where(
+      and(eq(participants.deviceId, deviceId), eq(participants.isHost, false)),
+    )
+    .orderBy(desc(events.date))
+
+  // Filter by upcoming or past
+  const filterByDate = (eventList: typeof participatedEvents) => {
+    return eventList.filter((event) =>
+      upcoming ? event.date >= now : event.date < now,
+    )
+  }
+
   return {
-    hosted: hostedEvents,
-    joined: participatedEvents
-  };
+    hosted: filterByDate(hostedEvents),
+    joined: filterByDate(participatedEvents),
+  }
 }

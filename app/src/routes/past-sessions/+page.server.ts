@@ -13,8 +13,9 @@ export const load: PageServerLoad = async ({ cookies }) => {
     }
   }
 
-  // Fetch all events for this user
-  const { hosted, joined } = await getUserEvents(deviceId, true)
+  // Fetch all past events for this user (upcoming: false)
+  const { hosted, joined } = await getUserEvents(deviceId, false)
+
   // Transform to frontend format
   const transformEvent = (event: (typeof hosted)[number]) => ({
     id: String(event.id),
