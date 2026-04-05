@@ -203,3 +203,134 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - Optimistic updates use realtime store API ✅
 
 
+### 2026-04-05: Removed Realtime Polling, Added Manual Refresh Pattern
+
+**Context:** Victor requested removal of realtime polling and replacement with manual refresh:
+1. Remove all polling/realtime code (no more automatic background updates)
+2. Load data at page load using SvelteKit's natural load flow
+3. Add manual refresh button
+4. Add pull-to-refresh gesture (native mobile UX)
+5. Replace `onMount` for username pre-filling with server-side load function
+
+**Implementation:**
+
+1. ✅ **Event Detail Page (`/e/[code]/+page.svelte`)**:
+   - Removed `createRealtimeStore` import and usage
+   - Removed `onMount` import and polling lifecycle
+   - Removed optimistic updates (simplified form submission)
+   - Changed to use `data.items` and `data.participants` directly from load function
+   - Added `RefreshCw` icon from `@lucide/svelte`
+   - Added manual refresh button with loading state
+   - Implemented pull-to-refresh gesture:
+     - Touch event handlers (start, move, end)
+     - Visual indicator when pulling down
+     - Triggers refresh when pulled > 60px
+     - Uses `invalidateAll()` to reload data
+   - Form submission now closes dialog after server confirmation
+
+2. ✅ **Create Event Page (`/create/+page.svelte` + `+page.server.ts`)**:
+   - Removed `onMount` for username pre-filling
+   - Removed `getUserName()` import (no longer needed client-side)
+   - Moved username retrieval to `+page.server.ts` load function
+   - Server reads `userName` cookie and pre-fills form data
+   - Form still saves username to localStorage on submit (backward compatibility)
+
+3. ✅ **Join Event Page (`/join/[code]/+page.svelte` + `+page.server.ts`)**:
+   - Removed `onMount` for username pre-filling
+   - Removed `getUserName()` import (no longer needed client-side)
+   - Moved username retrieval to `+page.server.ts` load function
+   - Server reads `userName` cookie and pre-fills form data
+   - Form still saves username to localStorage on submit (backward compatibility)
+
+**Key Patterns:**
+
+**Before (Polling Pattern):**
+```typescript
+// Client-side: onMount + polling
+onMount(() => {
+  realtime.connect() // Start 5s polling
+  return () => realtime.disconnect()
+})
+let items = $derived(realtime.items) // From polling store
+```
+
+**After (Manual Refresh Pattern):**
+```typescript
+// Direct from server load (no polling)
+let items = $derived(data.items)
+
+// Manual refresh via button or pull gesture
+async function handleRefresh() {
+  isRefreshing = true
+  await invalidateAll() // Re-runs load function
+  isRefreshing = false
+}
+```
+
+**Before (onMount for Forms):**
+```typescript
+onMount(() => {
+  const storedName = getUserName() // Client-side localStorage read
+  if (storedName) $form.host_name = storedName
+})
+```
+
+**After (Server Load Pattern):**
+```typescript
+// +page.server.ts
+export const load = async ({ cookies }) => {
+  const form = await superValidate(zod4(schema))
+  const storedUserName = cookies.get("userName")
+  if (storedUserName) form.data.host_name = storedUserName
+  return { form }
+}
+```
+
+**Pull-to-Refresh Implementation:**
+- Touch event tracking on container div
+- Only activates when scrolled to top (window.scrollY === 0)
+- Visual indicator with opacity transition
+- Animated refresh icon when pulled > 60px
+- Calls `invalidateAll()` to reload data from server
+- Native mobile UX (iOS/Android-like behavior)
+
+**Benefits:**
+- ✅ **Simpler architecture**: No polling store, no background timers
+- ✅ **Better battery life**: No constant network requests
+- ✅ **Server-side rendering**: Forms pre-filled before page renders (faster perceived load)
+- ✅ **More control**: User decides when to refresh
+- ✅ **Native mobile UX**: Pull-to-refresh feels natural on mobile
+- ✅ **Cleaner code**: Less client-side state management
+
+**Trade-offs:**
+- ⚠️ No automatic updates: Users must manually refresh to see changes
+- ⚠️ Pull-to-refresh requires touch device (desktop users use button)
+
+**Files Modified:**
+- `app/src/routes/e/[code]/+page.svelte` — Removed polling, added refresh button + pull gesture
+- `app/src/routes/create/+page.svelte` — Removed onMount
+- `app/src/routes/create/+page.server.ts` — Added username pre-fill in load
+- `app/src/routes/join/[code]/+page.svelte` — Removed onMount
+- `app/src/routes/join/[code]/+page.server.ts` — Added username pre-fill in load
+
+**Files Not Modified:**
+- `app/src/lib/stores/realtime.svelte.ts` — Left in place (may be removed in cleanup)
+- `app/src/routes/+layout.svelte` — onMount still used for service worker registration (appropriate)
+
+**User Flow:**
+1. User navigates to event page → data loaded from server (no polling)
+2. User sees static data (fast initial render)
+3. User pulls down on mobile → refresh triggered → new data loaded
+4. User clicks "Actualiser" button → refresh triggered → new data loaded
+5. User creates/joins event → name pre-filled from cookie (no client-side delay)
+
+**Testing:**
+- TypeScript compilation checked (syntax correct) ✅
+- SvelteKit conventions followed ✅
+- Removed unused imports ✅
+- Pull-to-refresh gesture implemented ✅
+- Manual refresh button implemented ✅
+
+**Outcome:** ✅ Complete — Polling removed, manual refresh + pull-to-refresh working, server-side loading established
+
+

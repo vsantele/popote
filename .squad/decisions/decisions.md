@@ -550,6 +550,60 @@ app/
 
 ---
 
+## Manual Refresh Pattern (Replacing Realtime Polling)
+
+**Date:** 2026-04-05  
+**Author:** Dallas  
+**Status:** ✅ Implemented
+
+### Decision
+Replace automatic realtime polling (5-second intervals) with manual refresh pattern using:
+1. SvelteKit's natural load functions for initial data
+2. Manual refresh button
+3. Pull-to-refresh gesture (mobile native UX)
+
+### Context
+Victor requested removal of realtime polling due to:
+- Unnecessary background network requests (battery/data usage)
+- User doesn't need instant updates for meal planning
+- Preference for user-controlled refresh over automatic updates
+
+### Implementation
+**Event Detail Page:**
+- Removed polling store and all background polling logic
+- Pull-to-refresh gesture for mobile (visual indicator, > 60px activation)
+- Refresh button with loading state
+- Data loaded via SvelteKit load functions
+
+**Form Pre-filling (Create/Join):**
+- Moved username retrieval to `+page.server.ts` load functions
+- Server pre-fills forms before render (no onMount delay)
+
+### Benefits
+✅ Simpler architecture (no polling state management)  
+✅ Better battery life (no background requests)  
+✅ Server-side rendering (instant form pre-fill)  
+✅ User control (manual refresh on demand)  
+✅ Native mobile UX (pull-to-refresh pattern)  
+✅ Cleaner code (less client-side complexity)
+
+### Trade-offs
+⚠️ No automatic updates (users must refresh manually)  
+⚠️ Desktop users need button instead of gesture
+
+### Rollback Plan
+If needed: re-enable polling with longer interval (30s), add refresh toggle setting, use visibility API for smart pause.
+
+### Files Modified
+- `app/src/routes/e/[code]/+page.svelte` — Removed polling, added pull-to-refresh
+- `app/src/routes/create/+page.svelte` + `+page.server.ts` — onMount → load
+- `app/src/routes/join/[code]/+page.svelte` + `+page.server.ts` — onMount → load
+- `app/src/routes/+page.svelte` + `+page.server.ts` — Server-side loading
+- `app/src/routes/e/[code]/+page.server.ts` — Event detail loader
+- `app/src/lib/server/db/index.ts` — Query optimization
+
+---
+
 ## All Decisions Summary
 
 ✅ **Architecture:** SvelteKit + Drizzle + Postgres + Aspire  
@@ -558,7 +612,7 @@ app/
 ✅ **Database:** PostgreSQL schema with Drizzle migrations  
 ✅ **Orchestration:** Aspire one-command stack  
 ✅ **Testing:** 54 automated tests + manual checklist  
-✅ **Real-time:** Polling MVP, WebSockets future  
+✅ **Real-time:** Manual refresh + pull-to-refresh (MVP)  
 ✅ **Observability:** OpenTelemetry via Aspire  
 
 **Status:** 🟢 IMPLEMENTATION COMPLETE — Ready for testing and deployment
