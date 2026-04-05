@@ -23,6 +23,5 @@ const app = await builder
   .withHttpsDeveloperCertificate()
   .withReference(db)
   .waitFor(db)
-  .withEnvironment("NODE_TLS_REJECT_UNAUTHORIZED", "0") // Disable TLS verification for development
 
 await builder.build().run()
