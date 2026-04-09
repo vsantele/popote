@@ -1,8 +1,8 @@
-import { json } from "@sveltejs/kit"
-import type { RequestHandler } from "./$types"
-import { getDb } from "$lib/server/db"
-import { events, participants } from "$lib/server/db/schema"
-import { generateUniqueShareCode } from "$lib/server/db/utils"
+import { json } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
+import { getDb } from "$lib/server/db";
+import { events, participants } from "$lib/server/db/schema";
+import { generateUniqueShareCode } from "$lib/server/db/utils";
 
 /**
  * POST /api/events
@@ -23,8 +23,8 @@ import { generateUniqueShareCode } from "$lib/server/db/utils"
  */
 export const POST: RequestHandler = async ({ request }) => {
   try {
-    const body = await request.json()
-    const { name, date, location, description, hostName, hostDeviceId } = body
+    const body = await request.json();
+    const { name, date, location, description, hostName, hostDeviceId } = body;
 
     // Validate required fields
     if (!name || !date || !hostName || !hostDeviceId) {
@@ -33,13 +33,13 @@ export const POST: RequestHandler = async ({ request }) => {
           error: "Missing required fields: name, date, hostName, hostDeviceId",
         },
         { status: 400 },
-      )
+      );
     }
 
-    const db = getDb()
+    const db = getDb();
 
     // Generate unique share code
-    const shareCode = await generateUniqueShareCode()
+    const shareCode = await generateUniqueShareCode();
 
     // Create event
     const [newEvent] = await db
@@ -54,7 +54,7 @@ export const POST: RequestHandler = async ({ request }) => {
         shareCode,
         updatedAt: new Date(),
       })
-      .returning()
+      .returning();
 
     // Auto-create host participant
     await db.insert(participants).values({
@@ -63,7 +63,7 @@ export const POST: RequestHandler = async ({ request }) => {
       deviceId: hostDeviceId,
       isHost: true,
       updatedAt: new Date(),
-    })
+    });
 
     return json(
       {
@@ -72,9 +72,9 @@ export const POST: RequestHandler = async ({ request }) => {
         event: newEvent,
       },
       { status: 201 },
-    )
+    );
   } catch (error) {
-    console.error("Error creating event:", error)
-    return json({ error: "Failed to create event" }, { status: 500 })
+    console.error("Error creating event:", error);
+    return json({ error: "Failed to create event" }, { status: 500 });
   }
-}
+};

@@ -1,9 +1,9 @@
-import { json } from "@sveltejs/kit"
-import type { RequestHandler } from "./$types"
-import { getDb } from "$lib/server/db"
-import { events, participants, items } from "$lib/server/db/schema"
-import { eq } from "drizzle-orm"
-import { isValidShareCode } from "$lib/server/db/utils"
+import { json } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
+import { getDb } from "$lib/server/db";
+import { events, participants, items } from "$lib/server/db/schema";
+import { eq } from "drizzle-orm";
+import { isValidShareCode } from "$lib/server/db/utils";
 
 /**
  * GET /api/events/[code]
@@ -17,14 +17,14 @@ import { isValidShareCode } from "$lib/server/db/utils"
  */
 export const GET: RequestHandler = async ({ params }) => {
   try {
-    const { code } = params
+    const { code } = params;
 
     // Validate share code format
     if (!isValidShareCode(code)) {
-      return json({ error: "Invalid share code format" }, { status: 400 })
+      return json({ error: "Invalid share code format" }, { status: 400 });
     }
 
-    const db = getDb()
+    const db = getDb();
 
     // Fetch event with relations using Drizzle query API
     const event = await db.query.events.findFirst({
@@ -37,10 +37,10 @@ export const GET: RequestHandler = async ({ params }) => {
           },
         },
       },
-    })
+    });
 
     if (!event) {
-      return json({ error: "Event not found" }, { status: 404 })
+      return json({ error: "Event not found" }, { status: 404 });
     }
 
     return json({
@@ -58,9 +58,9 @@ export const GET: RequestHandler = async ({ params }) => {
       },
       participants: event.participants,
       items: event.items,
-    })
+    });
   } catch (error) {
-    console.error("Error fetching event:", error)
-    return json({ error: "Failed to fetch event" }, { status: 500 })
+    console.error("Error fetching event:", error);
+    return json({ error: "Failed to fetch event" }, { status: 500 });
   }
-}
+};

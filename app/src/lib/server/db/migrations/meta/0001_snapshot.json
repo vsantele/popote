@@ -124,9 +124,7 @@
         "events_share_code_unique": {
           "name": "events_share_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "share_code"
-          ]
+          "columns": ["share_code"]
         }
       },
       "policies": {},
@@ -240,12 +238,8 @@
           "name": "items_event_id_events_id_fk",
           "tableFrom": "items",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -253,12 +247,8 @@
           "name": "items_participant_id_participants_id_fk",
           "tableFrom": "items",
           "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -362,12 +352,8 @@
           "name": "participants_event_id_events_id_fk",
           "tableFrom": "participants",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -452,9 +438,7 @@
         "sync_codes_code_unique": {
           "name": "sync_codes_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},

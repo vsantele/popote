@@ -1,21 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { POST } from "../../src/routes/api/items/+server"
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { POST } from "../../src/routes/api/items/+server";
 
 vi.mock("@sveltejs/kit", () => ({
   json: vi.fn((data, options) => ({ data, options })),
-}))
+}));
 
 vi.mock("$lib/server/db", () => ({
   getDb: vi.fn(),
-}))
+}));
 
-import { getDb } from "$lib/server/db"
+import { getDb } from "$lib/server/db";
 
 describe("POST /api/items - Add Item", () => {
-  let mockDb: any
+  let mockDb: any;
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.clearAllMocks();
 
     mockDb = {
       query: {
@@ -49,10 +49,10 @@ describe("POST /api/items - Add Item", () => {
           ),
         })),
       })),
-    }
+    };
 
-    vi.mocked(getDb).mockReturnValue(mockDb)
-  })
+    vi.mocked(getDb).mockReturnValue(mockDb);
+  });
 
   describe("Happy Path", () => {
     it("should add item with all fields", async () => {
@@ -64,19 +64,19 @@ describe("POST /api/items - Add Item", () => {
           quantity: "2",
           deviceId: "device_123",
         }),
-      }
+      };
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request } as any);
 
-      expect(response.options?.status).toBe(201)
+      expect(response.options?.status).toBe(201);
       expect(response.data.item).toEqual(
         expect.objectContaining({
           name: "Pizza",
           category: "plat",
           quantity: "2",
         }),
-      )
-    })
+      );
+    });
 
     it("should add item without quantity", async () => {
       const request = {
@@ -86,12 +86,12 @@ describe("POST /api/items - Add Item", () => {
           category: "entree",
           deviceId: "device_123",
         }),
-      }
+      };
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request } as any);
 
-      expect(response.options?.status).toBe(201)
-    })
+      expect(response.options?.status).toBe(201);
+    });
 
     it("should verify participant exists", async () => {
       const request = {
@@ -101,13 +101,13 @@ describe("POST /api/items - Add Item", () => {
           category: "plat",
           deviceId: "device_123",
         }),
-      }
+      };
 
-      await POST({ request } as any)
+      await POST({ request } as any);
 
-      expect(mockDb.query.participants.findFirst).toHaveBeenCalled()
-    })
-  })
+      expect(mockDb.query.participants.findFirst).toHaveBeenCalled();
+    });
+  });
 
   describe("Validation", () => {
     it("should reject missing eventId", async () => {
@@ -117,13 +117,13 @@ describe("POST /api/items - Add Item", () => {
           category: "plat",
           deviceId: "device_123",
         }),
-      }
+      };
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request } as any);
 
-      expect(response.options?.status).toBe(400)
-      expect(response.data.error).toContain("Missing required fields")
-    })
+      expect(response.options?.status).toBe(400);
+      expect(response.data.error).toContain("Missing required fields");
+    });
 
     it("should reject missing name", async () => {
       const request = {
@@ -132,12 +132,12 @@ describe("POST /api/items - Add Item", () => {
           category: "plat",
           deviceId: "device_123",
         }),
-      }
+      };
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request } as any);
 
-      expect(response.options?.status).toBe(400)
-    })
+      expect(response.options?.status).toBe(400);
+    });
 
     it("should reject invalid category", async () => {
       const request = {
@@ -147,13 +147,13 @@ describe("POST /api/items - Add Item", () => {
           category: "invalid_category",
           deviceId: "device_123",
         }),
-      }
+      };
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request } as any);
 
-      expect(response.options?.status).toBe(400)
-      expect(response.data.error).toContain("Invalid category")
-    })
+      expect(response.options?.status).toBe(400);
+      expect(response.data.error).toContain("Invalid category");
+    });
 
     it("should accept all valid categories", async () => {
       const categories = [
@@ -164,7 +164,7 @@ describe("POST /api/items - Add Item", () => {
         "boissons",
         "jeux",
         "autre",
-      ]
+      ];
 
       for (const category of categories) {
         const request = {
@@ -174,17 +174,17 @@ describe("POST /api/items - Add Item", () => {
             category,
             deviceId: "device_123",
           }),
-        }
+        };
 
-        const response = await POST({ request } as any)
-        expect(response.options?.status).toBe(201)
+        const response = await POST({ request } as any);
+        expect(response.options?.status).toBe(201);
       }
-    })
-  })
+    });
+  });
 
   describe("Authorization", () => {
     it("should reject if user is not a participant", async () => {
-      mockDb.query.participants.findFirst = vi.fn(() => Promise.resolve(null))
+      mockDb.query.participants.findFirst = vi.fn(() => Promise.resolve(null));
 
       const request = {
         json: async () => ({
@@ -193,20 +193,20 @@ describe("POST /api/items - Add Item", () => {
           category: "plat",
           deviceId: "device_999",
         }),
-      }
+      };
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request } as any);
 
-      expect(response.options?.status).toBe(403)
-      expect(response.data.error).toContain("Not a participant")
-    })
-  })
+      expect(response.options?.status).toBe(403);
+      expect(response.data.error).toContain("Not a participant");
+    });
+  });
 
   describe("Error Handling", () => {
     it("should handle database errors gracefully", async () => {
       mockDb.insert = vi.fn(() => {
-        throw new Error("Database error")
-      })
+        throw new Error("Database error");
+      });
 
       const request = {
         json: async () => ({
@@ -215,12 +215,12 @@ describe("POST /api/items - Add Item", () => {
           category: "plat",
           deviceId: "device_123",
         }),
-      }
+      };
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request } as any);
 
-      expect(response.options?.status).toBe(500)
-      expect(response.data.error).toContain("Failed to add item")
-    })
-  })
-})
+      expect(response.options?.status).toBe(500);
+      expect(response.data.error).toContain("Failed to add item");
+    });
+  });
+});

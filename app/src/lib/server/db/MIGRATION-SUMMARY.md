@@ -144,8 +144,8 @@ Added 2 questions to `docs/questions-for-victor.md`:
 
 ```typescript
 setInterval(() => {
-  invalidate("event:data") // Re-run load function
-}, 2000) // 2 second interval
+  invalidate("event:data"); // Re-run load function
+}, 2000); // 2 second interval
 ```
 
 **Pros:** Simple, no server changes, meets "< 2s sync" requirement  
@@ -156,9 +156,9 @@ setInterval(() => {
 ```typescript
 io.on("connection", (socket) => {
   socket.on("subscribe:event", (eventId) => {
-    socket.join(`event:${eventId}`)
-  })
-})
+    socket.join(`event:${eventId}`);
+  });
+});
 ```
 
 **Pros:** Instant sync, bi-directional  

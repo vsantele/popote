@@ -1,15 +1,22 @@
 // Real-time polling store for event updates
 
-import { log } from '$lib/utils/logger';
-import type { Item, Participant } from '$lib/types';
+import { log } from "$lib/utils/logger";
+import type { Item, Participant } from "$lib/types";
 
-const POLL_INTERVAL = parseInt(import.meta.env.VITE_POLL_INTERVAL || '5000', 10);
+const POLL_INTERVAL = parseInt(
+  import.meta.env.VITE_POLL_INTERVAL || "5000",
+  10,
+);
 
 /**
  * Creates a real-time polling store for an event
  * Automatically refreshes items and participants every POLL_INTERVAL ms
  */
-export function createRealtimeStore(shareCode: string, initialItems: Item[], initialParticipants: Participant[]) {
+export function createRealtimeStore(
+  shareCode: string,
+  initialItems: Item[],
+  initialParticipants: Participant[],
+) {
   let items = $state<Item[]>(initialItems);
   let participants = $state<Participant[]>(initialParticipants);
   let isPolling = $state(false);
@@ -28,7 +35,7 @@ export function createRealtimeStore(shareCode: string, initialItems: Item[], ini
     try {
       // Fetch from API route
       const response = await fetch(`/api/events/${shareCode}`);
-      
+
       if (!response.ok) {
         throw new Error(`API returned ${response.status}`);
       }
@@ -59,16 +66,16 @@ export function createRealtimeStore(shareCode: string, initialItems: Item[], ini
       items = transformedItems;
       participants = transformedParticipants;
 
-      log('debug', 'Realtime refresh successful', {
+      log("debug", "Realtime refresh successful", {
         shareCode,
         itemCount: items.length,
-        participantCount: participants.length
+        participantCount: participants.length,
       });
     } catch (err) {
       lastError = String(err);
-      log('warn', 'Realtime refresh failed', {
+      log("warn", "Realtime refresh failed", {
         shareCode,
-        error: lastError
+        error: lastError,
       });
     } finally {
       isPolling = false;
@@ -87,9 +94,9 @@ export function createRealtimeStore(shareCode: string, initialItems: Item[], ini
     // Set up polling interval
     intervalId = setInterval(refresh, POLL_INTERVAL);
 
-    log('info', 'Realtime polling started', {
+    log("info", "Realtime polling started", {
       shareCode,
-      intervalMs: POLL_INTERVAL
+      intervalMs: POLL_INTERVAL,
     });
   }
 
@@ -101,7 +108,7 @@ export function createRealtimeStore(shareCode: string, initialItems: Item[], ini
       clearInterval(intervalId);
       intervalId = null;
 
-      log('info', 'Realtime polling stopped', { shareCode });
+      log("info", "Realtime polling stopped", { shareCode });
     }
   }
 
@@ -121,16 +128,24 @@ export function createRealtimeStore(shareCode: string, initialItems: Item[], ini
 
   return {
     // State (reactive via $state)
-    get items() { return items; },
-    get participants() { return participants; },
-    get isPolling() { return isPolling; },
-    get lastError() { return lastError; },
+    get items() {
+      return items;
+    },
+    get participants() {
+      return participants;
+    },
+    get isPolling() {
+      return isPolling;
+    },
+    get lastError() {
+      return lastError;
+    },
 
     // Methods
     connect,
     disconnect,
     refresh,
     addItem,
-    addParticipant
+    addParticipant,
   };
 }

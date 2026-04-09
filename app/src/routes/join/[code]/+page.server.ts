@@ -1,36 +1,36 @@
-import type { PageServerLoad, Actions } from "./$types"
-import { superValidate } from "sveltekit-superforms/server"
-import { fail, redirect, error } from "@sveltejs/kit"
-import { z } from "zod"
-import { getDb } from "$lib/server/db"
-import { events, participants } from "$lib/server/db/schema"
-import { eq, and } from "drizzle-orm"
-import { log } from "$lib/utils/logger"
-import { zod4 } from "sveltekit-superforms/adapters"
-import { DEVICE_ID_KEY, USER_NAME_KEY } from "$lib/utils/device-id"
+import type { PageServerLoad, Actions } from "./$types";
+import { superValidate } from "sveltekit-superforms/server";
+import { fail, redirect, error } from "@sveltejs/kit";
+import { z } from "zod";
+import { getDb } from "$lib/server/db";
+import { events, participants } from "$lib/server/db/schema";
+import { eq, and } from "drizzle-orm";
+import { log } from "$lib/utils/logger";
+import { zod4 } from "sveltekit-superforms/adapters";
+import { DEVICE_ID_KEY, USER_NAME_KEY } from "$lib/utils/device-id";
 
 const joinEventSchema = z.object({
   name: z.string().min(1, "Votre nom est requis"),
-})
+});
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
-  const shareCode = params.code.toUpperCase()
-  const db = getDb()
+  const shareCode = params.code.toUpperCase();
+  const db = getDb();
 
   // Fetch event to verify it exists
   const selectedEvents = await db
     .select()
     .from(events)
     .where(eq(events.shareCode, shareCode))
-    .limit(1)
-  const event = selectedEvents[0]
+    .limit(1);
+  const event = selectedEvents[0];
 
   if (!event) {
-    throw error(404, "Événement introuvable")
+    throw error(404, "Événement introuvable");
   }
 
   // Check if this device already has a participant (shouldn't happen, but defensive)
-  const deviceId = cookies.get(DEVICE_ID_KEY)
+  const deviceId = cookies.get(DEVICE_ID_KEY);
   if (deviceId) {
     const participantResults = await db
       .select()
@@ -41,11 +41,11 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
           eq(participants.deviceId, deviceId),
         ),
       )
-      .limit(1)
+      .limit(1);
 
     if (participantResults[0]) {
       // Participant exists, redirect to event
-      return redirect(303, `/e/${shareCode}`)
+      return redirect(303, `/e/${shareCode}`);
     }
   }
 
@@ -58,53 +58,53 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     description: event.description || undefined,
     host_name: event.hostName,
     share_code: event.shareCode,
-  }
+  };
 
   // Pre-fill form with stored username if available
-  const storedUserName = cookies.get(USER_NAME_KEY)
-  const form = await superValidate(zod4(joinEventSchema))
+  const storedUserName = cookies.get(USER_NAME_KEY);
+  const form = await superValidate(zod4(joinEventSchema));
   if (storedUserName) {
-    form.data.name = storedUserName
+    form.data.name = storedUserName;
   }
 
-  return { form, event: transformedEvent }
-}
+  return { form, event: transformedEvent };
+};
 
 export const actions: Actions = {
   default: async ({ request, params, cookies }) => {
-    const form = await superValidate(request, zod4(joinEventSchema))
+    const form = await superValidate(request, zod4(joinEventSchema));
 
     if (!form.valid) {
-      return fail(400, { form })
+      return fail(400, { form });
     }
 
     try {
-      const shareCode = params.code.toUpperCase()
-      const db = getDb()
+      const shareCode = params.code.toUpperCase();
+      const db = getDb();
 
       // Get event
       const selectedEvents = await db
         .select()
         .from(events)
         .where(eq(events.shareCode, shareCode))
-        .limit(1)
-      const event = selectedEvents[0]
+        .limit(1);
+      const event = selectedEvents[0];
 
       if (!event) {
         return fail(404, {
           form,
           error: "Événement introuvable",
-        })
+        });
       }
 
       // Get or create device ID
-      let deviceId = cookies.get(DEVICE_ID_KEY)
+      let deviceId = cookies.get(DEVICE_ID_KEY);
       if (!deviceId) {
-        deviceId = crypto.randomUUID()
+        deviceId = crypto.randomUUID();
         cookies.set(DEVICE_ID_KEY, deviceId, {
           path: "/",
           maxAge: 60 * 60 * 24 * 365,
-        })
+        });
       }
 
       // Create participant
@@ -113,28 +113,28 @@ export const actions: Actions = {
         name: form.data.name,
         deviceId,
         isHost: false,
-      })
+      });
 
       // Store user name for future use
       cookies.set(USER_NAME_KEY, form.data.name, {
         path: "/",
         maxAge: 60 * 60 * 24 * 365,
-      })
+      });
 
       log("info", "Guest joined event", {
         eventId: event.id,
         guestName: form.data.name,
-      })
+      });
     } catch (err) {
-      if (err instanceof Response) throw err
-      console.error("Error joining event:", err)
-      log("error", "Failed to join event", { error: JSON.stringify(err) })
+      if (err instanceof Response) throw err;
+      console.error("Error joining event:", err);
+      log("error", "Failed to join event", { error: JSON.stringify(err) });
       return fail(500, {
         form,
         error: "Impossible de rejoindre. Veuillez réessayer.",
-      })
+      });
     }
 
-    return redirect(303, `/e/${params.code}`)
+    return redirect(303, `/e/${params.code}`);
   },
-}
+};

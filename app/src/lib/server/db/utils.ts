@@ -1,15 +1,15 @@
-import { getDb } from './index';
-import { events, syncCodes } from './schema';
-import { eq } from 'drizzle-orm';
+import { getDb } from "./index";
+import { events, syncCodes } from "./schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Share Code Generation Utility
- * 
+ *
  * Generates unique 6-8 character alphanumeric codes for event sharing
  * Migrated from PocketBase hooks (main.pb.js)
  */
 
-const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const CODE_LENGTH = 6;
 const MAX_ATTEMPTS = 10;
 
@@ -17,7 +17,7 @@ const MAX_ATTEMPTS = 10;
  * Generate a random alphanumeric code
  */
 function generateCode(length: number = CODE_LENGTH): string {
-  let code = '';
+  let code = "";
   for (let i = 0; i < length; i++) {
     code += CHARS.charAt(Math.floor(Math.random() * CHARS.length));
   }
@@ -29,13 +29,17 @@ function generateCode(length: number = CODE_LENGTH): string {
  */
 async function isCodeUnique(code: string): Promise<boolean> {
   const db = getDb();
-  const existing = await db.select().from(events).where(eq(events.shareCode, code)).limit(1);
+  const existing = await db
+    .select()
+    .from(events)
+    .where(eq(events.shareCode, code))
+    .limit(1);
   return existing.length === 0;
 }
 
 /**
  * Generate a unique share code with retry logic
- * 
+ *
  * @throws Error if unable to generate unique code after MAX_ATTEMPTS
  */
 export async function generateUniqueShareCode(): Promise<string> {
@@ -45,8 +49,10 @@ export async function generateUniqueShareCode(): Promise<string> {
       return code;
     }
   }
-  
-  throw new Error('Failed to generate unique share code after maximum attempts');
+
+  throw new Error(
+    "Failed to generate unique share code after maximum attempts",
+  );
 }
 
 /**
@@ -62,15 +68,19 @@ export function isValidShareCode(code: string): boolean {
  */
 export async function generateUniqueSyncCode(): Promise<string> {
   const db = getDb();
-  
+
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const code = generateCode(6);
-    const existing = await db.select().from(syncCodes).where(eq(syncCodes.code, code)).limit(1);
-    
+    const existing = await db
+      .select()
+      .from(syncCodes)
+      .where(eq(syncCodes.code, code))
+      .limit(1);
+
     if (existing.length === 0) {
       return code;
     }
   }
-  
-  throw new Error('Failed to generate unique sync code');
+
+  throw new Error("Failed to generate unique sync code");
 }

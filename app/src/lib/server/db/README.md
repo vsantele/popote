@@ -119,9 +119,9 @@ psql <connection_string>
 ### Import Database Client
 
 ```typescript
-import { getDb } from "$lib/server/db"
+import { getDb } from "$lib/server/db";
 
-const db = getDb()
+const db = getDb();
 ```
 
 ### Query Examples
@@ -129,29 +129,29 @@ const db = getDb()
 **Find event by share code:**
 
 ```typescript
-import { getDb } from "$lib/server/db"
-import { events } from "$lib/server/db/schema"
-import { eq } from "drizzle-orm"
+import { getDb } from "$lib/server/db";
+import { events } from "$lib/server/db/schema";
+import { eq } from "drizzle-orm";
 
-const db = getDb()
+const db = getDb();
 const event = await db.query.events.findFirst({
   where: eq(events.shareCode, "ABC123"),
   with: {
     participants: true,
     items: true,
   },
-})
+});
 ```
 
 **Create event with auto-participant:**
 
 ```typescript
-import { getDb } from "$lib/server/db"
-import { events, participants } from "$lib/server/db/schema"
-import { generateUniqueShareCode } from "$lib/server/db/utils"
+import { getDb } from "$lib/server/db";
+import { events, participants } from "$lib/server/db/schema";
+import { generateUniqueShareCode } from "$lib/server/db/utils";
 
-const db = getDb()
-const shareCode = await generateUniqueShareCode()
+const db = getDb();
+const shareCode = await generateUniqueShareCode();
 
 // Create event
 const [event] = await db
@@ -163,7 +163,7 @@ const [event] = await db
     hostDeviceId: "device-uuid-123",
     shareCode,
   })
-  .returning()
+  .returning();
 
 // Auto-create host participant
 await db.insert(participants).values({
@@ -171,16 +171,16 @@ await db.insert(participants).values({
   name: "Alice",
   deviceId: "device-uuid-123",
   isHost: true,
-})
+});
 ```
 
 **Add item:**
 
 ```typescript
-import { getDb } from "$lib/server/db"
-import { items } from "$lib/server/db/schema"
+import { getDb } from "$lib/server/db";
+import { items } from "$lib/server/db/schema";
 
-const db = getDb()
+const db = getDb();
 
 await db.insert(items).values({
   eventId: 1,
@@ -188,7 +188,7 @@ await db.insert(items).values({
   name: "Grilled veggies",
   category: "plat",
   quantity: "2 platters",
-})
+});
 ```
 
 ---
@@ -236,21 +236,24 @@ Drizzle doesn't support automatic rollback. To rollback:
 **Unit tests for share code generation:**
 
 ```typescript
-import { describe, it, expect } from "vitest"
-import { generateUniqueShareCode, isValidShareCode } from "$lib/server/db/utils"
+import { describe, it, expect } from "vitest";
+import {
+  generateUniqueShareCode,
+  isValidShareCode,
+} from "$lib/server/db/utils";
 
 describe("Share Code Utils", () => {
   it("generates valid 6-char code", async () => {
-    const code = await generateUniqueShareCode()
-    expect(code).toMatch(/^[A-Z0-9]{6}$/)
-  })
+    const code = await generateUniqueShareCode();
+    expect(code).toMatch(/^[A-Z0-9]{6}$/);
+  });
 
   it("validates share code format", () => {
-    expect(isValidShareCode("ABC123")).toBe(true)
-    expect(isValidShareCode("abc123")).toBe(false)
-    expect(isValidShareCode("AB12")).toBe(false)
-  })
-})
+    expect(isValidShareCode("ABC123")).toBe(true);
+    expect(isValidShareCode("abc123")).toBe(false);
+    expect(isValidShareCode("AB12")).toBe(false);
+  });
+});
 ```
 
 ---

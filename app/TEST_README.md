@@ -207,12 +207,12 @@ Provides realistic test data:
 **Usage:**
 
 ```typescript
-import { mockEvent, mockParticipant } from "$lib/test/mockData"
+import { mockEvent, mockParticipant } from "$lib/test/mockData";
 
 test("should display event name", () => {
-  render(EventCard, { event: mockEvent })
-  expect(screen.getByText(mockEvent.name)).toBeInTheDocument()
-})
+  render(EventCard, { event: mockEvent });
+  expect(screen.getByText(mockEvent.name)).toBeInTheDocument();
+});
 ```
 
 ---
@@ -295,7 +295,7 @@ resolve: {
 ```typescript
 vi.mock("$app/navigation", () => ({
   goto: vi.fn(),
-}))
+}));
 ```
 
 ---
@@ -309,7 +309,7 @@ vi.mock("$app/navigation", () => ({
 ```typescript
 vi.mock("$lib/server/db", () => ({
   getDb: vi.fn(),
-}))
+}));
 ```
 
 ---
@@ -331,14 +331,14 @@ test('should generate UUID v4 device ID when none exists', () => { ... });
 ```typescript
 test("should add item to event", () => {
   // Arrange: Setup test data
-  const event = mockEvent
+  const event = mockEvent;
 
   // Act: Perform action
-  const result = addItemToEvent(event, mockItem)
+  const result = addItemToEvent(event, mockItem);
 
   // Assert: Verify result
-  expect(result.items).toHaveLength(1)
-})
+  expect(result.items).toHaveLength(1);
+});
 ```
 
 ### 3. Test One Thing
@@ -361,13 +361,13 @@ test('should add item', () => { ... });
 
 ```typescript
 // ✅ Mock database
-vi.mock("$lib/server/db", () => ({ getDb: vi.fn() }))
+vi.mock("$lib/server/db", () => ({ getDb: vi.fn() }));
 
 // ✅ Mock navigation
-vi.mock("$app/navigation", () => ({ goto: vi.fn() }))
+vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 
 // ✅ Mock fetch
-global.fetch = vi.fn(() => Promise.resolve({ json: () => mockData }))
+global.fetch = vi.fn(() => Promise.resolve({ json: () => mockData }));
 ```
 
 ---

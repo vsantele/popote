@@ -1,5 +1,5 @@
-import { browser } from "$app/environment"
-import { DEVICE_ID_KEY } from "./utils/device-id"
+import { browser } from "$app/environment";
+import { DEVICE_ID_KEY } from "./utils/device-id";
 
 /**
  * Get or generate device ID
@@ -10,28 +10,28 @@ import { DEVICE_ID_KEY } from "./utils/device-id"
  * @returns Device ID (UUID v4)
  */
 export function getDeviceId(): string {
-  if (!browser) return ""
+  if (!browser) return "";
 
-  let deviceId = localStorage.getItem(DEVICE_ID_KEY)
+  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
 
   if (!deviceId) {
     // Generate UUID v4
-    deviceId = crypto.randomUUID()
-    localStorage.setItem(DEVICE_ID_KEY, deviceId)
+    deviceId = crypto.randomUUID();
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
   }
 
   // Sync to cookie for SSR
-  document.cookie = `${DEVICE_ID_KEY}=${deviceId}; path=/; max-age=31536000; SameSite=Lax`
+  document.cookie = `${DEVICE_ID_KEY}=${deviceId}; path=/; max-age=31536000; SameSite=Lax`;
 
-  return deviceId
+  return deviceId;
 }
 
 /**
  * Clear device ID (for testing or logout)
  */
 export function clearDeviceId(): void {
-  if (!browser) return
+  if (!browser) return;
 
-  localStorage.removeItem(DEVICE_ID_KEY)
-  document.cookie = `${DEVICE_ID_KEY}=; path=/; max-age=0`
+  localStorage.removeItem(DEVICE_ID_KEY);
+  document.cookie = `${DEVICE_ID_KEY}=; path=/; max-age=0`;
 }

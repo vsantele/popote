@@ -3,6 +3,7 @@
 ## Current Status
 
 SVG placeholder icons are currently in place:
+
 - `icon-192.svg` - 192x192 SVG icon
 - `icon-512.svg` - 512x512 SVG icon
 
@@ -17,6 +18,7 @@ magick icon-512.svg icon-512.png
 ```
 
 Or use online tools:
+
 - https://cloudconvert.com/svg-to-png
 - https://svgtopng.com/
 

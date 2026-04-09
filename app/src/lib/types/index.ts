@@ -31,31 +31,34 @@ export interface Item {
   created: string;
 }
 
-export type ItemCategory = 
-  | 'apero' 
-  | 'entree' 
-  | 'plat' 
-  | 'dessert' 
-  | 'boissons' 
-  | 'jeux' 
-  | 'autre';
+export type ItemCategory =
+  | "apero"
+  | "entree"
+  | "plat"
+  | "dessert"
+  | "boissons"
+  | "jeux"
+  | "autre";
 
-export const CATEGORIES: Record<ItemCategory, { emoji: string; label: string }> = {
-  apero: { emoji: '🥂', label: 'Apéro' },
-  entree: { emoji: '🥗', label: 'Entrée' },
-  plat: { emoji: '🍖', label: 'Plat' },
-  dessert: { emoji: '🍰', label: 'Dessert' },
-  boissons: { emoji: '🍷', label: 'Boissons' },
-  jeux: { emoji: '🎲', label: 'Jeux / Activités' },
-  autre: { emoji: '📦', label: 'Autre' }
+export const CATEGORIES: Record<
+  ItemCategory,
+  { emoji: string; label: string }
+> = {
+  apero: { emoji: "🥂", label: "Apéro" },
+  entree: { emoji: "🥗", label: "Entrée" },
+  plat: { emoji: "🍖", label: "Plat" },
+  dessert: { emoji: "🍰", label: "Dessert" },
+  boissons: { emoji: "🍷", label: "Boissons" },
+  jeux: { emoji: "🎲", label: "Jeux / Activités" },
+  autre: { emoji: "📦", label: "Autre" },
 };
 
 export const CATEGORY_ORDER: ItemCategory[] = [
-  'apero',
-  'entree',
-  'plat',
-  'dessert',
-  'boissons',
-  'jeux',
-  'autre'
+  "apero",
+  "entree",
+  "plat",
+  "dessert",
+  "boissons",
+  "jeux",
+  "autre",
 ];

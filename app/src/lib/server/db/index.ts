@@ -1,11 +1,11 @@
-import { drizzle } from "drizzle-orm/postgres-js"
-import postgres from "postgres"
-import * as schema from "./schema"
-import { env } from "$env/dynamic/private"
-import { eq, and, desc } from "drizzle-orm"
-import { events, participants, items, syncCodes } from "./schema"
-import { generateUniqueShareCode, generateUniqueSyncCode } from "./utils"
-import { gt } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
+import { env } from "$env/dynamic/private";
+import { eq, and, desc } from "drizzle-orm";
+import { events, participants, items, syncCodes } from "./schema";
+import { generateUniqueShareCode, generateUniqueSyncCode } from "./utils";
+import { gt } from "drizzle-orm";
 
 /**
  * Database client for SvelteKit application
@@ -17,8 +17,8 @@ import { gt } from "drizzle-orm"
  *   - Automatically injected when running under Aspire
  */
 
-let client: ReturnType<typeof postgres> | null = null
-let db: ReturnType<typeof drizzle> | null = null
+let client: ReturnType<typeof postgres> | null = null;
+let db: ReturnType<typeof drizzle> | null = null;
 
 /**
  * Convert .NET connection string format to PostgreSQL URL
@@ -31,70 +31,71 @@ function convertConnectionString(connectionString: string): string {
     connectionString.startsWith("postgres://") ||
     connectionString.startsWith("postgresql://")
   ) {
-    return connectionString
+    return connectionString;
   }
 
   // Parse .NET connection string format
-  const params: Record<string, string> = {}
+  const params: Record<string, string> = {};
   connectionString.split(";").forEach((part) => {
-    const [key, value] = part.split("=")
+    const [key, value] = part.split("=");
     if (key && value) {
-      params[key.trim()] = value.trim()
+      params[key.trim()] = value.trim();
     }
-  })
+  });
 
-  const host = params.Host || "localhost"
-  const port = params.Port || "5432"
-  const database = params.Database
-  const username = params.Username || params.User
-  const password = params.Password
+  const host = params.Host || "localhost";
+  const port = params.Port || "5432";
+  const database = params.Database;
+  const username = params.Username || params.User;
+  const password = params.Password;
 
   if (!database || !username) {
-    throw new Error("Invalid connection string: missing Database or Username")
+    throw new Error("Invalid connection string: missing Database or Username");
   }
 
-  return `postgresql://${username}:${password}@${host}:${port}/${database}`
+  return `postgresql://${username}:${password}@${host}:${port}/${database}`;
 }
 
 export function getDb() {
   if (!db) {
-    const connectionString = env.ConnectionStrings__popotedb || env.DATABASE_URL
+    const connectionString =
+      env.ConnectionStrings__popotedb || env.DATABASE_URL;
 
     if (!connectionString) {
       throw new Error(
         "Database connection string not found. Check Aspire configuration.",
-      )
+      );
     }
 
     // Convert connection string format if needed
-    const pgUrl = convertConnectionString(connectionString)
+    const pgUrl = convertConnectionString(connectionString);
 
     // Create postgres connection pool
-    client = postgres(pgUrl)
-    db = drizzle(client, { schema })
+    client = postgres(pgUrl);
+    db = drizzle(client, { schema });
   }
 
-  return db
+  return db;
 }
 
 // Cleanup on shutdown (for graceful server shutdown)
 export async function closeDb() {
   if (client) {
-    await client.end()
-    client = null
-    db = null
+    await client.end();
+    client = null;
+    db = null;
   }
 }
 
 // Export typed database instance
-export type Database = ReturnType<typeof getDb>
+export type Database = ReturnType<typeof getDb>;
 
 /**
  * Query helpers for page routes (replaces PocketBase service)
  */
 
 export async function getEventByShareCode(shareCode: string) {
-  const database = getDb()
+  const database = getDb();
   return await database.query.events.findFirst({
     where: eq(events.shareCode, shareCode.toUpperCase()),
     with: {
@@ -105,19 +106,19 @@ export async function getEventByShareCode(shareCode: string) {
         },
       },
     },
-  })
+  });
 }
 
 export async function createEventWithHost(eventData: {
-  name: string
-  date: Date
-  location?: string
-  description?: string
-  hostName: string
-  hostDeviceId: string
+  name: string;
+  date: Date;
+  location?: string;
+  description?: string;
+  hostName: string;
+  hostDeviceId: string;
 }) {
-  const database = getDb()
-  const shareCode = await generateUniqueShareCode()
+  const database = getDb();
+  const shareCode = await generateUniqueShareCode();
 
   // Create event
   const [newEvent] = await database
@@ -132,7 +133,7 @@ export async function createEventWithHost(eventData: {
       shareCode,
       updatedAt: new Date(),
     })
-    .returning()
+    .returning();
 
   // Auto-create host participant
   await database.insert(participants).values({
@@ -141,29 +142,29 @@ export async function createEventWithHost(eventData: {
     deviceId: eventData.hostDeviceId,
     isHost: true,
     updatedAt: new Date(),
-  })
+  });
 
   return {
     share_code: newEvent.shareCode,
     ...newEvent,
-  }
+  };
 }
 
 export async function getParticipantsByEventId(eventId: number) {
-  const database = getDb()
+  const database = getDb();
   return await database.query.participants.findMany({
     where: eq(participants.eventId, eventId),
-  })
+  });
 }
 
 export async function getItemsByEventId(eventId: number) {
-  const database = getDb()
+  const database = getDb();
   return await database.query.items.findMany({
     where: eq(items.eventId, eventId),
     with: {
       participant: true,
     },
-  })
+  });
 }
 
 export async function findOrCreateParticipant(
@@ -171,7 +172,7 @@ export async function findOrCreateParticipant(
   deviceId: string,
   name: string,
 ) {
-  const database = getDb()
+  const database = getDb();
 
   // Try to find existing participant
   const existing = await database.query.participants.findFirst({
@@ -179,10 +180,10 @@ export async function findOrCreateParticipant(
       eq(participants.eventId, eventId),
       eq(participants.deviceId, deviceId),
     ),
-  })
+  });
 
   if (existing) {
-    return existing
+    return existing;
   }
 
   // Create new participant
@@ -195,19 +196,19 @@ export async function findOrCreateParticipant(
       isHost: false,
       updatedAt: new Date(),
     })
-    .returning()
+    .returning();
 
-  return newParticipant
+  return newParticipant;
 }
 
 export async function createItemForParticipant(itemData: {
-  eventId: number
-  participantId: number
-  name: string
-  category: string
-  quantity?: string
+  eventId: number;
+  participantId: number;
+  name: string;
+  category: string;
+  quantity?: string;
 }) {
-  const database = getDb()
+  const database = getDb();
 
   const [newItem] = await database
     .insert(items)
@@ -219,9 +220,9 @@ export async function createItemForParticipant(itemData: {
       quantity: itemData.quantity || null,
       updatedAt: new Date(),
     })
-    .returning()
+    .returning();
 
-  return newItem
+  return newItem;
 }
 
 /**
@@ -232,15 +233,15 @@ export async function getUserEvents(
   deviceId: string,
   upcoming: boolean = true,
 ) {
-  const database = getDb()
-  const now = new Date()
+  const database = getDb();
+  const now = new Date();
 
   // Get events where user is host
   const hostedEvents = await database
     .select()
     .from(events)
     .where(eq(events.hostDeviceId, deviceId))
-    .orderBy(desc(events.date))
+    .orderBy(desc(events.date));
 
   // Get events where user is a participant (not host)
   const participatedEvents = await database
@@ -261,63 +262,63 @@ export async function getUserEvents(
     .where(
       and(eq(participants.deviceId, deviceId), eq(participants.isHost, false)),
     )
-    .orderBy(desc(events.date))
+    .orderBy(desc(events.date));
 
   // Filter by upcoming or past
   const filterByDate = (eventList: typeof participatedEvents) => {
     return eventList.filter((event) => {
-      const eventDate = new Date(event.date)
-      const isPast = eventDate < now
-      return upcoming ? !isPast : isPast
-    })
-  }
+      const eventDate = new Date(event.date);
+      const isPast = eventDate < now;
+      return upcoming ? !isPast : isPast;
+    });
+  };
 
   return {
     hosted: filterByDate(hostedEvents),
     joined: filterByDate(participatedEvents),
-  }
+  };
 }
 
 export async function createSyncCode(deviceId: string) {
-  const database = getDb()
-  const code = await generateUniqueSyncCode()
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+  const database = getDb();
+  const code = await generateUniqueSyncCode();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
   // Clear existing codes for this device
-  await database.delete(syncCodes).where(eq(syncCodes.deviceId, deviceId))
+  await database.delete(syncCodes).where(eq(syncCodes.deviceId, deviceId));
 
   await database.insert(syncCodes).values({
     code,
     deviceId,
     expiresAt,
-  })
+  });
 
-  return code
+  return code;
 }
 
 export async function getDeviceIdBySyncCode(code: string) {
-  const database = getDb()
-  const now = new Date()
+  const database = getDb();
+  const now = new Date();
 
   const result = await database.query.syncCodes.findFirst({
     where: and(
       eq(syncCodes.code, code.toUpperCase()),
       gt(syncCodes.expiresAt, now),
     ),
-  })
+  });
 
-  if (!result) return null
+  if (!result) return null;
 
   // Delete code after use (one-time)
-  await database.delete(syncCodes).where(eq(syncCodes.id, result.id))
+  await database.delete(syncCodes).where(eq(syncCodes.id, result.id));
 
-  return result.deviceId
+  return result.deviceId;
 }
 
 export async function isEventExisting(shareCode: string) {
-  const database = getDb()
+  const database = getDb();
   const event = await database.query.events.findFirst({
     where: eq(events.shareCode, shareCode.toUpperCase()),
-  })
-  return !!event
+  });
+  return !!event;
 }

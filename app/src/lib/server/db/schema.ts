@@ -6,8 +6,8 @@ import {
   serial,
   varchar,
   index,
-} from "drizzle-orm/pg-core"
-import { relations } from "drizzle-orm"
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 /**
  * Events table - Core event/party entity
@@ -41,7 +41,7 @@ export const events = pgTable(
     index("events_host_device_id_idx").on(table.hostDeviceId),
     index("events_date_idx").on(table.date),
   ],
-)
+);
 
 /**
  * Participants table - Links users to events
@@ -73,7 +73,7 @@ export const participants = pgTable(
     index("participants_event_device_idx").on(table.eventId, table.deviceId),
     index("participants_device_id_idx").on(table.deviceId),
   ],
-)
+);
 
 /**
  * Items table - Things participants bring
@@ -109,11 +109,11 @@ export const items = pgTable(
     index("items_participant_id_idx").on(table.participantId),
     index("items_category_idx").on(table.category),
   ],
-)
+);
 
 /**
  * Sync Codes table - Temporary codes for transferring device IDs
- * 
+ *
  * - code: 6-character alphanumeric code
  * - device_id: the identity to be transferred
  * - expires_at: 10-15 min expiration
@@ -133,13 +133,13 @@ export const syncCodes = pgTable(
     index("sync_codes_code_idx").on(table.code),
     index("sync_codes_device_id_idx").on(table.deviceId),
   ],
-)
+);
 
 // Relations for Drizzle query API
 export const eventsRelations = relations(events, ({ many }) => ({
   participants: many(participants),
   items: many(items),
-}))
+}));
 
 export const participantsRelations = relations(
   participants,
@@ -150,7 +150,7 @@ export const participantsRelations = relations(
     }),
     items: many(items),
   }),
-)
+);
 
 export const itemsRelations = relations(items, ({ one }) => ({
   event: one(events, {
@@ -161,7 +161,7 @@ export const itemsRelations = relations(items, ({ one }) => ({
     fields: [items.participantId],
     references: [participants.id],
   }),
-}))
+}));
 
 // Valid categories (enum for validation)
 export const VALID_CATEGORIES = [
@@ -172,6 +172,6 @@ export const VALID_CATEGORIES = [
   "boissons",
   "jeux",
   "autre",
-] as const
+] as const;
 
-export type Category = (typeof VALID_CATEGORIES)[number]
+export type Category = (typeof VALID_CATEGORIES)[number];

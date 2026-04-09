@@ -1,41 +1,41 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button"
+  import { Button } from "$lib/components/ui/button";
   import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card"
+  } from "$lib/components/ui/card";
 
   interface Props {
     data: {
       hosted: Array<{
-        id: string
-        name: string
-        date: string
-        location?: string
-        share_code: string
-      }>
+        id: string;
+        name: string;
+        date: string;
+        location?: string;
+        share_code: string;
+      }>;
       joined: Array<{
-        id: string
-        name: string
-        date: string
-        location?: string
-        share_code: string
-      }>
-    }
+        id: string;
+        name: string;
+        date: string;
+        location?: string;
+        share_code: string;
+      }>;
+    };
   }
 
-  let { data }: Props = $props()
+  let { data }: Props = $props();
 
   function formatDate(dateStr: string): string {
-    const date = new Date(dateStr)
+    const date = new Date(dateStr);
     return date.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "long",
       year: "numeric",
-    })
+    });
   }
 </script>
 
@@ -44,9 +44,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold">Historique des soirées</h1>
-        <p class="text-sm text-muted-foreground">
-          Vos événements passés
-        </p>
+        <p class="text-sm text-muted-foreground">Vos événements passés</p>
       </div>
       <Button href="/" variant="outline" size="sm">Retour</Button>
     </div>

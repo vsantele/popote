@@ -1,9 +1,9 @@
-import { json } from "@sveltejs/kit"
-import type { RequestHandler } from "./$types"
-import { getDb } from "$lib/server/db"
-import { items, participants } from "$lib/server/db/schema"
-import { eq, and } from "drizzle-orm"
-import { VALID_CATEGORIES } from "$lib/server/db/schema"
+import { json } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
+import { getDb } from "$lib/server/db";
+import { items, participants } from "$lib/server/db/schema";
+import { eq, and } from "drizzle-orm";
+import { VALID_CATEGORIES } from "$lib/server/db/schema";
 
 /**
  * POST /api/items
@@ -24,15 +24,15 @@ import { VALID_CATEGORIES } from "$lib/server/db/schema"
  */
 export const POST: RequestHandler = async ({ request }) => {
   try {
-    const body = await request.json()
-    const { eventId, name, category, quantity, deviceId } = body
+    const body = await request.json();
+    const { eventId, name, category, quantity, deviceId } = body;
 
     // Validate required fields
     if (!eventId || !name || !category || !deviceId) {
       return json(
         { error: "Missing required fields: eventId, name, category, deviceId" },
         { status: 400 },
-      )
+      );
     }
 
     // Validate category
@@ -42,10 +42,10 @@ export const POST: RequestHandler = async ({ request }) => {
           error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(", ")}`,
         },
         { status: 400 },
-      )
+      );
     }
 
-    const db = getDb()
+    const db = getDb();
 
     // Verify participant exists for this event and device
     const participant = await db.query.participants.findFirst({
@@ -53,10 +53,13 @@ export const POST: RequestHandler = async ({ request }) => {
         eq(participants.eventId, eventId),
         eq(participants.deviceId, deviceId),
       ),
-    })
+    });
 
     if (!participant) {
-      return json({ error: "Not a participant of this event" }, { status: 403 })
+      return json(
+        { error: "Not a participant of this event" },
+        { status: 403 },
+      );
     }
 
     // Create item
@@ -70,16 +73,16 @@ export const POST: RequestHandler = async ({ request }) => {
         quantity: quantity || null,
         updatedAt: new Date(),
       })
-      .returning()
+      .returning();
 
     return json(
       {
         item: newItem,
       },
       { status: 201 },
-    )
+    );
   } catch (error) {
-    console.error("Error adding item:", error)
-    return json({ error: "Failed to add item" }, { status: 500 })
+    console.error("Error adding item:", error);
+    return json({ error: "Failed to add item" }, { status: 500 });
   }
-}
+};

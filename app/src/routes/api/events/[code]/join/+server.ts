@@ -1,9 +1,9 @@
-import { json } from "@sveltejs/kit"
-import type { RequestHandler } from "./$types"
-import { getDb } from "$lib/server/db"
-import { events, participants } from "$lib/server/db/schema"
-import { eq, and } from "drizzle-orm"
-import { isValidShareCode } from "$lib/server/db/utils"
+import { json } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
+import { getDb } from "$lib/server/db";
+import { events, participants } from "$lib/server/db/schema";
+import { eq, and } from "drizzle-orm";
+import { isValidShareCode } from "$lib/server/db/utils";
 
 /**
  * POST /api/events/[code]/join
@@ -22,13 +22,13 @@ import { isValidShareCode } from "$lib/server/db/utils"
  */
 export const POST: RequestHandler = async ({ params, request }) => {
   try {
-    const { code } = params
-    const body = await request.json()
-    const { name, deviceId } = body
+    const { code } = params;
+    const body = await request.json();
+    const { name, deviceId } = body;
 
     // Validate share code format
     if (!isValidShareCode(code)) {
-      return json({ error: "Invalid share code format" }, { status: 400 })
+      return json({ error: "Invalid share code format" }, { status: 400 });
     }
 
     // Validate required fields
@@ -36,18 +36,18 @@ export const POST: RequestHandler = async ({ params, request }) => {
       return json(
         { error: "Missing required fields: name, deviceId" },
         { status: 400 },
-      )
+      );
     }
 
-    const db = getDb()
+    const db = getDb();
 
     // Check if event exists
     const event = await db.query.events.findFirst({
       where: eq(events.shareCode, code),
-    })
+    });
 
     if (!event) {
-      return json({ error: "Event not found" }, { status: 404 })
+      return json({ error: "Event not found" }, { status: 404 });
     }
 
     // Check if already joined
@@ -56,10 +56,10 @@ export const POST: RequestHandler = async ({ params, request }) => {
         eq(participants.eventId, event.id),
         eq(participants.deviceId, deviceId),
       ),
-    })
+    });
 
     if (existingParticipant) {
-      return json({ error: "Already joined this event" }, { status: 409 })
+      return json({ error: "Already joined this event" }, { status: 409 });
     }
 
     // Create participant
@@ -72,16 +72,16 @@ export const POST: RequestHandler = async ({ params, request }) => {
         isHost: false,
         updatedAt: new Date(),
       })
-      .returning()
+      .returning();
 
     return json(
       {
         participant: newParticipant,
       },
       { status: 201 },
-    )
+    );
   } catch (error) {
-    console.error("Error joining event:", error)
-    return json({ error: "Failed to join event" }, { status: 500 })
+    console.error("Error joining event:", error);
+    return json({ error: "Failed to join event" }, { status: 500 });
   }
-}
+};

@@ -1,5 +1,5 @@
-import { DEVICE_ID_KEY } from "$lib/utils/device-id"
-import type { Handle } from "@sveltejs/kit"
+import { DEVICE_ID_KEY } from "$lib/utils/device-id";
+import type { Handle } from "@sveltejs/kit";
 
 /**
  * SvelteKit hooks for device ID authentication
@@ -15,12 +15,12 @@ import type { Handle } from "@sveltejs/kit"
  */
 export const handle: Handle = async ({ event, resolve }) => {
   // Extract device ID from cookie
-  const deviceId = event.cookies.get(DEVICE_ID_KEY)
+  const deviceId = event.cookies.get(DEVICE_ID_KEY);
 
   // Attach to event.locals for use in routes
   if (deviceId) {
-    event.locals.deviceId = deviceId
+    event.locals.deviceId = deviceId;
   }
 
-  return resolve(event)
-}
+  return resolve(event);
+};

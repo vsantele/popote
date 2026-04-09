@@ -14,6 +14,7 @@ Production: `https://popote.io/api`
 ## Authentication
 
 All routes use **device-based authentication**:
+
 - Device ID generated client-side via `crypto.randomUUID()`
 - Stored in `localStorage` as `popote_device_id`
 - Sent via cookie or request body/query param
@@ -28,6 +29,7 @@ All routes use **device-based authentication**:
 Create a new event with auto-generated share code.
 
 **Request:**
+
 ```json
 {
   "name": "Summer BBQ",
@@ -40,6 +42,7 @@ Create a new event with auto-generated share code.
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": 1,
@@ -60,6 +63,7 @@ Create a new event with auto-generated share code.
 ```
 
 **Errors:**
+
 - `400`: Missing required fields
 - `500`: Internal server error
 
@@ -72,6 +76,7 @@ Get event details by share code.
 **Example:** `GET /api/events/ABC123`
 
 **Response (200):**
+
 ```json
 {
   "event": {
@@ -102,6 +107,7 @@ Get event details by share code.
 ```
 
 **Errors:**
+
 - `400`: Invalid share code format
 - `404`: Event not found
 - `500`: Internal server error
@@ -115,6 +121,7 @@ Join an event as a participant.
 **Example:** `POST /api/events/ABC123/join`
 
 **Request:**
+
 ```json
 {
   "name": "Bob",
@@ -123,6 +130,7 @@ Join an event as a participant.
 ```
 
 **Response (201):**
+
 ```json
 {
   "participant": {
@@ -138,6 +146,7 @@ Join an event as a participant.
 ```
 
 **Errors:**
+
 - `400`: Invalid share code format or missing fields
 - `404`: Event not found
 - `409`: Already joined (device ID already exists for this event)
@@ -150,6 +159,7 @@ Join an event as a participant.
 Add an item to an event.
 
 **Request:**
+
 ```json
 {
   "eventId": 1,
@@ -161,6 +171,7 @@ Add an item to an event.
 ```
 
 **Valid categories:**
+
 - `apero` (appetizers)
 - `entree` (starters)
 - `plat` (main dishes)
@@ -170,6 +181,7 @@ Add an item to an event.
 - `autre` (other)
 
 **Response (201):**
+
 ```json
 {
   "item": {
@@ -186,6 +198,7 @@ Add an item to an event.
 ```
 
 **Errors:**
+
 - `400`: Missing fields or invalid category
 - `403`: Not a participant (device ID not found for this event)
 - `500`: Internal server error
@@ -199,6 +212,7 @@ List all items for an event.
 **Example:** `GET /api/events/ABC123/items`
 
 **Response (200):**
+
 ```json
 {
   "items": [
@@ -226,6 +240,7 @@ List all items for an event.
 ```
 
 **Errors:**
+
 - `400`: Invalid share code format
 - `404`: Event not found
 - `500`: Internal server error
@@ -241,6 +256,7 @@ Delete an item (owner only).
 **Response (204):** No content (success)
 
 **Errors:**
+
 - `400`: Missing deviceId or invalid item ID
 - `403`: Not authorized (device ID doesn't match item creator)
 - `404`: Item not found
@@ -265,6 +281,7 @@ All errors follow this format:
 ### Using cURL
 
 **Create event:**
+
 ```bash
 curl -X POST http://localhost:5173/api/events \
   -H "Content-Type: application/json" \
@@ -277,11 +294,13 @@ curl -X POST http://localhost:5173/api/events \
 ```
 
 **Get event:**
+
 ```bash
 curl http://localhost:5173/api/events/ABC123
 ```
 
 **Join event:**
+
 ```bash
 curl -X POST http://localhost:5173/api/events/ABC123/join \
   -H "Content-Type: application/json" \
@@ -292,6 +311,7 @@ curl -X POST http://localhost:5173/api/events/ABC123/join \
 ```
 
 **Add item:**
+
 ```bash
 curl -X POST http://localhost:5173/api/items \
   -H "Content-Type: application/json" \
@@ -304,6 +324,7 @@ curl -X POST http://localhost:5173/api/items \
 ```
 
 **Delete item:**
+
 ```bash
 curl -X DELETE "http://localhost:5173/api/items/1?deviceId=device-456"
 ```
@@ -313,39 +334,42 @@ curl -X DELETE "http://localhost:5173/api/items/1?deviceId=device-456"
 ## Integration with Frontend
 
 **Import auth utility:**
+
 ```typescript
-import { getDeviceId } from '$lib/auth';
+import { getDeviceId } from "$lib/auth";
 ```
 
 **Create event from SvelteKit component:**
+
 ```typescript
 const deviceId = getDeviceId();
 
-const response = await fetch('/api/events', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/events", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     name: eventName,
     date: eventDate,
     hostName: userName,
-    hostDeviceId: deviceId
-  })
+    hostDeviceId: deviceId,
+  }),
 });
 
 const { shareCode, event } = await response.json();
 ```
 
 **Join event:**
+
 ```typescript
 const deviceId = getDeviceId();
 
 const response = await fetch(`/api/events/${shareCode}/join`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     name: userName,
-    deviceId
-  })
+    deviceId,
+  }),
 });
 
 const { participant } = await response.json();
@@ -358,6 +382,7 @@ const { participant } = await response.json();
 **Current approach:** Polling (3-second interval)
 
 **Implementation:**
+
 ```typescript
 let pollInterval: NodeJS.Timeout;
 
@@ -367,7 +392,7 @@ onMount(() => {
     const { event, participants, items } = await response.json();
     // Update local state
   }, 3000);
-  
+
   return () => clearInterval(pollInterval);
 });
 ```

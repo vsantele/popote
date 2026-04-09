@@ -6,7 +6,7 @@ Add these scripts to `app/package.json` for database operations:
 {
   "scripts": {
     // ... existing scripts ...
-    
+
     // Database scripts
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx db/migrate.ts",
@@ -20,31 +20,41 @@ Add these scripts to `app/package.json` for database operations:
 ## Script Descriptions
 
 ### `pnpm db:generate`
+
 Generates migration files from schema changes.
+
 - Compares current `db/schema.ts` with existing migrations
 - Creates new SQL migration files in `db/migrations/`
 - Run this after modifying schema
 
 ### `pnpm db:migrate`
+
 Runs pending migrations against database.
+
 - Applies all unapplied migrations from `db/migrations/`
 - Requires Aspire to be running (for connection string)
 - Run this to update database schema
 
 ### `pnpm db:studio`
+
 Opens Drizzle Studio (web-based database GUI).
+
 - View/edit data in browser
 - Alternative to PocketBase admin UI
 - Runs on http://localhost:4983
 
 ### `pnpm db:push`
+
 Push schema changes directly (without migrations).
+
 - **Use with caution** — destructive in production
 - Good for rapid prototyping
 - Bypasses migration history
 
 ### `pnpm db:introspect`
+
 Generate schema from existing database.
+
 - Useful for reverse-engineering schema
 - Creates schema.ts from database tables
 - Not needed for this project (schema already defined)
@@ -52,6 +62,7 @@ Generate schema from existing database.
 ## Recommended Workflow
 
 ### 1. Initial Setup
+
 ```bash
 # Install dependencies
 pnpm install
@@ -67,6 +78,7 @@ pnpm db:migrate
 ```
 
 ### 2. Schema Changes
+
 ```bash
 # 1. Edit db/schema.ts
 # 2. Generate migration
@@ -78,6 +90,7 @@ pnpm db:migrate
 ```
 
 ### 3. Debugging
+
 ```bash
 # Open Drizzle Studio
 pnpm db:studio
@@ -104,6 +117,7 @@ Add these to `app/package.json`:
 ```
 
 Then run:
+
 ```bash
 cd app
 pnpm install
