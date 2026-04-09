@@ -1,56 +1,62 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button"
+  import { Button } from "$lib/components/ui/button";
   import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card"
-  import { Input } from "$lib/components/ui/input"
-  import { Label } from "$lib/components/ui/label"
-  import { goto } from "$app/navigation"
+  } from "$lib/components/ui/card";
+  import { Input } from "$lib/components/ui/input";
+  import { Label } from "$lib/components/ui/label";
+  import { goto } from "$app/navigation";
+  import { superForm } from "sveltekit-superforms";
 
   interface Props {
     data: {
       hosted: Array<{
-        id: string
-        name: string
-        date: string
-        location?: string
-        share_code: string
-      }>
+        id: string;
+        name: string;
+        date: string;
+        location?: string;
+        share_code: string;
+      }>;
       joined: Array<{
-        id: string
-        name: string
-        date: string
-        location?: string
-        share_code: string
-      }>
-    }
+        id: string;
+        name: string;
+        date: string;
+        location?: string;
+        share_code: string;
+      }>;
+    };
   }
 
-  let { data }: Props = $props()
+  let { data } = $props();
 
-  let shareCode = $state("")
-
-  async function joinEvent() {
-    if (!shareCode.trim()) return
-    await goto(`/join/${shareCode.trim().toUpperCase()}`)
-  }
+  const { form, errors, enhance, message } = superForm(data.joinForm);
 
   function formatDate(dateStr: string): string {
-    const date = new Date(dateStr)
+    const date = new Date(dateStr);
     return date.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "long",
       year: "numeric",
-    })
+    });
   }
 </script>
 
 <div class="min-h-screen flex items-center justify-center p-4">
   <div class="w-full max-w-md space-y-6">
+    <div class="flex justify-end">
+      <Button
+        href="/account"
+        variant="ghost"
+        size="sm"
+        class="text-muted-foreground hover:text-foreground"
+      >
+        👤 Sync. Appareils
+      </Button>
+    </div>
     <div class="text-center space-y-2">
       <h1 class="text-4xl font-bold">🍽️ Popote</h1>
       <p class="text-muted-foreground">Organisation de repas collaboratifs</p>
@@ -77,18 +83,23 @@
           <CardDescription>Entrez le code partagé par l'hôte</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onsubmit={joinEvent} class="space-y-4">
+          <form method="POST" action="?/join" use:enhance class="space-y-4">
             <div class="space-y-2">
               <Label for="shareCode">Code de partage</Label>
               <Input
                 id="shareCode"
-                bind:value={shareCode}
+                name="shareCode"
+                bind:value={$form.shareCode}
                 placeholder="ABC123"
                 class="uppercase"
                 maxlength={8}
               />
             </div>
-            <Button type="submit" class="w-full" disabled={!shareCode.trim()}>
+            <Button
+              type="submit"
+              class="w-full"
+              disabled={!$form.shareCode.trim()}
+            >
               Rejoindre
             </Button>
           </form>
