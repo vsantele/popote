@@ -1,4 +1,4 @@
-import adapter from "@sveltejs/adapter-auto"
+import adapter from "@sveltejs/adapter-auto";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -17,12 +17,18 @@ const config = {
       instrumentation: {
         server: true,
       },
+      remoteFunctions: true,
+    },
+  },
+  compilerOptions: {
+    experimental: {
+      async: true,
     },
   },
   vitePlugin: {
     dynamicCompileOptions: ({ filename }) =>
       filename.includes("node_modules") ? undefined : { runes: true },
   },
-}
+};
 
-export default config
+export default config;
