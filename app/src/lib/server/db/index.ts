@@ -264,9 +264,11 @@ export async function getUserEvents(
 
   // Filter by upcoming or past
   const filterByDate = (eventList: typeof participatedEvents) => {
-    return eventList.filter((event) =>
-      upcoming ? event.date >= now : event.date < now,
-    )
+    return eventList.filter((event) => {
+      const eventDate = new Date(event.date)
+      const isPast = eventDate < now
+      return upcoming ? !isPast : isPast
+    })
   }
 
   return {

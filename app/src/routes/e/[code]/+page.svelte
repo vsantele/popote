@@ -32,31 +32,25 @@
     type ItemCategory,
   } from "$lib/types/index"
   import { log } from "$lib/utils/logger"
-  import { createRealtimeStore } from "$lib/stores/realtime.svelte"
-  import { onMount } from "svelte"
   import { superForm } from "sveltekit-superforms/client"
   import { invalidateAll } from "$app/navigation"
+  import { RefreshCw } from "@lucide/svelte"
 
   let { data } = $props()
 
   let viewMode = $state<"category" | "person">("category")
   let dialogOpen = $state(false)
+  let isRefreshing = $state(false)
 
-  // Create real-time store (initialize once with data)
-  let realtime = $state(
-    createRealtimeStore(data.event.share_code, data.items, data.participants),
-  )
-
-  // Get reactive state from store
-  let items = $derived(realtime.items)
-  let participants = $derived(realtime.participants)
+  // Use data directly from server load (no polling)
+  let items = $derived(data.items)
+  let participants = $derived(data.participants)
 
   // Setup Superform for adding items
   const { form, errors, enhance, delayed, message } = superForm(data.form, {
     resetForm: true,
     onUpdated: async ({ form }) => {
       if (form.valid) {
-        // Close dialog and refresh data
         dialogOpen = false
         await invalidateAll()
       }
@@ -68,11 +62,54 @@
     $form.category = "plat"
   }
 
-  // Start polling on mount, cleanup on unmount
-  onMount(() => {
-    realtime.connect()
-    return () => realtime.disconnect()
-  })
+  // Manual refresh function
+  async function handleRefresh() {
+    isRefreshing = true
+    try {
+      await invalidateAll()
+    } finally {
+      isRefreshing = false
+    }
+  }
+
+  // Pull-to-refresh support (mobile gesture)
+  let touchStartY = 0
+  let isPulling = $state(false)
+  let pullDistance = $state(0)
+
+  function handleTouchStart(e: TouchEvent) {
+    if (window.scrollY === 0) {
+      touchStartY = e.touches[0].clientY
+    }
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    if (touchStartY === 0) return
+
+    const touchY = e.touches[0].clientY
+    const distance = touchY - touchStartY
+
+    if (distance > 0 && window.scrollY === 0) {
+      isPulling = true
+      pullDistance = Math.min(distance, 80)
+
+      // Prevent default scrolling when pulling
+      if (distance > 10) {
+        e.preventDefault()
+      }
+    }
+  }
+
+  async function handleTouchEnd() {
+    if (isPulling && pullDistance > 60) {
+      // Trigger refresh if pulled far enough
+      await handleRefresh()
+    }
+
+    touchStartY = 0
+    isPulling = false
+    pullDistance = 0
+  }
 
   // Group items by category
   const itemsByCategory = $derived.by(() => {
@@ -139,8 +176,27 @@
   }
 </script>
 
-<div class="min-h-screen p-4">
-  <div class="max-w-4xl mx-auto space-y-6">
+<div
+  class="min-h-screen p-4"
+  role="main"
+  ontouchstart={handleTouchStart}
+  ontouchmove={handleTouchMove}
+  ontouchend={handleTouchEnd}
+>
+  <!-- Pull-to-refresh indicator -->
+  {#if isPulling}
+    <div
+      class="fixed top-0 left-0 right-0 flex items-center justify-center transition-all"
+      style="height: {pullDistance}px; opacity: {pullDistance / 80}"
+    >
+      <RefreshCw class={pullDistance > 60 ? "animate-spin" : ""} />
+    </div>
+  {/if}
+
+  <div
+    class="max-w-4xl mx-auto space-y-6"
+    style="padding-top: {isPulling ? pullDistance : 0}px"
+  >
     <!-- Event Header -->
     <Card>
       <CardHeader>
@@ -170,84 +226,108 @@
     </Card>
 
     <!-- View Toggle + Add Button -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between gap-2">
       <ToggleGroup bind:value={viewMode} type="single">
         <ToggleGroupItem value="category">Par catégorie</ToggleGroupItem>
         <ToggleGroupItem value="person">Par personne</ToggleGroupItem>
       </ToggleGroup>
 
-      <Dialog bind:open={dialogOpen}>
-        <DialogTrigger>Ajouter un item</DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Qu'apportez-vous ?</DialogTitle>
-          </DialogHeader>
-          <form method="POST" action="?/addItem" use:enhance class="space-y-4">
-            <div class="space-y-2">
-              <Label for="name">Nom de l'item *</Label>
-              <Input
-                id="name"
-                name="name"
-                bind:value={$form.name}
-                placeholder="Tiramisu maison"
-                required
-                aria-invalid={$errors.name ? "true" : undefined}
-              />
-              {#if $errors.name}
-                <p class="text-sm text-destructive">{$errors.name}</p>
+      <div class="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onclick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw
+            class={isRefreshing ? "animate-spin mr-2" : "mr-2"}
+            size={16}
+          />
+          Actualiser
+        </Button>
+
+        <Dialog bind:open={dialogOpen}>
+          <DialogTrigger>Ajouter un item</DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Qu'apportez-vous ?</DialogTitle>
+            </DialogHeader>
+            <form
+              method="POST"
+              action="?/addItem"
+              use:enhance
+              class="space-y-4"
+            >
+              <div class="space-y-2">
+                <Label for="name">Nom de l'item *</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  bind:value={$form.name}
+                  placeholder="Tiramisu maison"
+                  required
+                  aria-invalid={$errors.name ? "true" : undefined}
+                />
+                {#if $errors.name}
+                  <p class="text-sm text-destructive">{$errors.name}</p>
+                {/if}
+              </div>
+
+              <div class="space-y-2">
+                <Label for="category">Catégorie *</Label>
+                <Select
+                  name="category"
+                  bind:value={$form.category}
+                  type="single"
+                >
+                  <SelectTrigger>
+                    {$form.category}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {#each CATEGORY_ORDER as cat}
+                      <SelectItem value={cat} label={CATEGORIES[cat].label}>
+                        {CATEGORIES[cat].emoji}
+                        {CATEGORIES[cat].label}
+                      </SelectItem>
+                    {/each}
+                  </SelectContent>
+                </Select>
+                {#if $errors.category}
+                  <p class="text-sm text-destructive">{$errors.category}</p>
+                {/if}
+              </div>
+
+              <div class="space-y-2">
+                <Label for="quantity">Quantité</Label>
+                <Input
+                  id="quantity"
+                  name="quantity"
+                  bind:value={$form.quantity}
+                  placeholder="Pour 8 personnes"
+                />
+              </div>
+
+              {#if $message}
+                <p class="text-sm text-destructive">{$message}</p>
               {/if}
-            </div>
 
-            <div class="space-y-2">
-              <Label for="category">Catégorie *</Label>
-              <Select name="category" bind:value={$form.category} type="single">
-                <SelectTrigger>
-                  {$form.category}
-                </SelectTrigger>
-                <SelectContent>
-                  {#each CATEGORY_ORDER as cat}
-                    <SelectItem value={cat} label={CATEGORIES[cat].label}>
-                      {CATEGORIES[cat].emoji}
-                      {CATEGORIES[cat].label}
-                    </SelectItem>
-                  {/each}
-                </SelectContent>
-              </Select>
-              {#if $errors.category}
-                <p class="text-sm text-destructive">{$errors.category}</p>
-              {/if}
-            </div>
-
-            <div class="space-y-2">
-              <Label for="quantity">Quantité</Label>
-              <Input
-                id="quantity"
-                name="quantity"
-                bind:value={$form.quantity}
-                placeholder="Pour 8 personnes"
-              />
-            </div>
-
-            {#if $message}
-              <p class="text-sm text-destructive">{$message}</p>
-            {/if}
-
-            <div class="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onclick={() => (dialogOpen = false)}
-                class="flex-1"
-              >
-                Annuler
-              </Button>
-              <Button type="submit" class="flex-1" disabled={$delayed}>
-                {$delayed ? "Ajout..." : "Ajouter"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+              <div class="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onclick={() => (dialogOpen = false)}
+                  class="flex-1"
+                >
+                  Annuler
+                </Button>
+                <Button type="submit" class="flex-1" disabled={$delayed}>
+                  {$delayed ? "Ajout..." : "Ajouter"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
 
     <!-- Items List -->

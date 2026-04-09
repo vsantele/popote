@@ -10,24 +10,19 @@
   import { Input } from "$lib/components/ui/input"
   import { Label } from "$lib/components/ui/label"
   import { superForm } from "sveltekit-superforms/client"
-  import { getUserName } from "$lib/utils/device-id"
+  import { setUserName } from "$lib/utils/device-id"
 
   let { data } = $props()
 
   const { form, errors, enhance, delayed } = superForm(data.form, {
     resetForm: false,
-    onUpdated: ({ form }) => {
-      // Pre-fill host name with stored name if available
-      if (!form.data.host_name && getUserName()) {
-        form.data.host_name = getUserName()!
+    onSubmit: () => {
+      // Save host name to localStorage when submitting
+      if ($form.host_name) {
+        setUserName($form.host_name)
       }
     },
   })
-
-  // Pre-fill host name on mount
-  if (!$form.host_name && getUserName()) {
-    $form.host_name = getUserName()!
-  }
 </script>
 
 <div class="min-h-screen flex items-center justify-center p-4">
