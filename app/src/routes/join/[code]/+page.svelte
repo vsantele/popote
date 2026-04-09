@@ -10,11 +10,18 @@
   import { Input } from "$lib/components/ui/input"
   import { Label } from "$lib/components/ui/label"
   import { superForm } from "sveltekit-superforms/client"
+  import { setUserName } from "$lib/utils/device-id"
 
   let { data } = $props()
 
   const { form, errors, enhance, delayed } = superForm(data.form, {
     resetForm: false,
+    onSubmit: () => {
+      // Save user name to localStorage when submitting
+      if ($form.name) {
+        setUserName($form.name)
+      }
+    },
   })
 </script>
 

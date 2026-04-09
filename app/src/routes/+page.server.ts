@@ -1,9 +1,11 @@
 import type { PageServerLoad } from "./$types"
 import { getUserEvents } from "$lib/server/db"
+import { DEVICE_ID_KEY } from "$lib/utils/device-id"
 
 export const load: PageServerLoad = async ({ cookies }) => {
   // Get device ID from cookie
-  const deviceId = cookies.get("popote_device_id")
+
+  const deviceId = cookies.get(DEVICE_ID_KEY)
 
   if (!deviceId) {
     // User has no device ID yet, show empty state

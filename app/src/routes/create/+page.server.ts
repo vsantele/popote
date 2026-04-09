@@ -7,9 +7,18 @@ import { events, participants } from "$lib/server/db/schema"
 import { generateUniqueShareCode } from "$lib/server/db/utils"
 import { log } from "$lib/utils/logger"
 import { zod4 } from "sveltekit-superforms/adapters"
+import { DEVICE_ID_KEY, USER_NAME_KEY } from "$lib/utils/device-id"
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ cookies }) => {
+  // Get stored username from cookie
+  const storedUserName = cookies.get(USER_NAME_KEY)
+
+  // Pre-fill form with stored username if available
   const form = await superValidate(zod4(createEventSchema))
+  if (storedUserName) {
+    form.data.host_name = storedUserName
+  }
+
   return { form }
 }
 
@@ -23,10 +32,10 @@ export const actions: Actions = {
     let shareCode: string = ""
     try {
       // Get device ID from cookie or generate new one
-      let deviceId = cookies.get("deviceId")
+      let deviceId = cookies.get(DEVICE_ID_KEY)
       if (!deviceId) {
         deviceId = crypto.randomUUID()
-        cookies.set("deviceId", deviceId, {
+        cookies.set(DEVICE_ID_KEY, deviceId, {
           path: "/",
           maxAge: 60 * 60 * 24 * 365, // 1 year
         })
@@ -63,7 +72,7 @@ export const actions: Actions = {
       })
 
       // Store host name in cookie for future use
-      cookies.set("userName", form.data.host_name, {
+      cookies.set(USER_NAME_KEY, form.data.host_name, {
         path: "/",
         maxAge: 60 * 60 * 24 * 365,
       })

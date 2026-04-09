@@ -7,6 +7,7 @@ import { superValidate } from "sveltekit-superforms/server"
 import { addItemSchema } from "$lib/schemas/item.schema"
 import { log } from "$lib/utils/logger"
 import { zod4 } from "sveltekit-superforms/adapters"
+import { DEVICE_ID_KEY, USER_NAME_KEY } from "$lib/utils/device-id"
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
   const shareCode = params.code.toUpperCase()
@@ -25,9 +26,9 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
   }
 
   // Check if user has a name stored - if not, redirect to join
-  const userName = cookies.get("userName")
-  const deviceId = cookies.get("deviceId")
-  
+  const userName = cookies.get(USER_NAME_KEY)
+  const deviceId = cookies.get(DEVICE_ID_KEY)
+
   // If no userName, they need to join first (unless they're the host)
   if (!userName && deviceId !== event.hostDeviceId) {
     return redirect(303, `/join/${shareCode}`)
@@ -70,10 +71,15 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     event: String(event.id),
     participant: String(i.participantId),
     name: i.name,
-    category: i.category as any,
+    category: i.category,
     quantity: i.quantity || undefined,
     created: i.createdAt.toISOString(),
   }))
+
+  // Find current participant for optimistic updates
+  const currentParticipant = transformedParticipants.find(
+    (p) => p.device_id === deviceId,
+  )
 
   // Initialize form
   const form = await superValidate(zod4(addItemSchema))
@@ -82,6 +88,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     event: transformedEvent,
     participants: transformedParticipants,
     items: transformedItems,
+    currentParticipant,
     form,
   }
 }
@@ -114,8 +121,8 @@ export const actions: Actions = {
       }
 
       // Get device ID and user name from cookies
-      const deviceId = cookies.get("deviceId")
-      const userName = cookies.get("userName")
+      const deviceId = cookies.get(DEVICE_ID_KEY)
+      const userName = cookies.get(USER_NAME_KEY)
 
       if (!deviceId || !userName) {
         // Should not happen if load function redirects properly
@@ -168,11 +175,6 @@ export const actions: Actions = {
           quantity: form.data.quantity || null,
         })
       }
-
-      log("info", "Item added via form action", {
-        eventId: event.id,
-        participantName: userName,
-      })
 
       return { form }
     } catch (err) {

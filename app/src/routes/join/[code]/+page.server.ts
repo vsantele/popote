@@ -7,6 +7,7 @@ import { events, participants } from "$lib/server/db/schema"
 import { eq, and } from "drizzle-orm"
 import { log } from "$lib/utils/logger"
 import { zod4 } from "sveltekit-superforms/adapters"
+import { DEVICE_ID_KEY, USER_NAME_KEY } from "$lib/utils/device-id"
 
 const joinEventSchema = z.object({
   name: z.string().min(1, "Votre nom est requis"),
@@ -15,13 +16,6 @@ const joinEventSchema = z.object({
 export const load: PageServerLoad = async ({ params, cookies }) => {
   const shareCode = params.code.toUpperCase()
   const db = getDb()
-
-  // Check if user already has a name stored
-  const userName = cookies.get("userName")
-  if (userName) {
-    // User already joined, redirect to event
-    return redirect(303, `/e/${shareCode}`)
-  }
 
   // Fetch event to verify it exists
   const selectedEvents = await db
@@ -36,7 +30,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
   }
 
   // Check if this device already has a participant (shouldn't happen, but defensive)
-  const deviceId = cookies.get("deviceId")
+  const deviceId = cookies.get(DEVICE_ID_KEY)
   if (deviceId) {
     const participantResults = await db
       .select()
@@ -66,7 +60,13 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     share_code: event.shareCode,
   }
 
+  // Pre-fill form with stored username if available
+  const storedUserName = cookies.get(USER_NAME_KEY)
   const form = await superValidate(zod4(joinEventSchema))
+  if (storedUserName) {
+    form.data.name = storedUserName
+  }
+
   return { form, event: transformedEvent }
 }
 
@@ -98,10 +98,10 @@ export const actions: Actions = {
       }
 
       // Get or create device ID
-      let deviceId = cookies.get("deviceId")
+      let deviceId = cookies.get(DEVICE_ID_KEY)
       if (!deviceId) {
         deviceId = crypto.randomUUID()
-        cookies.set("deviceId", deviceId, {
+        cookies.set(DEVICE_ID_KEY, deviceId, {
           path: "/",
           maxAge: 60 * 60 * 24 * 365,
         })
@@ -116,7 +116,7 @@ export const actions: Actions = {
       })
 
       // Store user name for future use
-      cookies.set("userName", form.data.name, {
+      cookies.set(USER_NAME_KEY, form.data.name, {
         path: "/",
         maxAge: 60 * 60 * 24 * 365,
       })
