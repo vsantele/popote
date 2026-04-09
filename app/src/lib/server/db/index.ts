@@ -3,8 +3,9 @@ import postgres from "postgres"
 import * as schema from "./schema"
 import { env } from "$env/dynamic/private"
 import { eq, and, desc } from "drizzle-orm"
-import { events, participants, items } from "./schema"
-import { generateUniqueShareCode } from "./utils"
+import { events, participants, items, syncCodes } from "./schema"
+import { generateUniqueShareCode, generateUniqueSyncCode } from "./utils"
+import { gt } from "drizzle-orm"
 
 /**
  * Database client for SvelteKit application
@@ -275,4 +276,48 @@ export async function getUserEvents(
     hosted: filterByDate(hostedEvents),
     joined: filterByDate(participatedEvents),
   }
+}
+
+export async function createSyncCode(deviceId: string) {
+  const database = getDb()
+  const code = await generateUniqueSyncCode()
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+
+  // Clear existing codes for this device
+  await database.delete(syncCodes).where(eq(syncCodes.deviceId, deviceId))
+
+  await database.insert(syncCodes).values({
+    code,
+    deviceId,
+    expiresAt,
+  })
+
+  return code
+}
+
+export async function getDeviceIdBySyncCode(code: string) {
+  const database = getDb()
+  const now = new Date()
+
+  const result = await database.query.syncCodes.findFirst({
+    where: and(
+      eq(syncCodes.code, code.toUpperCase()),
+      gt(syncCodes.expiresAt, now),
+    ),
+  })
+
+  if (!result) return null
+
+  // Delete code after use (one-time)
+  await database.delete(syncCodes).where(eq(syncCodes.id, result.id))
+
+  return result.deviceId
+}
+
+export async function isEventExisting(shareCode: string) {
+  const database = getDb()
+  const event = await database.query.events.findFirst({
+    where: eq(events.shareCode, shareCode.toUpperCase()),
+  })
+  return !!event
 }

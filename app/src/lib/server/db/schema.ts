@@ -111,6 +111,30 @@ export const items = pgTable(
   ],
 )
 
+/**
+ * Sync Codes table - Temporary codes for transferring device IDs
+ * 
+ * - code: 6-character alphanumeric code
+ * - device_id: the identity to be transferred
+ * - expires_at: 10-15 min expiration
+ */
+export const syncCodes = pgTable(
+  "sync_codes",
+  {
+    id: serial("id").primaryKey(),
+    code: varchar("code", { length: 8 }).notNull().unique(),
+    deviceId: varchar("device_id", { length: 100 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("sync_codes_code_idx").on(table.code),
+    index("sync_codes_device_id_idx").on(table.deviceId),
+  ],
+)
+
 // Relations for Drizzle query API
 export const eventsRelations = relations(events, ({ many }) => ({
   participants: many(participants),
