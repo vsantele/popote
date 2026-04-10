@@ -4,6 +4,7 @@ import {
   timestamp,
   boolean,
   serial,
+  integer,
   varchar,
   index,
 } from "drizzle-orm/pg-core";
@@ -34,7 +35,8 @@ export const events = pgTable(
       .defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .defaultNow(),
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     index("events_share_code_idx").on(table.shareCode),
@@ -56,7 +58,7 @@ export const participants = pgTable(
   "participants",
   {
     id: serial("id").primaryKey(),
-    eventId: serial("event_id")
+    eventId: integer("event_id")
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 100 }).notNull(),
@@ -67,7 +69,8 @@ export const participants = pgTable(
       .defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .defaultNow(),
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     index("participants_event_device_idx").on(table.eventId, table.deviceId),
@@ -87,10 +90,10 @@ export const items = pgTable(
   "items",
   {
     id: serial("id").primaryKey(),
-    eventId: serial("event_id")
+    eventId: integer("event_id")
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
-    participantId: serial("participant_id")
+    participantId: integer("participant_id")
       .notNull()
       .references(() => participants.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 100 }).notNull(),
@@ -102,7 +105,8 @@ export const items = pgTable(
       .defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .defaultNow(),
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     index("items_event_id_idx").on(table.eventId),

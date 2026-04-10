@@ -18,7 +18,7 @@ import { gt } from "drizzle-orm";
  */
 
 let client: ReturnType<typeof postgres> | null = null;
-let db: ReturnType<typeof drizzle> | null = null;
+let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 /**
  * Convert .NET connection string format to PostgreSQL URL
@@ -88,7 +88,7 @@ export async function closeDb() {
 }
 
 // Export typed database instance
-export type Database = ReturnType<typeof getDb>;
+export type Database = NonNullable<typeof db>;
 
 /**
  * Query helpers for page routes (replaces PocketBase service)
@@ -120,33 +120,37 @@ export async function createEventWithHost(eventData: {
   const database = getDb();
   const shareCode = await generateUniqueShareCode();
 
-  // Create event
-  const [newEvent] = await database
-    .insert(events)
-    .values({
-      name: eventData.name,
-      date: eventData.date,
-      location: eventData.location || null,
-      description: eventData.description || null,
-      hostName: eventData.hostName,
-      hostDeviceId: eventData.hostDeviceId,
-      shareCode,
-      updatedAt: new Date(),
-    })
-    .returning();
+  // Use transaction to ensure atomicity
+  const result = await database.transaction(async (tx) => {
+    const [newEvent] = await tx
+      .insert(events)
+      .values({
+        name: eventData.name,
+        date: eventData.date,
+        location: eventData.location || null,
+        description: eventData.description || null,
+        hostName: eventData.hostName,
+        hostDeviceId: eventData.hostDeviceId,
+        shareCode,
+      })
+      .returning();
 
-  // Auto-create host participant
-  await database.insert(participants).values({
-    eventId: newEvent.id,
-    name: eventData.hostName,
-    deviceId: eventData.hostDeviceId,
-    isHost: true,
-    updatedAt: new Date(),
+    const [hostParticipant] = await tx
+      .insert(participants)
+      .values({
+        eventId: newEvent.id,
+        name: eventData.hostName,
+        deviceId: eventData.hostDeviceId,
+        isHost: true,
+      })
+      .returning();
+
+    return { event: newEvent, participant: hostParticipant };
   });
 
   return {
-    share_code: newEvent.shareCode,
-    ...newEvent,
+    share_code: result.event.shareCode,
+    ...result.event,
   };
 }
 
@@ -194,7 +198,6 @@ export async function findOrCreateParticipant(
       name,
       deviceId,
       isHost: false,
-      updatedAt: new Date(),
     })
     .returning();
 
@@ -218,7 +221,6 @@ export async function createItemForParticipant(itemData: {
       name: itemData.name,
       category: itemData.category,
       quantity: itemData.quantity || null,
-      updatedAt: new Date(),
     })
     .returning();
 

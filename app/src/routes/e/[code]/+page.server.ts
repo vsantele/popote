@@ -13,13 +13,14 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
   const shareCode = params.code.toUpperCase();
   const db = getDb();
 
-  // Fetch event by share code with related data
-  const selectedEvents = await db
-    .select()
-    .from(events)
-    .where(eq(events.shareCode, shareCode))
-    .limit(1);
-  const event = selectedEvents[0];
+  // Fetch event by share code with related data (single query with joins)
+  const event = await db.query.events.findFirst({
+    where: eq(events.shareCode, shareCode),
+    with: {
+      participants: true,
+      items: true,
+    },
+  });
 
   if (!event) {
     throw error(404, "Événement introuvable");
@@ -34,16 +35,6 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     return redirect(303, `/join/${shareCode}`);
   }
 
-  const eventParticipants = await db
-    .select()
-    .from(participants)
-    .where(eq(participants.eventId, event.id));
-
-  const eventItems = await db
-    .select()
-    .from(items)
-    .where(eq(items.eventId, event.id));
-
   // Transform to match frontend types
   const transformedEvent = {
     id: String(event.id),
@@ -57,7 +48,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     created: event.createdAt.toISOString(),
   };
 
-  const transformedParticipants = eventParticipants.map((p) => ({
+  const transformedParticipants = event.participants.map((p) => ({
     id: String(p.id),
     event: String(event.id),
     name: p.name,
@@ -66,7 +57,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     created: p.createdAt.toISOString(),
   }));
 
-  const transformedItems = eventItems.map((i) => ({
+  const transformedItems = event.items.map((i) => ({
     id: String(i.id),
     event: String(event.id),
     participant: String(i.participantId),
@@ -105,13 +96,15 @@ export const actions: Actions = {
       const shareCode = params.code.toUpperCase();
       const db = getDb();
 
-      // Get event by share code
-      const selectedEvents = await db
-        .select()
-        .from(events)
-        .where(eq(events.shareCode, shareCode))
-        .limit(1);
-      const event = selectedEvents[0];
+      // Get event by share code (relational query)
+      const event = await db.query.events.findFirst({
+        where: eq(events.shareCode, shareCode),
+        with: {
+          participants: {
+            where: (participants, { eq }) => eq(participants.deviceId, cookies.get(DEVICE_ID_KEY) || ""),
+          },
+        },
+      });
 
       if (!event) {
         return fail(404, {
@@ -132,49 +125,37 @@ export const actions: Actions = {
         });
       }
 
-      // Find participant by device ID
-      const participantResults = await db
-        .select()
-        .from(participants)
-        .where(
-          and(
-            eq(participants.eventId, event.id),
-            eq(participants.deviceId, deviceId),
-          ),
-        )
-        .limit(1);
-      const participant = participantResults[0];
+      const participant = event.participants[0];
 
-      if (!participant) {
-        // Create participant if doesn't exist (defensive)
-        const [newParticipant] = await db
-          .insert(participants)
-          .values({
-            eventId: event.id,
-            name: userName,
-            deviceId,
-            isHost: false,
-          })
-          .returning();
+      // Use transaction for participant + item creation (atomic)
+      await db.transaction(async (tx) => {
+        let participantId: number;
 
-        // Create item with new participant
-        await db.insert(items).values({
+        if (!participant) {
+          // Create participant if doesn't exist (defensive)
+          const [newParticipant] = await tx
+            .insert(participants)
+            .values({
+              eventId: event.id,
+              name: userName,
+              deviceId,
+              isHost: false,
+            })
+            .returning();
+          participantId = newParticipant.id;
+        } else {
+          participantId = participant.id;
+        }
+
+        // Create item
+        await tx.insert(items).values({
           eventId: event.id,
-          participantId: newParticipant.id,
+          participantId,
           name: form.data.name,
           category: form.data.category,
           quantity: form.data.quantity || null,
         });
-      } else {
-        // Create item with existing participant
-        await db.insert(items).values({
-          eventId: event.id,
-          participantId: participant.id,
-          name: form.data.name,
-          category: form.data.category,
-          quantity: form.data.quantity || null,
-        });
-      }
+      });
 
       return { form };
     } catch (err) {

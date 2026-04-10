@@ -44,30 +44,36 @@ export const actions: Actions = {
       const db = getDb();
       shareCode = await generateUniqueShareCode();
 
-      // Create event
-      const [newEvent] = await db
-        .insert(events)
-        .values({
-          name: form.data.name,
-          date: new Date(form.data.date),
-          location: form.data.location || null,
-          description: form.data.description || null,
-          hostName: form.data.host_name,
-          hostDeviceId: deviceId,
-          shareCode,
-        })
-        .returning();
+      // Create event and host participant in a transaction (atomic operation)
+      const result = await db.transaction(async (tx) => {
+        const [newEvent] = await tx
+          .insert(events)
+          .values({
+            name: form.data.name,
+            date: new Date(form.data.date),
+            location: form.data.location || null,
+            description: form.data.description || null,
+            hostName: form.data.host_name,
+            hostDeviceId: deviceId,
+            shareCode,
+          })
+          .returning();
 
-      // Auto-create host participant
-      await db.insert(participants).values({
-        eventId: newEvent.id,
-        name: form.data.host_name,
-        deviceId,
-        isHost: true,
+        const [hostParticipant] = await tx
+          .insert(participants)
+          .values({
+            eventId: newEvent.id,
+            name: form.data.host_name,
+            deviceId,
+            isHost: true,
+          })
+          .returning();
+
+        return { event: newEvent, participant: hostParticipant };
       });
 
       log("info", "Event created via form action", {
-        eventId: newEvent.id,
+        eventId: result.event.id,
         shareCode: shareCode,
       });
 

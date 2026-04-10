@@ -15,6 +15,13 @@
       "when": 1775762875449,
       "tag": "0001_famous_monster_badoon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775864845179,
+      "tag": "0002_condemned_barracuda",
+      "breakpoints": true
     }
   ]
 }

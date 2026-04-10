@@ -17,36 +17,24 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
   const shareCode = params.code.toUpperCase();
   const db = getDb();
 
-  // Fetch event to verify it exists
-  const selectedEvents = await db
-    .select()
-    .from(events)
-    .where(eq(events.shareCode, shareCode))
-    .limit(1);
-  const event = selectedEvents[0];
+  // Fetch event to verify it exists (relational query API)
+  const event = await db.query.events.findFirst({
+    where: eq(events.shareCode, shareCode),
+    with: {
+      participants: {
+        where: (participants, { eq }) => eq(participants.deviceId, cookies.get(DEVICE_ID_KEY) || ""),
+      },
+    },
+  });
 
   if (!event) {
     throw error(404, "Événement introuvable");
   }
 
-  // Check if this device already has a participant (shouldn't happen, but defensive)
-  const deviceId = cookies.get(DEVICE_ID_KEY);
-  if (deviceId) {
-    const participantResults = await db
-      .select()
-      .from(participants)
-      .where(
-        and(
-          eq(participants.eventId, event.id),
-          eq(participants.deviceId, deviceId),
-        ),
-      )
-      .limit(1);
-
-    if (participantResults[0]) {
-      // Participant exists, redirect to event
-      return redirect(303, `/e/${shareCode}`);
-    }
+  // Check if this device already has a participant
+  if (event.participants.length > 0) {
+    // Participant exists, redirect to event
+    return redirect(303, `/e/${shareCode}`);
   }
 
   // Transform event for display
