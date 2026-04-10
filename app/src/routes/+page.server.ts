@@ -19,11 +19,14 @@ export const load: PageServerLoad = async ({ cookies }) => {
 
   const deviceId = cookies.get(DEVICE_ID_KEY);
 
+  const joinForm = await superValidate(zod4(schema));
+
   if (!deviceId) {
     // User has no device ID yet, show empty state
     return {
       hosted: [],
       joined: [],
+      joinForm,
     };
   }
 
@@ -40,8 +43,6 @@ export const load: PageServerLoad = async ({ cookies }) => {
     share_code: event.shareCode,
     created: event.createdAt.toISOString(),
   });
-
-  const joinForm = await superValidate(zod4(schema));
 
   return {
     hosted: hosted.map(transformEvent),

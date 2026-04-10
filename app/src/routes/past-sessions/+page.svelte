@@ -7,27 +7,9 @@
     CardHeader,
     CardTitle,
   } from "$lib/components/ui/card";
+  import type { PageProps } from "./$types";
 
-  interface Props {
-    data: {
-      hosted: Array<{
-        id: string;
-        name: string;
-        date: string;
-        location?: string;
-        share_code: string;
-      }>;
-      joined: Array<{
-        id: string;
-        name: string;
-        date: string;
-        location?: string;
-        share_code: string;
-      }>;
-    };
-  }
-
-  let { data }: Props = $props();
+  let { data }: PageProps = $props();
 
   function formatDate(dateStr: string): string {
     const date = new Date(dateStr);

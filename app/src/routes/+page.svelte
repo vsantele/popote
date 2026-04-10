@@ -11,27 +11,9 @@
   import { Label } from "$lib/components/ui/label";
   import { goto } from "$app/navigation";
   import { superForm } from "sveltekit-superforms";
+  import type { PageProps } from "./$types";
 
-  interface Props {
-    data: {
-      hosted: Array<{
-        id: string;
-        name: string;
-        date: string;
-        location?: string;
-        share_code: string;
-      }>;
-      joined: Array<{
-        id: string;
-        name: string;
-        date: string;
-        location?: string;
-        share_code: string;
-      }>;
-    };
-  }
-
-  let { data } = $props();
+  let { data }: PageProps = $props();
 
   const { form, errors, enhance, message } = superForm(data.joinForm);
 

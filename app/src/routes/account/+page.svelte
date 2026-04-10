@@ -12,8 +12,9 @@
   import { Label } from "$lib/components/ui/label";
   import { DEVICE_ID_KEY } from "$lib/utils/device-id";
   import { goto } from "$app/navigation";
+  import type { PageProps } from "./$types";
 
-  let { data, form } = $props();
+  let { data, form }: PageProps = $props();
 
   $effect(() => {
     if (form?.success && form.newDeviceId) {

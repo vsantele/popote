@@ -11,8 +11,9 @@
   import { Label } from "$lib/components/ui/label";
   import { superForm } from "sveltekit-superforms/client";
   import { setUserName } from "$lib/utils/device-id";
+  import type { PageProps } from "./$types";
 
-  let { data } = $props();
+  let { data }: PageProps = $props();
 
   const { form, errors, enhance, delayed } = superForm(data.form, {
     resetForm: false,
