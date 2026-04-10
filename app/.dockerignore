@@ -1,0 +1,11 @@
+.junie
+.nugerpackages
+.git
+.svelte-kit
+.vscode
+.claude
+.copilot
+.github
+node_modules
+Dockerfile
+*.md
