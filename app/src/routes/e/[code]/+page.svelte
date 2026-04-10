@@ -36,12 +36,29 @@
   } from "$lib/types/index";
   import { log } from "$lib/utils/logger";
   import { superForm } from "sveltekit-superforms/client";
-  import { invalidateAll } from "$app/navigation";
+  import { invalidateAll, goto } from "$app/navigation";
+  import { page } from "$app/state";
   import { RefreshCw } from "@lucide/svelte";
+  import type { PageProps } from "./$types";
 
-  let { data } = $props();
+  let { data }: PageProps = $props();
 
-  let viewMode = $state<"category" | "person">("category");
+  // Derive viewMode from URL (single source of truth)
+  let viewMode = $derived<"category" | "person">(
+    page.url.searchParams.get("view") === "person" ? "person" : "category"
+  );
+
+  // Update URL through event handler (not effect)
+  function setViewMode(newMode: "category" | "person") {
+    const url = new URL(page.url);
+    if (newMode === "category") {
+      url.searchParams.delete("view");
+    } else {
+      url.searchParams.set("view", newMode);
+    }
+    goto(url, { replaceState: true, noScroll: true, keepFocus: true });
+  }
+
   let dialogOpen = $state(false);
   let isRefreshing = $state(false);
 
@@ -230,7 +247,11 @@
 
     <!-- View Toggle + Add Button -->
     <div class="flex items-center justify-between gap-2">
-      <ToggleGroup bind:value={viewMode} type="single">
+      <ToggleGroup
+        value={viewMode}
+        onvaluechange={(value) => value && setViewMode(value as "category" | "person")}
+        type="single"
+      >
         <ToggleGroupItem value="category">Par catégorie</ToggleGroupItem>
         <ToggleGroupItem value="person">Par personne</ToggleGroupItem>
       </ToggleGroup>
