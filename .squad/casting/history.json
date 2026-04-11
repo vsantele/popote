@@ -14,6 +14,21 @@
         {"name": "Scribe", "role": "Session Logger"},
         {"name": "Ralph", "role": "Work Monitor"}
       ]
+    },
+    {
+      "assignment_id": "popote-ash-aspire",
+      "universe": "alien_1979",
+      "agent_count": 7,
+      "timestamp": "2026-04-11T00:02:25Z",
+      "snapshot": [
+        {"name": "Ripley", "role": "Lead"},
+        {"name": "Dallas", "role": "Flutter Dev"},
+        {"name": "Kane", "role": "Backend Dev"},
+        {"name": "Lambert", "role": "Tester"},
+        {"name": "Scribe", "role": "Session Logger"},
+        {"name": "Ralph", "role": "Work Monitor"},
+        {"name": "Ash", "role": "Aspire & DevOps"}
+      ]
     }
   ]
 }
