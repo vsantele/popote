@@ -6,7 +6,6 @@ import { eq } from "drizzle-orm";
  * Share Code Generation Utility
  *
  * Generates unique 6-8 character alphanumeric codes for event sharing
- * Migrated from PocketBase hooks (main.pb.js)
  */
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

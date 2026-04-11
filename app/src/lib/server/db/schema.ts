@@ -13,8 +13,6 @@ import { relations } from "drizzle-orm";
 /**
  * Events table - Core event/party entity
  *
- * Migration from PocketBase:
- * - Replaces PocketBase "events" collection
  * - share_code generation now handled by trigger or application logic
  * - host_device_id used for anonymous authentication
  */
@@ -48,8 +46,6 @@ export const events = pgTable(
 /**
  * Participants table - Links users to events
  *
- * Migration from PocketBase:
- * - Replaces PocketBase "participants" collection
  * - device_id is the anonymous auth key (no accounts required)
  * - is_host flag identifies the event creator
  * - Cascade delete: removing event removes all participants
@@ -81,8 +77,6 @@ export const participants = pgTable(
 /**
  * Items table - Things participants bring
  *
- * Migration from PocketBase:
- * - Replaces PocketBase "items" collection
  * - Categories: apero, entree, plat, dessert, boissons, jeux, autre
  * - Cascade delete: removing event removes all items
  */
@@ -97,7 +91,6 @@ export const items = pgTable(
       .notNull()
       .references(() => participants.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 100 }).notNull(),
-    // Category enum matching PocketBase
     category: varchar("category", { length: 32 }).notNull(),
     quantity: varchar("quantity", { length: 32 }),
     createdAt: timestamp("created_at", { withTimezone: true })

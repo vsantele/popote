@@ -1,7 +1,6 @@
 # Database Layer — Drizzle + PostgreSQL
 
-**Architecture:** Drizzle ORM with PostgreSQL (orchestrated via Aspire)  
-**Migration from:** PocketBase (SQLite) + JavaScript hooks
+**Architecture:** Drizzle ORM with PostgreSQL (orchestrated via Aspire)
 
 ---
 
@@ -12,7 +11,7 @@ app/db/
 ├── schema.ts         # Drizzle table definitions (events, participants, items)
 ├── index.ts          # Database client singleton (connection pool)
 ├── migrate.ts        # Migration runner (pnpm tsx db/migrate.ts)
-├── utils.ts          # Share code generation (ported from PocketBase hooks)
+├── utils.ts          # Share code generation
 ├── migrations/       # Generated SQL migration files (via drizzle-kit)
 └── README.md         # This file
 ```

@@ -117,9 +117,6 @@ popote/
 │   ├── migration-plan.md     # Stack pivot details
 │   ├── questions-for-victor.md # Open questions
 │   └── cahier_charge.md      # Product requirements (French)
-├── old/                       # Deprecated stack
-│   ├── backend/              # PocketBase (old)
-│   └── popote_app/           # Flutter (old)
 └── .squad/                    # Team coordination
     ├── agents/               # Agent history
     └── decisions/            # Architecture decisions
@@ -269,11 +266,6 @@ See `.squad/` for team coordination and decisions.
 - [SvelteKit Docs](https://svelte.dev/docs/kit)
 - [Drizzle ORM Docs](https://orm.drizzle.team)
 - [shadcn-svelte](https://www.shadcn-svelte.com/)
-
-**Old Stack (Deprecated):**
-
-- [PocketBase Docs](https://pocketbase.io/docs/)
-- [Flutter Docs](https://flutter.dev/docs)
 
 ---
 

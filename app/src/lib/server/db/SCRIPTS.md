@@ -40,7 +40,6 @@ Runs pending migrations against database.
 Opens Drizzle Studio (web-based database GUI).
 
 - View/edit data in browser
-- Alternative to PocketBase admin UI
 - Runs on http://localhost:4983
 
 ### `pnpm db:push`

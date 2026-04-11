@@ -90,10 +90,6 @@ export async function closeDb() {
 // Export typed database instance
 export type Database = NonNullable<typeof db>;
 
-/**
- * Query helpers for page routes (replaces PocketBase service)
- */
-
 export async function getEventByShareCode(shareCode: string) {
   const database = getDb();
   return await database.query.events.findFirst({
