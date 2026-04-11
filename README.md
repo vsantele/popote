@@ -1,7 +1,7 @@
 # Popote 🍴
 
 **Application d'organisation de repas/soirées collaboratifs**  
-*La popote entre potes, bien organisée.*
+_La popote entre potes, bien organisée._
 
 ---
 
@@ -10,6 +10,7 @@
 Popote permet à un hôte d'organiser facilement un repas ou une soirée type "auberge espagnole" où chaque invité ramène quelque chose. L'app garantit **zéro friction** : pas de compte requis, création en 30 secondes, et mise à jour en temps réel.
 
 **Principes clés :**
+
 - 🚀 Zéro compte obligatoire — rejoint via un lien
 - ⚡ Création en 30 secondes
 - 📱 PWA — fonctionne partout (mobile, desktop, tablet)
@@ -22,30 +23,25 @@ Popote permet à un hôte d'organiser facilement un repas ou une soirée type "a
 ### Stack (Current)
 
 **Frontend:**
+
 - **SvelteKit** (TypeScript PWA)
 - Svelte 5 runes for reactive state
 - shadcn-svelte UI components
 - PWA support (offline, installable)
 
 **Backend:**
+
 - **Postgres** (containerized via Aspire)
 - **Drizzle ORM** (type-safe database access)
 - Device-based authentication (anonymous, no accounts)
 
 **Orchestration:**
+
 - **Aspire** (manages Postgres + SvelteKit + observability)
 - One command starts everything
 - Built-in OpenTelemetry (traces, logs, metrics)
 
 📂 **Location:** `app/` (SvelteKit), `apphost.ts` (Aspire)
-
-### Old Stack (Deprecated)
-
-The original Flutter + PocketBase implementation has been moved to `old/`:
-- `old/popote_app/` — Flutter mobile app
-- `old/backend/` — PocketBase backend
-
-See `docs/migration-plan.md` for details on the stack pivot.
 
 ---
 
@@ -54,17 +50,20 @@ See `docs/migration-plan.md` for details on the stack pivot.
 ### Prerequisites
 
 ✅ **Required:**
+
 - Node.js 20.19+ or 22.13+ or 24+
 - pnpm (`npm install -g pnpm`)
 - Docker Desktop (running)
 - Aspire CLI (`npm install -g aspire`)
 
 ✅ **Verify environment health:**
+
 ```powershell
 aspire doctor
 ```
 
 Should show:
+
 - ✅ HTTPS development certificate is trusted
 - ✅ Docker Desktop detected and running
 
@@ -77,12 +76,14 @@ npm run dev
 ```
 
 **What this does:**
+
 - Starts Postgres container (port 5432)
 - Creates `popotedb` database
 - Starts SvelteKit app (port 5173)
 - Opens Aspire dashboard (observability)
 
 **Access the app:**
+
 - **SvelteKit:** http://localhost:5173
 - **Aspire Dashboard:** https://popote.dev.localhost:15335
 
@@ -155,12 +156,14 @@ popote/
 ### Migrations
 
 **Generate migration from schema changes:**
+
 ```powershell
 cd app
 npx drizzle-kit generate
 ```
 
 **Apply migrations to Postgres:**
+
 ```powershell
 cd app
 npx drizzle-kit migrate
@@ -173,11 +176,8 @@ See `docs/aspire-setup.md` for full migration workflow.
 ## 👥 Team
 
 - **Ripley** — Lead (architect, orchestration, decisions)
-- **Victor** — Product Owner (requirements, priorities)
 
-**Previous team members (Flutter+PocketBase era):**
-- Kane — Backend Developer (PocketBase)
-- Dallas — Frontend Developer (Flutter)
+- **Victor** — Product Owner (requirements, priorities)
 
 See `.squad/` for team coordination and decisions.
 
@@ -186,12 +186,14 @@ See `.squad/` for team coordination and decisions.
 ## 📚 Documentation
 
 **Essential:**
+
 - **🚀 Aspire Setup Guide:** `docs/aspire-setup.md` (START HERE)
 - **Product Requirements:** `docs/cahier_charge.md` (French)
 - **Migration Plan:** `docs/migration-plan.md` (Flutter → SvelteKit pivot)
 - **Open Questions:** `docs/questions-for-victor.md` (awaiting answers)
 
 **Old Stack (Deprecated):**
+
 - Backend Guide: `old/backend/README.md`
 - API Reference: `old/backend/API_EXAMPLES.md`
 - Data Schema: `old/backend/schema.json`
@@ -201,6 +203,7 @@ See `.squad/` for team coordination and decisions.
 ## 🎯 MVP Features (v1)
 
 **Planned (not yet implemented):**
+
 - [ ] Create event with minimal info
 - [ ] Share event via link (unique code)
 - [ ] Join event anonymously (device ID)
@@ -226,6 +229,7 @@ See `.squad/` for team coordination and decisions.
 ## 📈 Progress
 
 ### Infrastructure ✅
+
 - [x] Aspire orchestration setup
 - [x] Postgres container configuration
 - [x] Drizzle ORM schema
@@ -235,6 +239,7 @@ See `.squad/` for team coordination and decisions.
 - [x] Documentation
 
 ### Backend 🚧
+
 - [x] Database schema (Drizzle)
 - [x] Connection string injection (Aspire)
 - [ ] Migrations (generate + apply)
@@ -244,6 +249,7 @@ See `.squad/` for team coordination and decisions.
 - [ ] Real-time polling endpoints
 
 ### Frontend 🚧
+
 - [ ] Event creation page
 - [ ] Event detail page (share link view)
 - [ ] Item list (by category/person)
@@ -258,12 +264,14 @@ See `.squad/` for team coordination and decisions.
 ## 🔗 Resources
 
 **Current Stack:**
+
 - [Aspire Docs](https://aspire.dev)
 - [SvelteKit Docs](https://svelte.dev/docs/kit)
 - [Drizzle ORM Docs](https://orm.drizzle.team)
 - [shadcn-svelte](https://www.shadcn-svelte.com/)
 
 **Old Stack (Deprecated):**
+
 - [PocketBase Docs](https://pocketbase.io/docs/)
 - [Flutter Docs](https://flutter.dev/docs)
 

@@ -142,6 +142,93 @@ describe('Schema Migration', () => {
 
 ## Reusable Code Snippets
 
+### Automatic Migration Execution (SvelteKit + Drizzle)
+
+**Problem:** Run database migrations automatically on server startup in both dev and production.
+
+**Solution:** Use SvelteKit's `hooks.server.ts` handle function with a one-time execution flag.
+
+```typescript
+// app/src/lib/server/db/migrate.ts
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
+import * as schema from "./schema";
+import path from "path";
+import { fileURLToPath } from "url";
+
+export async function runMigrations() {
+  const connectionString =
+    process.env.ConnectionStrings__popotedb || process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error("No database connection string found!");
+  }
+
+  const migrationClient = postgres(connectionString, { max: 1 });
+  const db = drizzle(migrationClient, { schema });
+
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const migrationsFolder = path.join(__dirname, "migrations");
+    
+    await migrate(db, { migrationsFolder });
+  } finally {
+    await migrationClient.end();
+  }
+}
+
+// CLI execution (pnpm db:migrate)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runMigrations()
+    .then(() => {
+      console.log("✅ Migrations completed!");
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("❌ Migration failed:", error);
+      process.exit(1);
+    });
+}
+```
+
+```typescript
+// app/src/hooks.server.ts
+import { runMigrations } from "$lib/server/db/migrate";
+import type { Handle } from "@sveltejs/kit";
+
+let migrationsRun = false;
+
+export const handle: Handle = async ({ event, resolve }) => {
+  // Run migrations once on first request
+  if (!migrationsRun) {
+    try {
+      console.log("🗄️  Running database migrations...");
+      await runMigrations();
+      migrationsRun = true;
+      console.log("✅ Database migrations complete");
+    } catch (error) {
+      console.error("❌ Migration failed:", error);
+      throw error; // Fail fast
+    }
+  }
+
+  return resolve(event);
+};
+```
+
+**Benefits:**
+- ✅ Works in both dev (`aspire start`) and production (`aspire publish`)
+- ✅ Fail-fast prevents broken deployments
+- ✅ Idempotent (Drizzle won't re-run applied migrations)
+- ✅ No orchestration complexity (no init containers needed)
+
+**Works with:**
+- Aspire (connection string from `ConnectionStrings__popotedb`)
+- Docker Compose (connection string from `DATABASE_URL`)
+- Manual deployments (any connection string env var)
+
 ### Share Code Generation (TypeScript)
 
 ```typescript

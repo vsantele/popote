@@ -4,24 +4,24 @@ How to decide who handles what.
 
 ## Routing Table
 
-| Work Type | Route To | Examples |
-|-----------|----------|----------|
-| Architecture & decisions | Ripley | Project structure, tech choices, design patterns |
-| Flutter UI & mobile | Dallas | Widgets, screens, state management, navigation |
-| Backend & API | Kane | PocketBase collections, realtime, data models |
-| Testing & quality | Lambert | Test cases, edge cases, user flow validation |
-| Aspire & DevOps | Ash | Migrations, deployments, Aspire config, CI/CD |
-| Code review | Ripley | Review PRs, check quality, suggest improvements |
-| Scope & priorities | Ripley | What to build next, trade-offs, decisions |
-| Session logging | Scribe | Automatic — never needs routing |
+| Work Type                | Route To | Examples                                          |
+| ------------------------ | -------- | ------------------------------------------------- |
+| Architecture & decisions | Ripley   | Project structure, tech choices, design patterns  |
+| Frontend                 | Dallas   | components, screens, state management, navigation |
+| Backend & API            | Kane     | Drizzle ORM, data models, API                     |
+| Testing & quality        | Lambert  | Test cases, edge cases, user flow validation      |
+| Aspire & DevOps          | Ash      | Migrations, deployments, Aspire config, CI/CD     |
+| Code review              | Ripley   | Review PRs, check quality, suggest improvements   |
+| Scope & priorities       | Ripley   | What to build next, trade-offs, decisions         |
+| Session logging          | Scribe   | Automatic — never needs routing                   |
 
 ## Issue Routing
 
-| Label | Action | Who |
-|-------|--------|-----|
-| `squad` | Triage: analyze issue, evaluate @copilot fit, assign `squad:{member}` label | Lead |
-| `squad:{name}` | Pick up issue and complete the work | Named member |
-| `squad:copilot` | Assign to @copilot for autonomous work (if enabled) | @copilot 🤖 |
+| Label           | Action                                                                      | Who          |
+| --------------- | --------------------------------------------------------------------------- | ------------ |
+| `squad`         | Triage: analyze issue, evaluate @copilot fit, assign `squad:{member}` label | Lead         |
+| `squad:{name}`  | Pick up issue and complete the work                                         | Named member |
+| `squad:copilot` | Assign to @copilot for autonomous work (if enabled)                         | @copilot 🤖  |
 
 ### How Issue Assignment Works
 
