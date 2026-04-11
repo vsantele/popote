@@ -186,7 +186,6 @@ See `.squad/` for team coordination and decisions.
 
 - **🚀 Aspire Setup Guide:** `docs/aspire-setup.md` (START HERE)
 - **Product Requirements:** `docs/cahier_charge.md` (French)
-- **Migration Plan:** `docs/migration-plan.md` (Flutter → SvelteKit pivot)
 - **Open Questions:** `docs/questions-for-victor.md` (awaiting answers)
 
 **Old Stack (Deprecated):**
