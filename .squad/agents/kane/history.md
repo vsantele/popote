@@ -185,3 +185,23 @@ const filterByDate = (eventList) => {
 
 **Outcome:** ✅ Complete — Device ID handling validated, queries verified, polling successfully removed
 
+### 2026-04-11: Aspire Migration Automation (cross-agent: Ash)
+
+**Context:** Ash (Aspire & DevOps) assigned to set up automatic SQL migrations for both Aspire run mode (local dev) and publish mode (deployment).
+
+**Database Concerns Identified by Ash:**
+- New migration exists (0002_condemned_barracuda.sql) but not yet applied to database
+- Migration execution needed in two scenarios:
+  1. **Local dev:** `aspire start` should auto-run pending migrations
+  2. **Deployment:** Publish mode must ensure migrations execute before app starts
+- Drizzle ORM migration runner in place at `app/src/lib/server/db/migrate.ts`
+- Key orchestration entry point: `apphost.cs`
+
+**Integration Points for Backend:**
+- Kane's database schema (Drizzle ORM) is the target of migrations
+- Migration files stored in `app/src/lib/server/db/migrations/`
+- Device ID tracking and session queries remain stable
+- Aspire orchestration handles Postgres container lifecycle
+
+**Status:** Ash working on automation; outcome pending
+

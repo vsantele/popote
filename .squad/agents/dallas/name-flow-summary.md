@@ -3,12 +3,14 @@
 ## ❌ Before (Problematic UX)
 
 ### Host Flow
+
 1. Home → Click "Créer une soirée"
 2. `/create` → Fill form (name, event details) ✅
 3. Creates event → Redirects to `/e/ABC123`
 4. Can add items ✅
 
-### Guest Flow  
+### Guest Flow
+
 1. Home → Enter share code "ABC123" → Click "Rejoindre"
 2. `/e/ABC123` → Directly sees event details ⚠️ (no name collected)
 3. Click "Ajouter un item" → Dialog opens
@@ -22,12 +24,14 @@
 ## ✅ After (Streamlined UX)
 
 ### Host Flow (Unchanged)
+
 1. Home → Click "Créer une soirée"
 2. `/create` → Fill form (name, event details) ✅
 3. Creates event → Redirects to `/e/ABC123`
 4. Can add items freely ✅
 
 ### Guest Flow (Improved)
+
 1. Home → Enter share code "ABC123" → Click "Rejoindre"
 2. `/join/ABC123` → **Name form appears** ✅ (name collected ONCE)
 3. Submits name → Creates participant → Redirects to `/e/ABC123`
@@ -46,10 +50,12 @@
 **Purpose**: Collect guest name before viewing event
 
 **Files**:
+
 - `app/src/routes/join/[code]/+page.svelte` — Form UI
 - `app/src/routes/join/[code]/+page.server.ts` — Server logic
 
 **Logic**:
+
 1. Load function checks if userName cookie exists
    - If yes → Redirect to `/e/[code]` (skip name entry)
    - If no → Show name form
@@ -62,9 +68,11 @@
 ### Updated Routes
 
 **Home (`/+page.svelte`)**:
+
 - Join button: `goto('/join/${code}')` instead of `goto('/e/${code}')`
 
 **Event Detail (`/e/[code]/+page.server.ts`)**:
+
 - Load function: Added guard
   ```typescript
   if (!userName && deviceId !== event.hostDeviceId) {
@@ -80,10 +88,12 @@
   ```
 
 **Event Detail (`/e/[code]/+page.svelte`)**:
+
 - Removed `participant_name` field from add item dialog
 - Form now only has: name, category, quantity
 
 **Item Schema (`item.schema.ts`)**:
+
 ```typescript
 // Before
 export const addItemSchema = z.object({
@@ -106,13 +116,13 @@ export const addItemSchema = z.object({
 
 ## User Flow Comparison
 
-| Step | Before | After |
-|------|--------|-------|
-| Guest joins | Goes straight to `/e/[code]` | Goes to `/join/[code]` first |
-| Name collection | ❌ When adding first item | ✅ When joining event |
-| Adding item #1 | Must enter name | Just item details |
-| Adding item #2 | Must enter name again | Just item details |
-| Adding item #3 | Must enter name again | Just item details |
+| Step            | Before                       | After                        |
+| --------------- | ---------------------------- | ---------------------------- |
+| Guest joins     | Goes straight to `/e/[code]` | Goes to `/join/[code]` first |
+| Name collection | ❌ When adding first item    | ✅ When joining event        |
+| Adding item #1  | Must enter name              | Just item details            |
+| Adding item #2  | Must enter name again        | Just item details            |
+| Adding item #3  | Must enter name again        | Just item details            |
 
 **Result**: Much faster and less repetitive! 🎉
 
@@ -134,10 +144,12 @@ export const addItemSchema = z.object({
 ## Files Changed
 
 **Created**:
+
 - `app/src/routes/join/[code]/+page.svelte`
 - `app/src/routes/join/[code]/+page.server.ts`
 
 **Modified**:
+
 - `app/src/routes/+page.svelte` (join redirect)
 - `app/src/routes/e/[code]/+page.svelte` (removed name field)
 - `app/src/routes/e/[code]/+page.server.ts` (added guard, updated action)

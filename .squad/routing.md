@@ -10,6 +10,7 @@ How to decide who handles what.
 | Flutter UI & mobile | Dallas | Widgets, screens, state management, navigation |
 | Backend & API | Kane | PocketBase collections, realtime, data models |
 | Testing & quality | Lambert | Test cases, edge cases, user flow validation |
+| Aspire & DevOps | Ash | Migrations, deployments, Aspire config, CI/CD |
 | Code review | Ripley | Review PRs, check quality, suggest improvements |
 | Scope & priorities | Ripley | What to build next, trade-offs, decisions |
 | Session logging | Scribe | Automatic — never needs routing |

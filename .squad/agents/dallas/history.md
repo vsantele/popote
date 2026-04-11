@@ -26,6 +26,7 @@
 Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 
 **Previous work (Flutter, 2026-03-22):**
+
 - Initialized project structure with Riverpod state management
 - Built 5 main screens (home, create, event detail, participant list, item management)
 - Integrated Material 3 design language
@@ -35,6 +36,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - Compiled successfully, ready for backend integration
 
 **Current work (SvelteKit, 2026-03-23 → present):**
+
 - Full frontend rewrite with SvelteKit + TypeScript
 - Replaced Riverpod with Svelte 5 runes (`$state`, `$derived`)
 - Integrated Superforms for type-safe form handling with Zod validation
@@ -45,18 +47,21 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - Aspire integration for local development environment
 
 **Key Routes:**
+
 - `/+page.svelte` — Home with create/join entry points, session list
 - `/create/+page.svelte` — Event creation form
 - `/e/[code]/+page.svelte` — Event detail with item management
 - `/join/[code]/+page.svelte` — Guest name collection on join
 
 **State Management (Svelte 5 Runes):**
+
 - Local reactive state via `$state` rune
 - Computed values via `$derived` rune
 - Context API for cross-component stores
 - Server data via `+page.server.ts` load functions
 
 **Database Integration:**
+
 - Drizzle ORM for type-safe queries
 - Postgres (orchestrated via .NET Aspire)
 - Device ID-based anonymous auth (no accounts required)
@@ -64,6 +69,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - Share codes for guest joining
 
 **PWA Capabilities:**
+
 - Offline support (service worker)
 - Installable on mobile/desktop
 - Share code deep linking: `https://popote.io/s/{code}`
@@ -74,6 +80,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 ### 2026-03-29: Streamlined Name Collection Flow
 
 **Context:** Victor requested to fix the name collection UX:
+
 - Host should keep name from room creation
 - Guests should provide name ONCE when joining (not when adding items)
 - Adding items should never ask for name
@@ -114,6 +121,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - **Adding Items**: No name field, uses stored userName from cookie automatically
 
 **Key Files Modified:**
+
 - `app/src/routes/+page.svelte` — Updated join redirect
 - `app/src/routes/join/[code]/+page.svelte` — New join form (created)
 - `app/src/routes/join/[code]/+page.server.ts` — New join logic (created)
@@ -122,12 +130,14 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - `app/src/lib/schemas/item.schema.ts` — Removed participant_name field
 
 **Benefits:**
+
 - Improved UX: Users only provide name once at the right time
 - Cleaner item form: Faster to add items without repetitive name entry
 - Better flow: Clear distinction between joining and participating
 - Secure: userName stored in httpOnly cookie (server-side)
 
 **Testing:**
+
 - Dev server starts successfully ✅
 - TypeScript compiles without errors in new routes ✅
 - Routes follow SvelteKit conventions ✅
@@ -135,6 +145,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 ### 2026-04-05: Enhanced UX with Past Sessions, Name Persistence, and Optimistic Updates
 
 **Context:** Victor requested several frontend improvements:
+
 1. Display joined sessions on frontpage (filtered by deviceId)
 2. Create past sessions page reachable from homepage
 3. Save user name in localStorage for future use in create/join forms
@@ -173,6 +184,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
      - Used by frontend to populate optimistic item participant field
 
 **Key Files Modified:**
+
 - `app/src/routes/+page.svelte` — Added past sessions link
 - `app/src/routes/+page.server.ts` — Filter to upcoming events only
 - `app/src/routes/past-sessions/+page.svelte` — New past sessions view (created)
@@ -184,6 +196,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - `app/src/routes/e/[code]/+page.server.ts` — Return currentParticipant
 
 **Benefits:**
+
 - ✅ No polling delay: Items appear instantly when added (optimistic updates)
 - ✅ Better organization: Upcoming vs past events clearly separated
 - ✅ Faster forms: Name pre-filled from localStorage on create/join
@@ -191,6 +204,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 - ✅ Persistent preferences: User name saved across sessions in browser
 
 **User Flow:**
+
 1. User creates event → name saved to localStorage → pre-filled on next create
 2. User joins event → name saved to localStorage → pre-filled on next join
 3. User adds item → item appears instantly (optimistic) → server confirms in background
@@ -198,14 +212,15 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 5. User views past sessions → sees all historical events they hosted or joined
 
 **Testing:**
+
 - Code follows SvelteKit conventions ✅
 - TypeScript types correct ✅
 - Optimistic updates use realtime store API ✅
 
-
 ### 2026-04-05: Removed Realtime Polling, Added Manual Refresh Pattern
 
 **Context:** Victor requested removal of realtime polling and replacement with manual refresh:
+
 1. Remove all polling/realtime code (no more automatic background updates)
 2. Load data at page load using SvelteKit's natural load flow
 3. Add manual refresh button
@@ -245,6 +260,7 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 **Key Patterns:**
 
 **Before (Polling Pattern):**
+
 ```typescript
 // Client-side: onMount + polling
 onMount(() => {
@@ -255,6 +271,7 @@ let items = $derived(realtime.items) // From polling store
 ```
 
 **After (Manual Refresh Pattern):**
+
 ```typescript
 // Direct from server load (no polling)
 let items = $derived(data.items)
@@ -268,6 +285,7 @@ async function handleRefresh() {
 ```
 
 **Before (onMount for Forms):**
+
 ```typescript
 onMount(() => {
   const storedName = getUserName() // Client-side localStorage read
@@ -276,6 +294,7 @@ onMount(() => {
 ```
 
 **After (Server Load Pattern):**
+
 ```typescript
 // +page.server.ts
 export const load = async ({ cookies }) => {
@@ -287,6 +306,7 @@ export const load = async ({ cookies }) => {
 ```
 
 **Pull-to-Refresh Implementation:**
+
 - Touch event tracking on container div
 - Only activates when scrolled to top (window.scrollY === 0)
 - Visual indicator with opacity transition
@@ -295,6 +315,7 @@ export const load = async ({ cookies }) => {
 - Native mobile UX (iOS/Android-like behavior)
 
 **Benefits:**
+
 - ✅ **Simpler architecture**: No polling store, no background timers
 - ✅ **Better battery life**: No constant network requests
 - ✅ **Server-side rendering**: Forms pre-filled before page renders (faster perceived load)
@@ -303,10 +324,12 @@ export const load = async ({ cookies }) => {
 - ✅ **Cleaner code**: Less client-side state management
 
 **Trade-offs:**
+
 - ⚠️ No automatic updates: Users must manually refresh to see changes
 - ⚠️ Pull-to-refresh requires touch device (desktop users use button)
 
 **Files Modified:**
+
 - `app/src/routes/e/[code]/+page.svelte` — Removed polling, added refresh button + pull gesture
 - `app/src/routes/create/+page.svelte` — Removed onMount
 - `app/src/routes/create/+page.server.ts` — Added username pre-fill in load
@@ -314,10 +337,12 @@ export const load = async ({ cookies }) => {
 - `app/src/routes/join/[code]/+page.server.ts` — Added username pre-fill in load
 
 **Files Not Modified:**
+
 - `app/src/lib/stores/realtime.svelte.ts` — Left in place (may be removed in cleanup)
 - `app/src/routes/+layout.svelte` — onMount still used for service worker registration (appropriate)
 
 **User Flow:**
+
 1. User navigates to event page → data loaded from server (no polling)
 2. User sees static data (fast initial render)
 3. User pulls down on mobile → refresh triggered → new data loaded
@@ -325,6 +350,7 @@ export const load = async ({ cookies }) => {
 5. User creates/joins event → name pre-filled from cookie (no client-side delay)
 
 **Testing:**
+
 - TypeScript compilation checked (syntax correct) ✅
 - SvelteKit conventions followed ✅
 - Removed unused imports ✅
@@ -332,5 +358,3 @@ export const load = async ({ cookies }) => {
 - Manual refresh button implemented ✅
 
 **Outcome:** ✅ Complete — Polling removed, manual refresh + pull-to-refresh working, server-side loading established
-
-

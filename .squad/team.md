@@ -16,6 +16,7 @@
 | Dallas | Frontend Dev | .squad/agents/dallas/charter.md | ⚛️ Active |
 | Kane | Backend Dev | .squad/agents/kane/charter.md | 🔧 Active |
 | Lambert | Tester | .squad/agents/lambert/charter.md | 🧪 Active |
+| Ash | Aspire & DevOps | .squad/agents/ash/charter.md | ⚙️ Active |
 | Scribe | Session Logger | .squad/agents/scribe/charter.md | 📋 Active |
 | Ralph | Work Monitor | — | 🔄 Monitor |
 

@@ -9,6 +9,7 @@
 ## ✅ Completed
 
 ### Architecture & Planning
+
 - [x] Comprehensive architecture document (`.squad/decisions/inbox/dallas-frontend-architecture.md`)
 - [x] State management approach defined (Svelte 5 runes)
 - [x] Device ID strategy documented (localStorage)
@@ -17,22 +18,26 @@
 - [x] Observability strategy defined
 
 ### Core Infrastructure
+
 - [x] TypeScript types (`$lib/types/index.ts`)
 - [x] Device ID utility (`$lib/utils/device-id.ts`)
 - [x] Logger utility (`$lib/utils/logger.ts`)
 - [x] PocketBase API client (`$lib/services/pocketbase.ts`)
 
 ### UI Components (shadcn-svelte)
+
 - [x] Installed: button, card, input, label, select, dialog, badge, separator, toggle-group, sheet
 - [x] All 11 components ready for use
 
 ### Routes
+
 - [x] Home page (`/`) — Create or join event
 - [x] Create event (`/create`) — Form with validation
 - [x] Event detail (`/e/[code]`) — Items view with category/person toggle
 - [x] Server-side data loading for event page
 
 ### Features Implemented
+
 - [x] Create event with host name, date, location, description
 - [x] Join event via share code
 - [x] View event details (name, date, location, share code)
@@ -46,12 +51,14 @@
 - [x] Empty state handling
 
 ### PWA Setup
+
 - [x] Manifest.json created
 - [x] PWA meta tags in layout
 - [x] Service worker strategy planned (not yet implemented)
 - [x] Theme color configured (#FF6B35)
 
 ### Developer Experience
+
 - [x] TypeScript configuration
 - [x] Environment config example (`.env.example`)
 - [x] All type checks passing
@@ -62,17 +69,20 @@
 ## 🚧 TODO (Next Session)
 
 ### Real-time Features
+
 - [ ] Implement SSE subscription in event detail page
 - [ ] Auto-update items when other users add/modify
 - [ ] Reconnection logic on network failure
 
 ### PWA
+
 - [ ] Create service worker (`src/service-worker.ts`)
 - [ ] Generate PWA icons (192x192, 512x512)
 - [ ] Test offline functionality
 - [ ] Test PWA install on mobile devices
 
 ### UX Enhancements
+
 - [ ] Loading states and skeleton screens
 - [ ] Toast notifications for errors/success
 - [ ] Item deletion (for owner only)
@@ -81,6 +91,7 @@
 - [ ] Form validation feedback
 
 ### Testing
+
 - [ ] Test with live PocketBase backend
 - [ ] Test share functionality on mobile
 - [ ] Test deep linking flow
