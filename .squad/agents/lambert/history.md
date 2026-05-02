@@ -12,6 +12,7 @@
 **My focus:** Test cases, edge cases, user flow validation
 
 **Success criteria to validate:**
+
 - Création soirée: < 30 secondes
 - Rejoindre + ajouter item: < 20 secondes
 - Zéro inscription requise
@@ -24,6 +25,7 @@
 **Deliverable:** `docs/test_plan.md` — comprehensive test scenarios covering all PRD requirements
 
 **Key Testing Areas Identified:**
+
 1. **Performance benchmarks** are critical success criteria:
    - Event creation < 30s
    - Join+add < 20s
@@ -55,16 +57,19 @@
    - CI/CD with GitHub Actions for automated tests
 
 **File Paths:**
+
 - `docs/test_plan.md` — main test document
 - `docs/cahier_charge.md` — PRD source
 
 **Architectural Insights:**
+
 - PocketBase SSE (Server-Sent Events) for real-time sync
 - Flutter with Riverpod/Provider for state management
 - device_id used for local identification (no auth)
 - Share codes must be cryptographically random (security requirement)
 
 **Team Coordination - 2026-03-22:**
+
 - All architectural decisions approved and documented (.squad/decisions.md)
 - Test strategy aligns with team's Riverpod + PocketBase + GoRouter choices
 - 13 user flows and 31 edge cases ready to execute across 5 development phases
@@ -74,6 +79,7 @@
   - Ripley: Architecture decisions provide clear guardrails for all testing scenarios
 
 **Next Steps:**
+
 - Wait for Dallas (backend) and Kane (mobile) to build features
 - Then execute test plan in phases:
   1. Core flows (creation, join, add)
@@ -85,11 +91,13 @@
 ### 2026-03-23 — Test Strategy for SvelteKit + Drizzle + Postgres Migration
 
 **Context:**
+
 - Project migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres
 - Core requirements unchanged (zero-friction, real-time sync < 2s)
 - Test strategy must adapt to new web-first stack
 
 **Deliverables Created:**
+
 1. **`docs/test-plan.md`** — Comprehensive test plan for new stack (27KB)
    - Test pyramid (unit, component, integration, E2E)
    - Testing tools (Vitest, Testing Library, Playwright, Drizzle-Kit)
@@ -145,6 +153,7 @@
    - **Rationale:** Browser contexts don't replicate real-world conditions
 
 **Migration Impact:**
+
 - ✅ **Preserved:** Core user flows, success criteria, hybrid approach
 - ⚠️ **Changed:** Flutter widget tests → Svelte Testing Library
 - ⚠️ **Changed:** PocketBase SSE → SvelteKit real-time (implementation TBD)
@@ -152,6 +161,7 @@
 - ⚠️ **Changed:** SharedPreferences → localStorage (device ID)
 
 **Blockers & Open Questions:**
+
 1. **Real-time sync approach:** WebSocket, SSE, polling, or third-party?
 2. **Database hosting:** Local, Supabase, Railway, Neon?
 3. **Test database setup:** Testcontainers or shared test DB?
@@ -160,6 +170,7 @@
 6. **Performance benchmarks:** Hard gates or soft goals?
 
 **Next Steps:**
+
 1. Wait for Victor to answer questions in `docs/questions-for-victor.md`
 2. Set up Vitest + Playwright configuration (after questions answered)
 3. Write first unit tests (share code generation, validation)
@@ -168,6 +179,7 @@
 6. Execute test plan in phases (as features are built)
 
 **Team Coordination:**
+
 - Ripley needs to approve testing tools and strategy
 - Kane needs to coordinate on database test setup
 - Dallas needs to coordinate on component test setup
@@ -183,6 +195,7 @@ Real-time sync testing is the highest-risk area in the migration. The old Pocket
 **Status:** ✅ Pivot approved and documented
 
 All team members have assessed migration strategy and completed architectural assessments:
+
 - Ripley: Migration plan and architecture design complete
 - Kane: Backend architecture and Drizzle schema designed
 - Dallas: Frontend architecture and SvelteKit structure designed
@@ -198,6 +211,7 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
 Implemented comprehensive test suite for the SvelteKit + Drizzle + Postgres stack migration, covering unit tests, component tests, integration tests, and manual test documentation.
 
 **Test Infrastructure Setup:**
+
 1. Installed Vitest and Testing Library dependencies using pnpm (npm had workspace protocol issues)
 2. Created `vitest.config.ts` with jsdom environment and path aliases
 3. Created global test setup (`src/lib/test/setup.ts`) with:
@@ -206,21 +220,26 @@ Implemented comprehensive test suite for the SvelteKit + Drizzle + Postgres stac
    - Jest DOM matchers for better assertions
 
 **Unit Tests Implemented:**
+
 1. `src/lib/auth.test.ts` - Device ID generation and persistence (12 test cases)
 2. `db/utils.test.ts` - Share code generation (15 test cases)
 
 **Integration Tests Implemented:**
+
 1. `src/routes/api/events/+server.test.ts` - Event creation API (10 test cases)
 2. `src/routes/api/items/+server.test.ts` - Item creation API (9 test cases)
 
 **Component Tests Implemented:**
+
 1. `src/routes/+page.test.ts` - Home page component (8 test cases)
 
 **Documentation Created:**
+
 1. `docs/manual-tests.md` - 12 comprehensive manual test scenarios
 2. `app/TEST_README.md` - Complete test suite documentation
 
 **Test Scripts Added:**
+
 - `pnpm test` - Run tests in watch mode
 - `pnpm test:run` - Run tests once (CI mode)
 - `pnpm test:ui` - Open Vitest UI
@@ -237,6 +256,7 @@ Implemented comprehensive test suite for the SvelteKit + Drizzle + Postgres stac
 **Status:** ✅ IMPLEMENTATION COMPLETE — Stack ready for testing
 
 **Lambert's Work Completion Summary:**
+
 - ✅ Test Infrastructure: Vitest + Testing Library setup complete
 - ✅ Unit Tests: Device ID, share code generation (27 tests)
 - ✅ Integration Tests: API routes with database (19 tests)
@@ -245,17 +265,20 @@ Implemented comprehensive test suite for the SvelteKit + Drizzle + Postgres stac
 - ✅ CI/CD Ready: Test scripts and GitHub Actions workflow
 
 **Team Coordination Notes:**
+
 - Kane (Backend): Backend API complete, integration tests verify all endpoints
 - Dallas (Frontend): Frontend complete, component tests validate rendering
 - Ripley (Infrastructure): Aspire operational, test database connection ready
 
 **Test Coverage:**
+
 - Unit: 40% (fast, run frequently)
 - Component: 30% (UI validation)
 - Integration: 25% (API + DB)
 - E2E/Manual: 5% (critical paths + multi-device)
 
 **Key Files:**
+
 - Test config: `app/vitest.config.ts`
 - Test setup: `app/src/lib/test/setup.ts`
 - All tests: `app/src/**/*.test.ts`, `app/db/**/*.test.ts`
@@ -263,6 +286,7 @@ Implemented comprehensive test suite for the SvelteKit + Drizzle + Postgres stac
 - Test documentation: `app/TEST_README.md`
 
 **How to Run Tests:**
+
 ```bash
 cd app
 pnpm test              # Watch mode
@@ -288,6 +312,7 @@ Victor reported critical bug: `Files prefixed with + are reserved (saw src/route
 SvelteKit's file-based router reserves `+` prefix for routes. Test files like `src/routes/+page.test.ts` were conflicting with routing system.
 
 **Solution Implemented:**
+
 1. **Moved ALL test files out of `src/routes/`** to dedicated `tests/` directory:
    - `src/routes/+page.test.ts` → `tests/routes/home.test.ts`
    - `src/routes/api/events/+server.test.ts` → `tests/api/events.test.ts`
@@ -296,6 +321,7 @@ SvelteKit's file-based router reserves `+` prefix for routes. Test files like `s
    - `db/utils.test.ts` → `tests/lib/device.test.ts`
 
 2. **Updated test file structure:**
+
    ```
    app/
    ├── tests/               # All test files (outside routes)
@@ -315,6 +341,7 @@ SvelteKit's file-based router reserves `+` prefix for routes. Test files like `s
    - `.squad/decisions/inbox/lambert-test-file-structure.md` — Documented decision
 
 **Verification:**
+
 - ✅ Dev server starts without errors (`npm run dev`)
 - ✅ Test structure follows SvelteKit conventions
 - ✅ All 54 automated tests ready to run
@@ -323,6 +350,7 @@ SvelteKit's file-based router reserves `+` prefix for routes. Test files like `s
 SvelteKit's file-based routing is STRICT — ANY file with `+` prefix in `src/routes/` is treated as a route file. Test files MUST live outside `src/routes/` (e.g., in `tests/` directory) to avoid routing conflicts. This is a hard requirement in SvelteKit, not a preference.
 
 **Files Changed:**
+
 - Moved 5 test files to new structure
 - Updated `app/vitest.config.ts`
 - Updated `app/TEST_README.md`
@@ -338,6 +366,7 @@ SvelteKit's file-based routing is STRICT — ANY file with `+` prefix in `src/ro
 **Status:** ✅ COMPLETED — SvelteKit routing conflict resolved
 
 **Lambert's Work:**
+
 - Fixed critical app startup bug caused by test files in `src/routes/`
 - Moved 5 test files to dedicated `tests/` directory
 - Updated Vitest configuration and all imports

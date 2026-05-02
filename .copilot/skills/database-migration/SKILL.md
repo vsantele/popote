@@ -59,8 +59,8 @@ Start without indexes for MVP. Add later if:
 
 ```javascript
 // NEW: SvelteKit server action
-const shareCode = await ensureUniqueShareCode(db)
-await db.insert(events).values({ ...data, shareCode })
+const shareCode = await ensureUniqueShareCode(db);
+await db.insert(events).values({ ...data, shareCode });
 ```
 
 ### 2. Extract Validation Logic
@@ -84,7 +84,7 @@ export const createItemSchema = z.object({
     "autre",
   ]),
   quantity: z.string().max(100).optional(),
-})
+});
 ```
 
 ### 3. Map Transaction Patterns
@@ -96,13 +96,13 @@ export const createItemSchema = z.object({
 
 ```typescript
 await db.transaction(async (tx) => {
-  const [event] = await tx.insert(events).values(eventData).returning()
+  const [event] = await tx.insert(events).values(eventData).returning();
   await tx.insert(participants).values({
     eventId: event.id,
     name: hostName,
     isHost: true,
-  })
-})
+  });
+});
 ```
 
 ---
@@ -157,32 +157,32 @@ describe('Schema Migration', () => {
 
 ```typescript
 // app/src/lib/server/db/migrate.ts
-import { drizzle } from "drizzle-orm/postgres-js"
-import { migrate } from "drizzle-orm/postgres-js/migrator"
-import postgres from "postgres"
-import * as schema from "./schema"
-import path from "path"
-import { fileURLToPath } from "url"
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
+import * as schema from "./schema";
+import path from "path";
+import { fileURLToPath } from "url";
 
 export async function runMigrations() {
   const connectionString =
-    process.env.ConnectionStrings__popotedb || process.env.DATABASE_URL
+    process.env.ConnectionStrings__popotedb || process.env.DATABASE_URL;
 
   if (!connectionString) {
-    throw new Error("No database connection string found!")
+    throw new Error("No database connection string found!");
   }
 
-  const migrationClient = postgres(connectionString, { max: 1 })
-  const db = drizzle(migrationClient, { schema })
+  const migrationClient = postgres(connectionString, { max: 1 });
+  const db = drizzle(migrationClient, { schema });
 
   try {
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = path.dirname(__filename)
-    const migrationsFolder = path.join(__dirname, "migrations")
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const migrationsFolder = path.join(__dirname, "migrations");
 
-    await migrate(db, { migrationsFolder })
+    await migrate(db, { migrationsFolder });
   } finally {
-    await migrationClient.end()
+    await migrationClient.end();
   }
 }
 
@@ -190,39 +190,39 @@ export async function runMigrations() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   runMigrations()
     .then(() => {
-      console.log("✅ Migrations completed!")
-      process.exit(0)
+      console.log("✅ Migrations completed!");
+      process.exit(0);
     })
     .catch((error) => {
-      console.error("❌ Migration failed:", error)
-      process.exit(1)
-    })
+      console.error("❌ Migration failed:", error);
+      process.exit(1);
+    });
 }
 ```
 
 ```typescript
 // app/src/hooks.server.ts
-import { runMigrations } from "$lib/server/db/migrate"
-import type { Handle } from "@sveltejs/kit"
+import { runMigrations } from "$lib/server/db/migrate";
+import type { Handle } from "@sveltejs/kit";
 
-let migrationsRun = false
+let migrationsRun = false;
 
 export const handle: Handle = async ({ event, resolve }) => {
   // Run migrations once on first request
   if (!migrationsRun) {
     try {
-      console.log("🗄️  Running database migrations...")
-      await runMigrations()
-      migrationsRun = true
-      console.log("✅ Database migrations complete")
+      console.log("🗄️  Running database migrations...");
+      await runMigrations();
+      migrationsRun = true;
+      console.log("✅ Database migrations complete");
     } catch (error) {
-      console.error("❌ Migration failed:", error)
-      throw error // Fail fast
+      console.error("❌ Migration failed:", error);
+      throw error; // Fail fast
     }
   }
 
-  return resolve(event)
-}
+  return resolve(event);
+};
 ```
 
 **Benefits:**
@@ -242,12 +242,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 ```typescript
 export function generateShareCode(length = 6): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  let code = ""
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
   for (let i = 0; i < length; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length))
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return code
+  return code;
 }
 
 export async function ensureUniqueShareCode(
@@ -255,16 +255,16 @@ export async function ensureUniqueShareCode(
   maxAttempts = 10,
 ): Promise<string> {
   for (let i = 0; i < maxAttempts; i++) {
-    const code = generateShareCode()
+    const code = generateShareCode();
     const existing = await db
       .select()
       .from(events)
       .where(eq(events.shareCode, code))
-      .limit(1)
+      .limit(1);
 
-    if (existing.length === 0) return code
+    if (existing.length === 0) return code;
   }
-  throw new Error("Failed to generate unique share code")
+  throw new Error("Failed to generate unique share code");
 }
 ```
 
@@ -272,14 +272,14 @@ export async function ensureUniqueShareCode(
 
 ```typescript
 export function getDeviceId(): string {
-  if (typeof window === "undefined") return "" // SSR guard
+  if (typeof window === "undefined") return ""; // SSR guard
 
-  let deviceId = localStorage.getItem("deviceId")
+  let deviceId = localStorage.getItem("deviceId");
   if (!deviceId) {
-    deviceId = crypto.randomUUID()
-    localStorage.setItem("deviceId", deviceId)
+    deviceId = crypto.randomUUID();
+    localStorage.setItem("deviceId", deviceId);
   }
-  return deviceId
+  return deviceId;
 }
 ```
 

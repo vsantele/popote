@@ -27,6 +27,7 @@
 **See `DRIZZLE_BEST_PRACTICES.md` for full reference. Key rules:**
 
 1. **Use transactions for multi-table ops:**
+
    ```typescript
    await db.transaction(async (tx) => {
      const [event] = await tx.insert(events).values({...}).returning();
@@ -35,6 +36,7 @@
    ```
 
 2. **Use relational query API (not manual joins):**
+
    ```typescript
    const event = await db.query.events.findFirst({
      where: eq(events.id, id),
@@ -43,10 +45,11 @@
    ```
 
 3. **Use `integer()` for FKs (NOT `serial()`):**
+
    ```typescript
    eventId: integer("event_id")
      .notNull()
-     .references(() => events.id, { onDelete: "cascade" })
+     .references(() => events.id, { onDelete: "cascade" });
    ```
 
 4. **Use `.$onUpdate()` for auto-timestamps:**
@@ -54,12 +57,13 @@
    updatedAt: timestamp("updated_at")
      .notNull()
      .defaultNow()
-     .$onUpdate(() => new Date())
+     .$onUpdate(() => new Date());
    ```
 
 ## Schema Design
 
 **Tables:**
+
 - `events` - Core event entity (id, name, date, location, shareCode, hostDeviceId)
 - `participants` - Event attendees (id, eventId, name, deviceId, isHost)
 - `items` - Brought items (id, eventId, participantId, name, category, quantity)

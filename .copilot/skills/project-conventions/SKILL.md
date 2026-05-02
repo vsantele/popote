@@ -53,4 +53,5 @@ Describe a key convention or practice used in this codebase. Be specific about w
 ## Anti-Patterns
 
 <!-- List things to avoid in this codebase -->
+
 - **[Anti-pattern]** — Explanation of what not to do and why.

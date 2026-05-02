@@ -11,6 +11,7 @@
 - **Pivoted:** 2026-03-22 (Flutter+PocketBase → SvelteKit+Drizzle+Postgres)
 
 **Key requirements from PRD (unchanged):**
+
 - Zéro compte obligatoire pour les invités (local device ID via localStorage)
 - Création d'événement en < 30 secondes
 - Vue principale: liste de qui ramène quoi (par catégorie ou par personne)
@@ -28,6 +29,7 @@
 Designed and approved architecture for Flutter+PocketBase stack before architecture pivot to SvelteKit+Drizzle+Postgres on 2026-03-23. This section captures key decisions that informed the new architecture.
 
 **Architecture Phase 1 choices:**
+
 - **State Management:** Riverpod (compiled, async/streaming support)
 - **Backend:** PocketBase with JS hooks (SQLite, REST API, native SSE)
 - **Navigation:** GoRouter (native deep-linking for share codes)
@@ -36,11 +38,13 @@ Designed and approved architecture for Flutter+PocketBase stack before architect
 - **Timeline:** 7 weeks (Foundation → Core → Sync → Polish → Deployment)
 
 **Team coordination:**
+
 - Kane: PocketBase backend complete (share code hooks, auto-participant creation)
 - Dallas: Flutter scaffolding with Riverpod patterns, ready for integration
 - Lambert: Test strategy (hybrid approach) with 13 user flows and 31 edge cases
 
 **Architecture Pivot (2026-03-23):**
+
 - Victor pivoted to SvelteKit+Drizzle+Postgres for faster iteration, better type safety
 - Data model fully transfers (events, participants, items, same relationships)
 - Business logic patterns transfer (share codes, validation, cascade deletes)
@@ -48,6 +52,7 @@ Designed and approved architecture for Flutter+PocketBase stack before architect
 - Key insight: Old implementation is a valuable reference. Pivot is technology shift, not product redesign.
 
 **Impact:**
+
 - All Flutter+PocketBase decisions documented in `.squad/decisions.md` (marked SUPERSEDED)
 - Old code archived in `old/popote_app/` (Flutter) and `old/backend/` (PocketBase)
 - SvelteKit equivalent decisions created (Svelte 5 runes, Postgres+Drizzle, @vite-pwa/sveltekit, polling)
@@ -58,6 +63,7 @@ Designed and approved architecture for Flutter+PocketBase stack before architect
 ## Learnings
 
 **Architecture Phase 1 - 2026-03-22:**
+
 - **State Management:** Chose Riverpod over Provider for compile-time safety and excellent async/streaming support (critical for SSE real-time updates)
 - **Backend:** PocketBase chosen for SQLite + REST API + native SSE, eliminates backend dev overhead
 - **Navigation:** GoRouter provides native deep-linking support needed for invite links (`https://popote.io/s/{shareCode}`)
@@ -68,12 +74,14 @@ Designed and approved architecture for Flutter+PocketBase stack before architect
 - **Key Risk:** Deep link reliability; mitigation via app store fallback
 
 **Team Coordination - 2026-03-22:**
+
 - **Kane coordination:** PocketBase backend complete with share code generation in hooks (atomic, no race conditions). Ready for frontend integration.
 - **Dallas coordination:** Riverpod decisions documented and approved. Flutter scaffolding uses StreamProvider pattern for real-time sync.
 - **Lambert coordination:** Test strategy aligned with architecture decisions. 13 user flows and 31 edge cases prepared for all phases.
 - **All decisions approved:** State management (Riverpod), deep linking (share codes + Universal Links), backend (PocketBase hooks), testing (hybrid approach)
 
 **Architecture Pivot - 2026-03-22:**
+
 - **Victor pivoted project from Flutter+PocketBase to SvelteKit+Drizzle+Postgres.**
 - **Reason:** Mobile-first PWA with SvelteKit is lighter, faster to iterate, and aligns better with "everywhere access" goal. Postgres + Drizzle provides better type safety and migration tooling than PocketBase.
 - **Analyzed old implementation:** Flutter app (`old/popote_app/`) had full Riverpod state management, device-based anonymous auth, real-time SSE sync. PocketBase backend (`old/backend/`) had complete schema (events, participants, items), JS hooks for share code generation, auto-creation of host participant, category validation.
@@ -101,6 +109,7 @@ Designed and approved architecture for Flutter+PocketBase stack before architect
 **Status:** ✅ Pivot approved and documented
 
 All team members have assessed migration strategy and completed architectural assessments:
+
 - Ripley: Migration plan and architecture design complete
 - Kane: Backend architecture and Drizzle schema designed
 - Dallas: Frontend architecture and SvelteKit structure designed
@@ -109,6 +118,7 @@ All team members have assessed migration strategy and completed architectural as
 All decisions are documented in `.squad/decisions.md` and implementation plans are ready for Victor's approval.
 
 **Aspire Orchestration Setup - 2026-03-23:**
+
 - **Victor requested Aspire setup** for Postgres orchestration. Goal: One command starts entire stack (Postgres + SvelteKit + dashboard).
 - **Reviewed existing setup:** `apphost.ts` already configured with Postgres resource, database creation, SvelteKit app integration, connection string injection, and health checks. Victor had partially set this up.
 - **Aspire environment verified:** Ran `aspire doctor` — Docker Desktop running, HTTPS dev certificates trusted. All checks passed.
@@ -203,6 +213,7 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
    - Full API testing requires app restart with fixed code
 
 **Key Findings:**
+
 - Infrastructure fully operational (Aspire, Postgres, Drizzle)
 - Backend code complete (all routes implemented)
 - Single critical bug blocking full stack: connection string format
@@ -210,16 +221,19 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
 - App state "Unknown" due to crash from connection error
 
 **Documentation Created:**
+
 - `docs/stack-verification.md` — Complete verification report with testing checklist
 - Added note to `docs/questions-for-victor.md` about critical fix
 
 **Next Steps for Victor:**
+
 1. **Restart Aspire:** `npm run dev` (critical — loads connection string fix)
 2. **Verify app starts:** Check state is "Running" and health is "Healthy"
 3. **Test API endpoints:** Try `POST /api/events`, verify event creation
 4. **Run testing checklist:** See `docs/stack-verification.md` for full checklist
 
 **Known Issues:**
+
 1. ✅ Connection string format mismatch (FIXED, restart required)
 2. ⏸️ App state "Unknown" (will resolve after restart)
 3. ⚠️ Aspire dashboard OTLP logs inaccessible (DNS issue, low priority, use browser)
@@ -227,6 +241,7 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
 **Confidence Level:** High — Fix is simple, well-tested, and isolated. Once Aspire restarts, full stack should be operational.
 
 **File Paths (For Reference):**
+
 - **Aspire setup guide:** `docs/aspire-setup.md` [NEW, comprehensive, START HERE]
 - **Questions for Victor:** `docs/questions-for-victor.md` [NEW, 10 decisions awaiting answers]
 - Architecture proposal: `docs/architecture.md` [OLD, Flutter-based]
@@ -244,6 +259,7 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
 **Status:** ✅ IMPLEMENTATION COMPLETE — Stack ready for testing
 
 **Ripley's Work Completion Summary:**
+
 - ✅ Aspire Orchestration: Postgres + SvelteKit fully operational
 - ✅ Database Schema: Drizzle ORM with complete migrations
 - ✅ Connection String: Critical bug fix applied and tested
@@ -251,14 +267,16 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
 - ✅ Architecture: All architectural decisions documented in decisions.md
 
 **Team Coordination Summary:**
+
 - Kane (Backend): API routes complete, database layer ready
 - Dallas (Frontend): SvelteKit UI complete, real-time polling integrated
 - Lambert (Testing): Test suite complete (54 tests), manual checklist ready
 - Victor (Product): All decisions documented, awaiting approval
 
 **Orchestration Logs Created:**
+
 - Kane: Backend implementation completed
-- Dallas: Frontend implementation completed  
+- Dallas: Frontend implementation completed
 - Ripley: Aspire setup + bug fix completed (2 logs)
 - Lambert: Test suite implementation completed
 - Session: Full implementation summary
@@ -266,11 +284,13 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
 **All Decisions Merged:** Decisions inbox merged into decisions.md, deduplicated, all 11+ decisions documented
 
 **Critical Fix Status:**
+
 - ✅ Connection string converter implemented
 - ✅ Tested standalone with real database
 - ⏳ Awaiting Aspire restart for full activation
 
 **Infrastructure Status:**
+
 - ✅ Aspire resources: All healthy (Postgres, database, app)
 - ✅ Drizzle schema: All tables created, migrations applied
 - ✅ Database connections: Working (tested after fix)
@@ -279,6 +299,7 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
 **Next Phase:** Victor restarts Aspire → Full stack integration testing → Production deployment
 
 **Key Deliverables:**
+
 - Backend API: Complete with all CRUD operations
 - Frontend PWA: Complete with real-time polling, offline support
 - Database: Postgres with Drizzle ORM, full migrations
@@ -303,6 +324,7 @@ All decisions are documented in `.squad/decisions.md` and implementation plans a
 **CRITICAL FINDING: Incomplete PocketBase → PostgreSQL Migration**
 
 The application is in a **hybrid state** with two parallel backend implementations:
+
 - ✅ **API routes** (`app/src/routes/api/**/*.ts`) → Use new Drizzle ORM + PostgreSQL (correct)
 - ❌ **Page routes** (`app/src/routes/create/+page.server.ts`, `app/src/routes/e/[code]/+page.server.ts`) → Still use old PocketBase client (incorrect)
 
@@ -388,17 +410,18 @@ The application is in a **hybrid state** with two parallel backend implementatio
 
 **Architecture Status:**
 
-| Layer | PostgreSQL (New) | PocketBase (Old) | Status |
-|-------|------------------|------------------|--------|
-| Database | ✅ Drizzle ORM + Postgres | ❌ SQLite (deprecated) | MIGRATED |
-| API Routes | ✅ `/api/events`, `/api/items` | N/A | MIGRATED |
-| Page Routes | ❌ Still uses PocketBase client | ❌ Active | **NOT MIGRATED** |
-| Real-time Sync | ❌ Polls PocketBase endpoints | ❌ Active | **NOT MIGRATED** |
-| Connection String | ✅ Aspire-injected + converter | N/A | COMPLETE |
+| Layer             | PostgreSQL (New)                | PocketBase (Old)       | Status           |
+| ----------------- | ------------------------------- | ---------------------- | ---------------- |
+| Database          | ✅ Drizzle ORM + Postgres       | ❌ SQLite (deprecated) | MIGRATED         |
+| API Routes        | ✅ `/api/events`, `/api/items`  | N/A                    | MIGRATED         |
+| Page Routes       | ❌ Still uses PocketBase client | ❌ Active              | **NOT MIGRATED** |
+| Real-time Sync    | ❌ Polls PocketBase endpoints   | ❌ Active              | **NOT MIGRATED** |
+| Connection String | ✅ Aspire-injected + converter  | N/A                    | COMPLETE         |
 
 **Recommended Action Plan:**
 
 **Phase 1: Complete Backend Migration (CRITICAL)** — Assign to Kane
+
 1. Create database adapter at `app/src/lib/db/index.ts` that re-exports from `/app/db/index.ts`
 2. Add query helpers for page routes (e.g., `getEventByShareCode()`, `createEventWithHost()`)
 3. Rewrite `app/src/routes/create/+page.server.ts` to use new DB adapter
@@ -407,18 +430,12 @@ The application is in a **hybrid state** with two parallel backend implementatio
 6. Remove `app/src/lib/services/pocketbase.ts` entirely
 7. Remove PocketBase URL environment variables from `.env.example`
 
-**Phase 2: Cleanup & Hardening (IMPORTANT)** — Assign to Dallas
-8. Delete backup files (`*.backup`)
-9. Add rate limiting to API routes (SvelteKit hooks)
-10. Add retry logic to polling store (exponential backoff)
-11. Wrap localStorage calls in error boundaries
+**Phase 2: Cleanup & Hardening (IMPORTANT)** — Assign to Dallas 8. Delete backup files (`*.backup`) 9. Add rate limiting to API routes (SvelteKit hooks) 10. Add retry logic to polling store (exponential backoff) 11. Wrap localStorage calls in error boundaries
 
-**Phase 3: Polish (NICE-TO-HAVE)** — Defer to post-MVP
-12. Generate PNG icon assets
-13. Complete component test coverage
-14. Add performance instrumentation
+**Phase 3: Polish (NICE-TO-HAVE)** — Defer to post-MVP 12. Generate PNG icon assets 13. Complete component test coverage 14. Add performance instrumentation
 
 **Timeline Estimate:**
+
 - Phase 1: **1 day** (5-6 files to migrate)
 - Phase 2: **0.5 days** (cleanup + error handling)
 - Phase 3: **1 day** (assets + tests)
@@ -427,6 +444,7 @@ The application is in a **hybrid state** with two parallel backend implementatio
 Victor must approve migration plan before implementation. Key decision: Remove PocketBase entirely or maintain dual backend support temporarily?
 
 **Files for Reference:**
+
 - Migration plan: `docs/migration-plan.md` (existing)
 - This audit: `.squad/agents/ripley/history.md` (this section)
 - Decision record: `.squad/decisions/inbox/ripley-complete-migration.md` (to be created)
@@ -440,6 +458,7 @@ Victor must approve migration plan before implementation. Key decision: Remove P
 **Work Completed:**
 
 Performed comprehensive codebase audit to identify migration incompleteness:
+
 - Scanned entire codebase for placeholders and TODOs
 - Created AUDIT_REPORT.md with 11 categorized issues
 - Prioritized blockers (3), critical (4), and technical debt (4)
@@ -447,27 +466,30 @@ Performed comprehensive codebase audit to identify migration incompleteness:
 
 **Audit Results:**
 
-| Component | Status | Completeness |
-|-----------|--------|--------------|
-| Database Schema | ✅ Done | 100% |
-| API Routes | ✅ Done | 100% |
-| DB Adapter | ❌ Stub | 0% |
-| Page Routes | ⚠️ Partial | 30% |
-| Real-time Store | ⚠️ Partial | 40% |
-| Type Definitions | ✅ Done | 100% |
-| **Overall** | **⚠️ Incomplete** | **60%** |
+| Component        | Status            | Completeness |
+| ---------------- | ----------------- | ------------ |
+| Database Schema  | ✅ Done           | 100%         |
+| API Routes       | ✅ Done           | 100%         |
+| DB Adapter       | ❌ Stub           | 0%           |
+| Page Routes      | ⚠️ Partial        | 30%          |
+| Real-time Store  | ⚠️ Partial        | 40%          |
+| Type Definitions | ✅ Done           | 100%         |
+| **Overall**      | **⚠️ Incomplete** | **60%**      |
 
 **Blockers Identified:**
+
 1. Database adapter stub (`app/src/lib/db/index.ts`) — empty, needs query helpers
 2. Page route queries — still reference PocketBase, need Drizzle migration
 3. Real-time polling — targets PocketBase endpoints, needs API update
 
 **Team Coordination:**
+
 - Kane (Backend): Completed API routes and connection string converter
 - Dallas (Frontend): Completed PocketBase removal and Superforms integration
 - Victor (Product): Needs to review AUDIT_REPORT.md and approve next phase
 
 **Decisions Merged to decisions.md:**
+
 - Decision #14: Drizzle Schema Design
 - Decision #15: SvelteKit Folder Structure (test file fix)
 - Decision #16: Aspire Orchestration
@@ -476,6 +498,7 @@ Performed comprehensive codebase audit to identify migration incompleteness:
 - Decision #20: Migration Audit Results
 
 **Risk Assessment:**
+
 - High Risk: Page routes will fail until database adapter completed
 - Medium Risk: Type mismatches could cause runtime errors
 - Low Risk: Observability can be added post-MVP

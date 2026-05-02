@@ -7,6 +7,7 @@ I set up **automatic database migration execution** for both Aspire run mode (lo
 ## How It Works
 
 ### In Development (`aspire start`)
+
 1. You start Aspire
 2. Postgres container starts
 3. SvelteKit app boots
@@ -15,6 +16,7 @@ I set up **automatic database migration execution** for both Aspire run mode (lo
 6. You see: `✅ Database migrations completed successfully!` in console
 
 ### In Production (`aspire publish`)
+
 Same workflow — migrations run automatically on container startup.
 
 ## Files Changed
@@ -48,11 +50,13 @@ Same workflow — migrations run automatically on container startup.
 ## Usage
 
 ### Normal Workflow (Automatic)
+
 ```bash
 aspire start  # Migrations run automatically on first request
 ```
 
 ### Manual Execution (If Needed)
+
 ```bash
 cd app
 pnpm db:migrate
@@ -68,6 +72,7 @@ To verify migrations ran successfully, check the console output when accessing t
 ```
 
 Or check the database directly:
+
 ```sql
 SELECT * FROM drizzle.__drizzle_migrations;
 ```
@@ -91,6 +96,7 @@ If this causes issues, I can revert to manual execution. Just let me know.
 ---
 
 **Documentation:**
+
 - Full details: `docs/database-migrations.md`
 - Decision record: `.squad/decisions/inbox/ash-automatic-migrations.md`
 - My notes: `.squad/agents/ash/history.md`

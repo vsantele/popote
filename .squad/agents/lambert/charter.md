@@ -44,8 +44,8 @@
 **Component tests:**
 
 ```typescript
-import { render, screen } from "@testing-library/svelte"
-import "@testing-library/jest-dom"
+import { render, screen } from "@testing-library/svelte";
+import "@testing-library/jest-dom";
 ```
 
 **Database tests:**

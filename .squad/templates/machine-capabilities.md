@@ -25,16 +25,16 @@ Create `~/.squad/machine-capabilities.json` (user-wide) or `.squad/machine-capab
 
 Add `needs:*` labels to issues that require specific capabilities:
 
-| Label | Meaning |
-|-------|---------|
-| `needs:browser` | Requires Playwright / browser automation |
-| `needs:gpu` | Requires NVIDIA GPU |
-| `needs:personal-gh` | Requires personal GitHub account |
-| `needs:emu-gh` | Requires Enterprise Managed User account |
-| `needs:azure-cli` | Requires authenticated Azure CLI |
-| `needs:docker` | Requires Docker daemon |
-| `needs:onedrive` | Requires OneDrive sync |
-| `needs:teams-mcp` | Requires Teams MCP tools |
+| Label               | Meaning                                  |
+| ------------------- | ---------------------------------------- |
+| `needs:browser`     | Requires Playwright / browser automation |
+| `needs:gpu`         | Requires NVIDIA GPU                      |
+| `needs:personal-gh` | Requires personal GitHub account         |
+| `needs:emu-gh`      | Requires Enterprise Managed User account |
+| `needs:azure-cli`   | Requires authenticated Azure CLI         |
+| `needs:docker`      | Requires Docker daemon                   |
+| `needs:onedrive`    | Requires OneDrive sync                   |
+| `needs:teams-mcp`   | Requires Teams MCP tools                 |
 
 Custom capabilities are supported — any `needs:X` label works if `X` is in the machine's `capabilities` array.
 
@@ -45,6 +45,7 @@ squad watch --interval 5
 ```
 
 Ralph will log skipped issues:
+
 ```
 ⏭️ Skipping #42 "Train ML model" — missing: gpu
 ✓ Triaged #43 "Fix CSS layout" → Picard (routing-rule)

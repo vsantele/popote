@@ -1,0 +1,23 @@
+allowBuilds:
+  aws-sdk: true
+  better-sqlite3: true
+  esbuild: true
+  protobufjs: true
+  sharp: true
+  workerd: true
+catalog:
+  "@types/node": ^24
+  typescript: ^6
+  vite: npm:@voidzero-dev/vite-plus-core@latest
+  vite-plus: ^0.1.20
+  vitest: npm:@voidzero-dev/vite-plus-test@latest
+overrides:
+  vite: "catalog:"
+  vitest: "catalog:"
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: "*"
+    vitest: "*"

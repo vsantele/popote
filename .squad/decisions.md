@@ -7,12 +7,14 @@
 **Victor pivoted the project from Flutter+PocketBase to SvelteKit+Drizzle+Postgres.**
 
 **Old stack (moved to `old/`):**
+
 - Flutter (mobile app)
 - PocketBase (SQLite backend with JS hooks)
 - Riverpod state management
 - Deep linking (GoRouter)
 
 **New stack:**
+
 - SvelteKit (TypeScript PWA)
 - Drizzle ORM (type-safe database access)
 - Postgres (orchestrated via Aspire)
@@ -40,6 +42,7 @@
 Use **Riverpod** for state management (not Provider or GetX).
 
 **Rationale:**
+
 - Compile-time safety (code-generated, typos fail at build-time)
 - Native async & streaming support (FutureProvider, StreamProvider for SSE)
 - No BuildContext required (cleaner separation of concerns)
@@ -47,17 +50,20 @@ Use **Riverpod** for state management (not Provider or GetX).
 - Intuitive for small teams (providers as computed values)
 
 **Implementation:**
+
 - Repository layer: Provider-based dependency injection
 - State layer: FutureProvider for API calls, StateProvider for UI state
 - Real-time layer: StreamProvider.family for PocketBase subscriptions
 - UI layer: ConsumerWidget/ConsumerStatefulWidget for integration
 
 **Constraints:**
+
 - No Provider package mixing
 - All async operations use FutureProvider or StreamProvider
 - Use Freezed or Equatable for model equality
 
 **Approval Status:**
+
 - ✅ Dallas (Flutter lead)
 - ✅ Kane (Backend lead)
 - ✅ Victor (Product)
@@ -77,6 +83,7 @@ Use **6-8 character alphanumeric share codes** combined with **platform-native d
 **Example:** `https://popote.io/s/ABC123`
 
 **Rationale:**
+
 - No account dependency (works for guests who don't have app installed)
 - Platform native deep linking (seamless UX, system trust)
 - Stateless server logic (simple PocketBase query by share_code)
@@ -84,12 +91,14 @@ Use **6-8 character alphanumeric share codes** combined with **platform-native d
 - Works across SMS, WhatsApp, email, any text channel
 
 **Implementation - Backend (Kane):**
+
 - Add `share_code` field to events table (unique, indexed)
 - Generate on creation: 8-char alphanumeric
 - API: `GET /api/collections/events/records?filter=share_code='{code}'`
 - Generate share codes in PocketBase hooks (atomic, no race conditions)
 
 **Implementation - Frontend (Dallas):**
+
 - Domain setup: Register `popote.io` and host `.well-known/assetlinks.json` and `apple-app-site-association`
 - Deep link handler: Extract share code from path, fetch event, navigate to detail screen
 - Test commands:
@@ -97,15 +106,18 @@ Use **6-8 character alphanumeric share codes** combined with **platform-native d
   - iOS: `xcrun simctl openurl booted "https://popote.io/s/ABC123"`
 
 **Constraints:**
+
 - Domain registration required before beta release
 - SSL certificate required (no HTTP)
 - App must be published to store for production-level reliability
 
 **Rollback Plan:**
+
 - Fall back to `Share` package with app store redirect if deep linking fails
 - Slightly worse UX but functionally complete
 
 **Approval Status:**
+
 - ✅ Dallas (Flutter lead)
 - ✅ Kane (Backend lead)
 - ✅ Victor (Product)
@@ -122,6 +134,7 @@ Use **6-8 character alphanumeric share codes** combined with **platform-native d
 Use **PocketBase JavaScript hooks** for backend business logic instead of external API layer.
 
 **Rationale:**
+
 - Zero additional infrastructure (runs inside PocketBase)
 - Atomic operations (share_code generation is safe from race conditions)
 - Direct database access (validation and constraints enforced)
@@ -129,11 +142,13 @@ Use **PocketBase JavaScript hooks** for backend business logic instead of extern
 - Automatic host participant creation (no separate call needed)
 
 **Trade-offs:**
+
 - ⚠️ Logic coupled to PocketBase
 - ⚠️ Testing requires PocketBase instance
 - ⚠️ JavaScript (not TypeScript) for hooks
 
 **Implementation:**
+
 - `pb_hooks/main.pb.js` with:
   - Share code generation on event creation (6-char uppercase alphanumeric)
   - Auto-creation of host participant
@@ -141,6 +156,7 @@ Use **PocketBase JavaScript hooks** for backend business logic instead of extern
   - Uniqueness checks with retry logic (max 10 attempts)
 
 **Collections:**
+
 - `events`: id, name, date, location, description, host_name, host_device_id, share_code, created
 - `participants`: id, event (FK), name, device_id, is_host, created
 - `items`: id, event (FK), participant (FK), name, category (select), quantity, created
@@ -148,16 +164,19 @@ Use **PocketBase JavaScript hooks** for backend business logic instead of extern
 **Categories:** apero, entree, plat, dessert, boissons, jeux, autre (fixed enum)
 
 **Patterns:**
+
 - Device-based auth (device_id for anonymous users, no accounts required)
 - Real-time sync via PocketBase SSE
 - Share codes revocable by host
 - Cascade delete (deleting event removes all participants and items)
 
 **Scalability:**
+
 - Current approach scales to ~10K events easily
 - If business logic becomes complex: extract to separate service or migrate to PocketBase Go extensions
 
 **Approval Status:**
+
 - ✅ Dallas (Frontend lead)
 - ✅ Ripley (Architect)
 - ✅ Victor (Product)
@@ -175,12 +194,14 @@ Use **PocketBase JavaScript hooks** for backend business logic instead of extern
 Hybrid testing approach combining Flutter widget tests + manual validation.
 
 **Why Superseded:**
+
 - Architecture pivot to SvelteKit requires Vitest + Playwright
 - Testing tools changed but strategy remains (80% automated, 20% manual)
 - Real-time sync validation approach enhanced for polling/WebSocket
 - Old test plan archived for reference
 
 **New Test Strategy Status:**
+
 - ✅ Test plan updated for SvelteKit + Drizzle stack
 - ✅ Test pyramid designed (40% unit, 30% component, 25% integration, 5% E2E)
 - ✅ Performance validation approach documented
@@ -201,30 +222,38 @@ Hybrid testing approach combining Flutter widget tests + manual validation.
 Use **Svelte 5 runes** (`$state`, `$derived`) for local reactive state + **context API** for shared state across components.
 
 **Rationale:**
+
 - Svelte 5 runes provide reactive state without boilerplate (simpler than Riverpod)
 - Context API allows passing stores down component tree
 - Server/client split is natural in SvelteKit (load functions for server data)
 - No external state library needed (built into Svelte 5)
 
 **Implementation:**
+
 ```typescript
 // lib/stores/event-store.svelte.ts
 export class EventStore {
   event = $state<Event | null>(null);
   participants = $state<Participant[]>([]);
   items = $state<Item[]>([]);
-  
-  addItem(item: Item) { this.items = [...this.items, item]; }
-  removeItem(id: string) { this.items = this.items.filter(i => i.id !== id); }
+
+  addItem(item: Item) {
+    this.items = [...this.items, item];
+  }
+  removeItem(id: string) {
+    this.items = this.items.filter((i) => i.id !== id);
+  }
 }
 ```
 
 **Migration from Riverpod:**
+
 - `FutureProvider` → SvelteKit `load` function
 - `StreamProvider` → Polling or WebSocket store
 - `StateProvider` → `$state` rune
 
 **Approval Status:**
+
 - ⏳ Victor (Product)
 - ⏳ Dallas (Frontend, if involved in SvelteKit)
 
@@ -239,23 +268,27 @@ export class EventStore {
 Use **Drizzle ORM** with **Postgres** for type-safe database access.
 
 **Rationale:**
+
 - Type safety: Drizzle generates TypeScript types from schema
 - Migration tooling: `drizzle-kit` generates migrations from schema changes
 - Postgres: Production-ready, ACID-compliant, better scalability than SQLite
 - Aspire orchestration: Postgres container managed by Aspire (no manual setup)
 
 **Schema Design:**
+
 - Same data model as PocketBase (events, participants, items)
 - UUID primary keys (Postgres standard)
 - Cascade deletes preserved
 - Categories as text enum (validated by Zod)
 
 **Migration Workflow:**
+
 1. Define schema in `app/src/lib/db/schema.ts`
 2. Run `drizzle-kit generate` to create migrations
 3. Run `drizzle-kit migrate` to apply to Postgres
 
 **Approval Status:**
+
 - ⏳ Victor (Product)
 - ⏳ Kane (Backend, if involved in new stack)
 
@@ -270,28 +303,32 @@ Use **Drizzle ORM** with **Postgres** for type-safe database access.
 Use **localStorage** to persist device ID for anonymous auth (browser-based).
 
 **Rationale:**
+
 - PWA runs in browser, localStorage is persistent across sessions
 - Same pattern as Flutter's SharedPreferences
 - No account required (anonymous users with stable device ID)
 - Web Crypto API provides `crypto.randomUUID()`
 
 **Implementation:**
+
 ```typescript
 export function getDeviceId(): string {
-  let deviceId = localStorage.getItem('deviceId');
+  let deviceId = localStorage.getItem("deviceId");
   if (!deviceId) {
     deviceId = crypto.randomUUID();
-    localStorage.setItem('deviceId', deviceId);
+    localStorage.setItem("deviceId", deviceId);
   }
   return deviceId;
 }
 ```
 
 **Trade-offs:**
+
 - ⚠️ If user clears browser storage, device ID is lost (same as uninstalling Flutter app)
 - ✅ No server-side session management needed
 
 **Approval Status:**
+
 - ⏳ Victor (Product)
 
 ---
@@ -305,23 +342,27 @@ export function getDeviceId(): string {
 Use **@vite-pwa/sveltekit** for PWA support (offline, installable).
 
 **Rationale:**
+
 - Zero-config PWA generation with Vite plugin
 - Offline support (service worker caching)
 - Install prompt on mobile (iOS/Android)
 - No app store distribution required
 
 **Features:**
+
 - Manifest.json auto-generated
 - Service worker for offline caching
 - Install prompt UI (custom banner)
 - Works on desktop, mobile, tablet
 
 **Deep Linking:**
+
 - No platform-specific config needed (standard HTTPS URLs)
 - URL format: `https://popote.io/s/{shareCode}`
 - SvelteKit routing: `app/src/routes/s/[code]/+page.server.ts`
 
 **Approval Status:**
+
 - ⏳ Victor (Product)
 
 ---
@@ -335,32 +376,36 @@ Use **@vite-pwa/sveltekit** for PWA support (offline, installable).
 Use **5-second polling** for real-time sync (MVP). Upgrade to WebSockets if latency becomes issue.
 
 **Rationale:**
+
 - Simplest to implement (no server changes)
 - Good enough for MVP (5s latency acceptable for meal planning)
 - Can upgrade to WebSockets later if needed
 - No connection management complexity
 
 **Implementation:**
+
 ```typescript
 export function createPollStore(eventId: string, intervalMs = 5000) {
   let items = $state<Item[]>([]);
-  
+
   async function refresh() {
     const res = await fetch(`/api/events/${eventId}`);
     const data = await res.json();
     items = data.items;
   }
-  
+
   setInterval(refresh, intervalMs);
   return { items };
 }
 ```
 
 **Upgrade Path:**
+
 - If user feedback demands lower latency: WebSockets with `ws` library
 - SvelteKit supports WebSocket endpoints (straightforward integration)
 
 **Approval Status:**
+
 - ⏳ Victor (Product)
 
 ---
@@ -374,6 +419,7 @@ export function createPollStore(eventId: string, intervalMs = 5000) {
 Use **Aspire's built-in observability** (OpenTelemetry) for traces, logs, metrics.
 
 **Rationale:**
+
 - Aspire provides dashboard out-of-the-box
 - Traces, logs, metrics unified in Aspire dashboard
 - SvelteKit server logs automatically collected
@@ -381,12 +427,14 @@ Use **Aspire's built-in observability** (OpenTelemetry) for traces, logs, metric
 - No additional setup required
 
 **What to Instrument:**
+
 - Event creation (timing, errors)
 - Share code generation (collision rate)
 - Real-time sync (update latency)
 - Database queries (slow query detection)
 
 **Approval Status:**
+
 - ⏳ Victor (Product)
 
 ---
@@ -424,7 +472,8 @@ See orchestration log for details: `.squad/orchestration-log/2026-03-24T00-01-15
 ## 13-20. Additional Decisions (From Migration Audit)
 
 See `.squad/orchestration-log/2026-03-24T00-01-15-ripley.md` for complete audit results and additional decisions 13-20 documenting:
-- SvelteKit Folder Structure  
+
+- SvelteKit Folder Structure
 - Drizzle Schema Design
 - Test File Structure (SvelteKit convention)
 - Aspire Orchestration
@@ -447,16 +496,19 @@ See `.squad/orchestration-log/2026-03-24T00-01-15-ripley.md` for complete audit 
 **Impact:** Medium (improves UX, affects join flow)
 
 Restructured name collection to ask users for their name at the right time:
+
 - **Hosts**: Provide name when creating event (unchanged)
 - **Guests**: Provide name ONCE when joining via share code (new `/join/[code]` route)
 - **Adding items**: Never asks for name (uses stored userName from cookie)
 
 **Benefits:**
+
 - ✅ Name collected once at natural entry point (when joining)
 - ✅ Adding items is faster (no name field)
 - ✅ Clear distinction between "joining an event" and "adding items"
 
 **Implementation:**
+
 - New route: `/join/[code]` with guest name form
 - Creates participant record in database
 - Stores userName in httpOnly cookie
@@ -465,14 +517,17 @@ Restructured name collection to ask users for their name at the right time:
 - Event detail guards against users without userName
 
 **Trade-offs:**
+
 - ⚠️ Additional route pattern (mitigated by intuitive UX)
 - ⚠️ Cookie dependency (same pattern as existing deviceId cookie)
 
 **Testing Status:**
+
 - ✅ Dev server, TypeScript compilation verified
 - ⏳ Manual integration testing pending
 
 **Approval Status:**
+
 - ⏳ Victor (Product Owner)
 
 ---
@@ -488,6 +543,7 @@ Use **optimistic UI updates** for item creation to eliminate perceived lag from 
 
 **Context:**
 Victor requested removal of polling delay when adding items. Previously, after submitting an item:
+
 1. Form submitted to server
 2. Dialog stayed open showing "Ajout..." spinner
 3. Server processed request
@@ -498,6 +554,7 @@ Victor requested removal of polling delay when adding items. Previously, after s
 This created a noticeable delay between clicking "Add" and seeing the item appear.
 
 **Implementation:**
+
 1. On form submit, immediately create optimistic item with temporary ID
 2. Add optimistic item to UI via store
 3. Close dialog instantly (no waiting)
@@ -505,6 +562,7 @@ This created a noticeable delay between clicking "Add" and seeing the item appea
 5. Next poll replaces temp item with real one
 
 **Code Pattern:**
+
 ```typescript
 onSubmit: () => {
   const optimisticItem = {
@@ -513,36 +571,41 @@ onSubmit: () => {
     name: $form.name || "",
     category: $form.category || "plat",
     quantity: $form.quantity || undefined,
-  }
-  
-  realtime.addItem(optimisticItem)
-  dialogOpen = false // Close immediately
-}
+  };
+
+  realtime.addItem(optimisticItem);
+  dialogOpen = false; // Close immediately
+};
 ```
 
 **Benefits:**
+
 - ✅ **Instant feedback**: Item appears immediately when user clicks "Add"
 - ✅ **No perceived lag**: Dialog closes instantly, no spinner wait
 - ✅ **Better UX**: Feels native and responsive
 - ✅ **Still reliable**: Server confirmation happens in background
 
 **Trade-offs:**
+
 - ⚠️ Optimistic item uses temporary ID (replaced on next poll)
 - ⚠️ If server fails, item remains until next poll reveals error
 - ⚠️ Requires careful state management
 
 **Rollback Plan:**
 If issues arise, revert to previous pattern:
+
 - Remove optimistic logic from `onSubmit`
 - Move dialog close back to `onUpdated` handler
 - Keep polling unchanged
 
 **Alternatives Considered:**
+
 1. **WebSocket push**: Would eliminate polling entirely, but increases complexity
 2. **Manual refresh button**: Poor UX, shifts burden to user
 3. **Longer polling interval**: Reduces server load but worsens UX
 
 **Approval Status:**
+
 - ⏳ Victor (Product Owner)
 - ⏳ Kane (Backend)
 - ⏳ Ripley (Architect)

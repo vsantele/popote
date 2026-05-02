@@ -264,23 +264,23 @@ Migrated from Flutter + PocketBase to SvelteKit + Drizzle + Postgres.
 ```typescript
 // Client-side: onMount + polling
 onMount(() => {
-  realtime.connect() // Start 5s polling
-  return () => realtime.disconnect()
-})
-let items = $derived(realtime.items) // From polling store
+  realtime.connect(); // Start 5s polling
+  return () => realtime.disconnect();
+});
+let items = $derived(realtime.items); // From polling store
 ```
 
 **After (Manual Refresh Pattern):**
 
 ```typescript
 // Direct from server load (no polling)
-let items = $derived(data.items)
+let items = $derived(data.items);
 
 // Manual refresh via button or pull gesture
 async function handleRefresh() {
-  isRefreshing = true
-  await invalidateAll() // Re-runs load function
-  isRefreshing = false
+  isRefreshing = true;
+  await invalidateAll(); // Re-runs load function
+  isRefreshing = false;
 }
 ```
 
@@ -288,9 +288,9 @@ async function handleRefresh() {
 
 ```typescript
 onMount(() => {
-  const storedName = getUserName() // Client-side localStorage read
-  if (storedName) $form.host_name = storedName
-})
+  const storedName = getUserName(); // Client-side localStorage read
+  if (storedName) $form.host_name = storedName;
+});
 ```
 
 **After (Server Load Pattern):**
@@ -298,11 +298,11 @@ onMount(() => {
 ```typescript
 // +page.server.ts
 export const load = async ({ cookies }) => {
-  const form = await superValidate(zod4(schema))
-  const storedUserName = cookies.get("userName")
-  if (storedUserName) form.data.host_name = storedUserName
-  return { form }
-}
+  const form = await superValidate(zod4(schema));
+  const storedUserName = cookies.get("userName");
+  if (storedUserName) form.data.host_name = storedUserName;
+  return { form };
+};
 ```
 
 **Pull-to-Refresh Implementation:**

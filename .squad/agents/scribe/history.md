@@ -18,6 +18,7 @@ Initial setup complete.
 ### 2026-03-22 — Phase 1 Squad Orchestration Complete
 
 **Orchestration Tasks Completed:**
+
 1. ✅ Orchestration logs created for all agents (Ripley, Lambert, Kane, Dallas)
 2. ✅ Session log created: popote-initial-build summary
 3. ✅ Decision inbox merged to decisions.md (4 decisions documented and approved)
@@ -25,12 +26,14 @@ Initial setup complete.
 5. ✅ Inbox decision files deleted (no duplicates)
 
 **Deliverables:**
+
 - `.squad/orchestration-log/2026-03-22T21-50-18-*.md` (4 agent logs)
 - `.squad/log/2026-03-22T21-50-18-popote-initial-build.md` (session summary)
 - `.squad/decisions.md` (4 approved architectural decisions)
 - Agent history updates with cross-team coordination notes
 
 **Decisions Merged:**
+
 1. State Management: Riverpod (compile-time safety, async/streaming)
 2. Deep Linking: Share codes + Universal Links (https://popote.io/s/{code})
 3. Backend Architecture: PocketBase with JS hooks (atomic, zero external API)

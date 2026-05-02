@@ -16,6 +16,7 @@ These decisions represent the previous Flutter+PocketBase architecture that was 
 Use **Riverpod** for state management (not Provider or GetX).
 
 **Rationale:**
+
 - Compile-time safety (code-generated, typos fail at build-time)
 - Native async & streaming support (FutureProvider, StreamProvider for SSE)
 - No BuildContext required (cleaner separation of concerns)
@@ -52,6 +53,7 @@ Use **6-8 character alphanumeric share codes** combined with **platform-native d
 Use **PocketBase JavaScript hooks** for backend business logic instead of external API layer.
 
 **What Changed:**
+
 - PocketBase SSE → 5-second polling (MVP) or WebSockets (future)
 - PocketBase REST → SvelteKit API routes
 - SQLite → PostgreSQL
@@ -70,6 +72,7 @@ Use **PocketBase JavaScript hooks** for backend business logic instead of extern
 Hybrid testing approach combining Flutter widget tests + manual validation.
 
 **What Changed:**
+
 - Flutter widget tests → Vitest + @testing-library/svelte
 - PocketBase SSE real-time tests → Polling sync tests
 - Manual multi-device testing → Browser tab-based testing
@@ -81,17 +84,20 @@ Hybrid testing approach combining Flutter widget tests + manual validation.
 ## Archive Policy
 
 Decisions are archived when:
+
 1. **Superseded by architecture changes** (marked explicitly)
 2. **Older than 30 days** and replaced by newer decisions
 3. **Implementation complete and stable** (no longer need decision)
 
 **Storage:**
+
 - Current decisions: `decisions.md` (< 20KB target)
 - Archived decisions: `decisions-archive.md` (this file)
 - Migration/deprecation guidance: ALWAYS noted in main file with cross-references
 
 **Retrieval:**
 If you need context on why something was decided, check:
+
 1. Main `decisions.md` — current active decisions
 2. This file — superseded decisions with migration paths
 3. Agent history files — implementation details

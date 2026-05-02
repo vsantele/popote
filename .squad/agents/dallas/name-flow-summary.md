@@ -76,14 +76,14 @@
 - Load function: Added guard
   ```typescript
   if (!userName && deviceId !== event.hostDeviceId) {
-    return redirect(303, `/join/${shareCode}`)
+    return redirect(303, `/join/${shareCode}`);
   }
   ```
 - addItem action: Changed to use userName from cookie
   ```typescript
-  const userName = cookies.get("userName")
+  const userName = cookies.get("userName");
   if (!userName) {
-    return fail(401, { form, error: "Session invalide" })
+    return fail(401, { form, error: "Session invalide" });
   }
   ```
 

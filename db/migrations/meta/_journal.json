@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1777667350846,
+      "tag": "20260501202910_famous_silver_fox",
+      "breakpoints": true
+    }
+  ]
+}

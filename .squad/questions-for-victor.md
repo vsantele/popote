@@ -7,10 +7,10 @@
 
 ## Questions en attente
 
-*(Les questions seront ajoutées ici par les agents au fur et à mesure)*
+_(Les questions seront ajoutées ici par les agents au fur et à mesure)_
 
 ---
 
 ## Questions résolues
 
-*(Déplacées ici une fois que Victor a répondu)*
+_(Déplacées ici une fois que Victor a répondu)_

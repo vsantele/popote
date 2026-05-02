@@ -9,29 +9,29 @@ This repository uses Aspire to orchestrate its distributed application. Resource
 
 ## CLI command reference
 
-| Task | Command |
-|---|---|
-| Start the app | `aspire start` |
-| Start isolated (worktrees) | `aspire start --isolated` |
-| Restart the app | `aspire start` (stops previous automatically) |
-| Wait for resource healthy | `aspire wait <resource>` |
-| Stop the app | `aspire stop` |
-| List resources | `aspire describe` or `aspire resources` |
-| Run resource command | `aspire resource <resource> <command>` |
-| Start/stop/restart resource | `aspire resource <resource> start|stop|restart` |
-| View console logs | `aspire logs [resource]` |
-| View structured logs | `aspire otel logs [resource]` |
-| View traces | `aspire otel traces [resource]` |
-| Logs for a trace | `aspire otel logs --trace-id <id>` |
-| Add an integration | `aspire add` |
-| List running AppHosts | `aspire ps` |
-| Update AppHost packages | `aspire update` |
-| Search docs | `aspire docs search <query>` |
-| Get doc page | `aspire docs get <slug>` |
-| List doc pages | `aspire docs list` |
-| Environment diagnostics | `aspire doctor` |
-| List resource MCP tools | `aspire mcp tools` |
-| Call resource MCP tool | `aspire mcp call <resource> <tool> --input <json>` |
+| Task                        | Command                                            |
+| --------------------------- | -------------------------------------------------- | ---- | -------- |
+| Start the app               | `aspire start`                                     |
+| Start isolated (worktrees)  | `aspire start --isolated`                          |
+| Restart the app             | `aspire start` (stops previous automatically)      |
+| Wait for resource healthy   | `aspire wait <resource>`                           |
+| Stop the app                | `aspire stop`                                      |
+| List resources              | `aspire describe` or `aspire resources`            |
+| Run resource command        | `aspire resource <resource> <command>`             |
+| Start/stop/restart resource | `aspire resource <resource> start                  | stop | restart` |
+| View console logs           | `aspire logs [resource]`                           |
+| View structured logs        | `aspire otel logs [resource]`                      |
+| View traces                 | `aspire otel traces [resource]`                    |
+| Logs for a trace            | `aspire otel logs --trace-id <id>`                 |
+| Add an integration          | `aspire add`                                       |
+| List running AppHosts       | `aspire ps`                                        |
+| Update AppHost packages     | `aspire update`                                    |
+| Search docs                 | `aspire docs search <query>`                       |
+| Get doc page                | `aspire docs get <slug>`                           |
+| List doc pages              | `aspire docs list`                                 |
+| Environment diagnostics     | `aspire doctor`                                    |
+| List resource MCP tools     | `aspire mcp tools`                                 |
+| Call resource MCP tool      | `aspire mcp call <resource> <tool> --input <json>` |
 
 Most commands support `--format Json` for machine-readable output. Use `--apphost <path>` to target a specific AppHost.
 

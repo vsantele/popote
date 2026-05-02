@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/void/schema.json",
+  "target": "cloudflare",
+  "worker": {
+    "compatibility_date": "2026-02-24"
+  }
+}

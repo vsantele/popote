@@ -6,7 +6,6 @@ Documentation specialist maintaining history, decisions, and technical records.
 
 **Project:** popote
 
-
 ## Responsibilities
 
 - Collaborate with team members on assigned work

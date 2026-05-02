@@ -3,6 +3,7 @@
 **Purpose:** Reusable patterns for migrating from one database technology to another while preserving business logic and data model integrity.
 
 **When to use:**
+
 - Migrating from one ORM/database to another
 - Pivoting technology stack while preserving product requirements
 - Translating schema definitions between technologies
@@ -15,14 +16,14 @@ When migrating database schemas, follow this checklist:
 
 ### 1. Map Data Types
 
-| Source | Target | Notes |
-|--------|--------|-------|
-| String/Text | `text()` | No length limits in Postgres |
-| Integer | `integer()` | |
-| Boolean | `boolean()` | |
-| Date/DateTime | `timestamp({ withTimezone: true })` | Always use timezone-aware timestamps |
-| UUID | `uuid().defaultRandom()` | Use Postgres native UUID generation |
-| Fixed-length string | `char('field', { length: N })` | For codes, IDs with exact length |
+| Source              | Target                              | Notes                                |
+| ------------------- | ----------------------------------- | ------------------------------------ |
+| String/Text         | `text()`                            | No length limits in Postgres         |
+| Integer             | `integer()`                         |                                      |
+| Boolean             | `boolean()`                         |                                      |
+| Date/DateTime       | `timestamp({ withTimezone: true })` | Always use timezone-aware timestamps |
+| UUID                | `uuid().defaultRandom()`            | Use Postgres native UUID generation  |
+| Fixed-length string | `char('field', { length: N })`      | For codes, IDs with exact length     |
 
 ### 2. Preserve Relationships
 
@@ -40,6 +41,7 @@ When migrating database schemas, follow this checklist:
 ### 4. Index Strategy
 
 Start without indexes for MVP. Add later if:
+
 - Queries are slow (>100ms)
 - Filtering by specific fields is common
 - Unique lookups need optimization
@@ -54,12 +56,13 @@ Start without indexes for MVP. Add later if:
 **To:** Server-side utilities, API route handlers, Zod schemas
 
 **Example:**
+
 ```javascript
 // OLD: PocketBase hook
 onRecordCreateRequest((e) => {
   const shareCode = generateShareCode();
-  record.set('share_code', shareCode);
-}, 'events');
+  record.set("share_code", shareCode);
+}, "events");
 
 // NEW: SvelteKit server action
 const shareCode = await ensureUniqueShareCode(db);
@@ -72,11 +75,20 @@ await db.insert(events).values({ ...data, shareCode });
 **To:** Zod schemas (single source of truth)
 
 **Example:**
+
 ```typescript
 // Zod schema replaces both DB constraints and hook validation
 export const createItemSchema = z.object({
   name: z.string().min(1).max(200),
-  category: z.enum(['apero', 'entree', 'plat', 'dessert', 'boissons', 'jeux', 'autre']),
+  category: z.enum([
+    "apero",
+    "entree",
+    "plat",
+    "dessert",
+    "boissons",
+    "jeux",
+    "autre",
+  ]),
   quantity: z.string().max(100).optional(),
 });
 ```
@@ -87,6 +99,7 @@ export const createItemSchema = z.object({
 **To:** Explicit transactions (ORM API)
 
 **Example:**
+
 ```typescript
 await db.transaction(async (tx) => {
   const [event] = await tx.insert(events).values(eventData).returning();
@@ -104,13 +117,13 @@ await db.transaction(async (tx) => {
 
 ### Common Risks in Database Migrations
 
-| Risk | Mitigation |
-|------|------------|
-| **Type mismatches** | Use TypeScript inference from schema (`typeof table.$inferSelect`) |
-| **Missing constraints** | Document all constraints in Zod schemas |
-| **Performance regression** | Benchmark queries before/after migration |
-| **Data loss** | Never delete old database until new one is validated |
-| **Connection pooling** | Use connection pooling for serverless deployments |
+| Risk                       | Mitigation                                                         |
+| -------------------------- | ------------------------------------------------------------------ |
+| **Type mismatches**        | Use TypeScript inference from schema (`typeof table.$inferSelect`) |
+| **Missing constraints**    | Document all constraints in Zod schemas                            |
+| **Performance regression** | Benchmark queries before/after migration                           |
+| **Data loss**              | Never delete old database until new one is validated               |
+| **Connection pooling**     | Use connection pooling for serverless deployments                  |
 
 ---
 
@@ -123,13 +136,13 @@ describe('Schema Migration', () => {
   it('preserves data integrity', async () => {
     // 1. Create record in old database
     const oldEvent = await oldDb.createEvent({ ... });
-    
+
     // 2. Export data
     const exported = await exportData();
-    
+
     // 3. Import to new database
     await importData(newDb, exported);
-    
+
     // 4. Verify data is identical
     const newEvent = await newDb.query.events.findFirst({ ... });
     expect(newEvent.name).toBe(oldEvent.name);
@@ -172,7 +185,7 @@ export async function runMigrations() {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const migrationsFolder = path.join(__dirname, "migrations");
-    
+
     await migrate(db, { migrationsFolder });
   } finally {
     await migrationClient.end();
@@ -219,12 +232,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 ```
 
 **Benefits:**
+
 - ✅ Works in both dev (`aspire start`) and production (`aspire publish`)
 - ✅ Fail-fast prevents broken deployments
 - ✅ Idempotent (Drizzle won't re-run applied migrations)
 - ✅ No orchestration complexity (no init containers needed)
 
 **Works with:**
+
 - Aspire (connection string from `ConnectionStrings__popotedb`)
 - Docker Compose (connection string from `DATABASE_URL`)
 - Manual deployments (any connection string env var)
@@ -233,8 +248,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 ```typescript
 export function generateShareCode(length = 6): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
   for (let i = 0; i < length; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -243,7 +258,7 @@ export function generateShareCode(length = 6): string {
 
 export async function ensureUniqueShareCode(
   db: Database,
-  maxAttempts = 10
+  maxAttempts = 10,
 ): Promise<string> {
   for (let i = 0; i < maxAttempts; i++) {
     const code = generateShareCode();
@@ -252,10 +267,10 @@ export async function ensureUniqueShareCode(
       .from(events)
       .where(eq(events.shareCode, code))
       .limit(1);
-    
+
     if (existing.length === 0) return code;
   }
-  throw new Error('Failed to generate unique share code');
+  throw new Error("Failed to generate unique share code");
 }
 ```
 
@@ -263,12 +278,12 @@ export async function ensureUniqueShareCode(
 
 ```typescript
 export function getDeviceId(): string {
-  if (typeof window === 'undefined') return ''; // SSR guard
-  
-  let deviceId = localStorage.getItem('deviceId');
+  if (typeof window === "undefined") return ""; // SSR guard
+
+  let deviceId = localStorage.getItem("deviceId");
   if (!deviceId) {
     deviceId = crypto.randomUUID();
-    localStorage.setItem('deviceId', deviceId);
+    localStorage.setItem("deviceId", deviceId);
   }
   return deviceId;
 }
@@ -292,6 +307,7 @@ export function getDeviceId(): string {
 ---
 
 **When NOT to use this pattern:**
+
 - If old database is working fine (don't migrate for no reason)
 - If new database doesn't provide meaningful benefits
 - If migration timeline exceeds product validation timeline
@@ -299,6 +315,7 @@ export function getDeviceId(): string {
 ---
 
 **Success Criteria:**
+
 - All data model concepts preserved
 - Business logic produces identical results
 - Performance is equal or better

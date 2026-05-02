@@ -17,6 +17,7 @@ Migrations run automatically on **server startup** via SvelteKit's `hooks.server
 5. **Fail-fast behavior**: Server won't start if migrations fail
 
 This approach works identically in:
+
 - ✅ **Run mode**: `aspire start` (local development)
 - ✅ **Publish mode**: Docker deployment (production)
 
@@ -83,19 +84,21 @@ When deployed via `aspire publish`:
 ✅ **Fail-fast**: Server won't start if migrations fail (prevents broken deployments)  
 ✅ **Aspire-native**: Works seamlessly in both run and publish modes  
 ✅ **No external tools**: No need for init containers or separate migration services  
-✅ **Idempotent**: Drizzle tracks applied migrations, won't re-run  
+✅ **Idempotent**: Drizzle tracks applied migrations, won't re-run
 
 ## Troubleshooting
 
 ### Migrations not running?
 
 Check SvelteKit server logs for:
+
 ```
 🗄️  Running database migrations...
 ✅ Database migrations complete
 ```
 
 If you see:
+
 ```
 ❌ Migration failed: ...
 ```
@@ -124,14 +127,17 @@ Drizzle migrations are **forward-only**. To rollback:
 ## Alternative Approaches Considered
 
 ### ❌ Init Container Pattern
+
 - **Pros**: Clean separation of concerns
 - **Cons**: Requires Aspire init container support (not in Vite resources), added complexity
 
 ### ❌ Separate Migration Service
+
 - **Pros**: Dedicated resource for migrations
 - **Cons**: Orchestration complexity, race conditions with app startup
 
 ### ✅ **Server Startup Hook (CHOSEN)**
+
 - **Pros**: Simple, works everywhere, fail-fast, no orchestration needed
 - **Cons**: Slight delay on first request (negligible for dev, one-time for production)
 
@@ -139,11 +145,12 @@ Drizzle migrations are **forward-only**. To rollback:
 
 **Date**: 2026-04-11  
 **Decided by**: Ash (DevOps)  
-**Status**: ✅ Implemented  
+**Status**: ✅ Implemented
 
 Run migrations in SvelteKit server startup hook (`hooks.server.ts`) for both run and publish modes.
 
 **Rationale**:
+
 - Simplest approach that works identically in dev and production
 - No Aspire-specific orchestration needed
 - Fail-fast prevents broken deployments
