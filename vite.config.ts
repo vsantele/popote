@@ -10,6 +10,6 @@ export default defineConfig({
     sortPackageJson: false,
     ignorePatterns: [],
   },
-  plugins: [voidPlugin(), tailwindcss(), sveltekit()],
+  plugins: [voidPlugin({ persistTo: ".void" }), tailwindcss(), sveltekit()],
   staged: { "*": "vp check --fix" },
 });

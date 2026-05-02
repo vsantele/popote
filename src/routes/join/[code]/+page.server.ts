@@ -7,22 +7,20 @@ import { events, participants } from "$lib/server/db/schema";
 import { eq } from "drizzle-orm";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
-import { DEVICE_ID_KEY, USER_NAME_KEY } from "$lib/utils/device-id";
 
 const joinEventSchema = z.object({
   name: z.string().min(1, "Votre nom est requis"),
 });
 
-export const load: PageServerLoad = async ({ params, cookies }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
   const shareCode = params.code.toUpperCase();
+  const userId = locals.user?.id;
 
-  // Fetch event to verify it exists (relational query API)
   const event = await db.query.events.findFirst({
     where: eq(events.shareCode, shareCode),
     with: {
       participants: {
-        where: (participants, { eq }) =>
-          eq(participants.deviceId, cookies.get(DEVICE_ID_KEY) || ""),
+        where: (participants, { eq }) => eq(participants.userId, userId ?? ""),
       },
     },
   });
@@ -31,13 +29,10 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     throw error(404, "Événement introuvable");
   }
 
-  // Check if this device already has a participant
   if (event.participants.length > 0) {
-    // Participant exists, redirect to event
     return redirect(303, `/e/${shareCode}`);
   }
 
-  // Transform event for display
   const transformedEvent = {
     id: String(event.id),
     name: event.name,
@@ -48,28 +43,29 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     share_code: event.shareCode,
   };
 
-  // Pre-fill form with stored username if available
-  const storedUserName = cookies.get(USER_NAME_KEY);
   const form = await superValidate(zod4(joinEventSchema));
-  if (storedUserName) {
-    form.data.name = storedUserName;
+  if (locals.user?.name) {
+    form.data.name = locals.user.name;
   }
 
   return { form, event: transformedEvent };
 };
 
 export const actions: Actions = {
-  default: async ({ request, params, cookies }) => {
+  default: async ({ request, params, locals }) => {
     const form = await superValidate(request, zod4(joinEventSchema));
 
     if (!form.valid) {
       return fail(400, { form });
     }
 
+    if (!locals.user) {
+      return fail(401, { form, error: "Session invalide." });
+    }
+
     try {
       const shareCode = params.code.toUpperCase();
 
-      // Get event
       const selectedEvents = await db
         .select()
         .from(events)
@@ -84,28 +80,11 @@ export const actions: Actions = {
         });
       }
 
-      // Get or create device ID
-      let deviceId = cookies.get(DEVICE_ID_KEY);
-      if (!deviceId) {
-        deviceId = crypto.randomUUID();
-        cookies.set(DEVICE_ID_KEY, deviceId, {
-          path: "/",
-          maxAge: 60 * 60 * 24 * 365,
-        });
-      }
-
-      // Create participant
       await db.insert(participants).values({
         eventId: event.id,
         name: form.data.name,
-        deviceId,
+        userId: locals.user.id,
         isHost: false,
-      });
-
-      // Store user name for future use
-      cookies.set(USER_NAME_KEY, form.data.name, {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 365,
       });
 
       log("info", "Guest joined event", {

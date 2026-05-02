@@ -7,12 +7,11 @@ import { superValidate } from "sveltekit-superforms/server";
 import { addItemSchema } from "$lib/schemas/item.schema";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
-import { DEVICE_ID_KEY, USER_NAME_KEY } from "$lib/utils/device-id";
 
-export const load: PageServerLoad = async ({ params, cookies }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
   const shareCode = params.code.toUpperCase();
+  const userId = locals.user?.id;
 
-  // Fetch event by share code with related data (single query with joins)
   const event = await db.query.events.findFirst({
     where: eq(events.shareCode, shareCode),
     with: {
@@ -25,16 +24,15 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     throw error(404, "Événement introuvable");
   }
 
-  // Check if user has a name stored - if not, redirect to join
-  const userName = cookies.get(USER_NAME_KEY);
-  const deviceId = cookies.get(DEVICE_ID_KEY);
+  // If the visitor isn't the host and isn't already a participant, send them
+  // to /join so they can pick a display name first.
+  const isHost = userId && event.hostUserId === userId;
+  const alreadyJoined = event.participants.some((p) => p.userId === userId);
 
-  // If no userName, they need to join first (unless they're the host)
-  if (!userName && deviceId !== event.hostDeviceId) {
+  if (!isHost && !alreadyJoined) {
     return redirect(303, `/join/${shareCode}`);
   }
 
-  // Transform to match frontend types
   const transformedEvent = {
     id: String(event.id),
     name: event.name,
@@ -42,7 +40,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     location: event.location || undefined,
     description: event.description || undefined,
     host_name: event.hostName,
-    host_device_id: event.hostDeviceId,
+    host_user_id: event.hostUserId,
     share_code: event.shareCode,
     created: event.createdAt.toISOString(),
   };
@@ -51,7 +49,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     id: String(p.id),
     event: String(event.id),
     name: p.name,
-    device_id: p.deviceId,
+    user_id: p.userId,
     is_host: p.isHost,
     created: p.createdAt.toISOString(),
   }));
@@ -66,12 +64,10 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
     created: i.createdAt.toISOString(),
   }));
 
-  // Find current participant for optimistic updates
   const currentParticipant = transformedParticipants.find(
-    (p) => p.device_id === deviceId,
+    (p) => p.user_id === userId,
   );
 
-  // Initialize form
   const form = await superValidate(zod4(addItemSchema));
 
   return {
@@ -84,23 +80,29 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 };
 
 export const actions: Actions = {
-  addItem: async ({ request, params, cookies }) => {
+  addItem: async ({ request, params, locals }) => {
     const form = await superValidate(request, zod4(addItemSchema));
 
     if (!form.valid) {
       return fail(400, { form });
     }
 
+    if (!locals.user) {
+      return fail(401, {
+        form,
+        error: "Session invalide. Veuillez rejoindre l'événement.",
+      });
+    }
+
     try {
       const shareCode = params.code.toUpperCase();
+      const userId = locals.user.id;
 
-      // Get event by share code (relational query)
       const event = await db.query.events.findFirst({
         where: eq(events.shareCode, shareCode),
         with: {
           participants: {
-            where: (participants, { eq }) =>
-              eq(participants.deviceId, cookies.get(DEVICE_ID_KEY) || ""),
+            where: (participants, { eq }) => eq(participants.userId, userId),
           },
         },
       });
@@ -112,48 +114,30 @@ export const actions: Actions = {
         });
       }
 
-      // Get device ID and user name from cookies
-      const deviceId = cookies.get(DEVICE_ID_KEY);
-      const userName = cookies.get(USER_NAME_KEY);
+      const participant = event.participants[0];
+      let participantId: number;
 
-      if (!deviceId || !userName) {
-        // Should not happen if load function redirects properly
-        return fail(401, {
-          form,
-          error: "Session invalide. Veuillez rejoindre l'événement.",
-        });
+      if (!participant) {
+        const [newParticipant] = await db
+          .insert(participants)
+          .values({
+            eventId: event.id,
+            name: locals.user!.name,
+            userId,
+            isHost: false,
+          })
+          .returning();
+        participantId = newParticipant.id;
+      } else {
+        participantId = participant.id;
       }
 
-      const participant = event.participants[0];
-
-      // Use transaction for participant + item creation (atomic)
-      await db.transaction(async (tx) => {
-        let participantId: number;
-
-        if (!participant) {
-          // Create participant if doesn't exist (defensive)
-          const [newParticipant] = await tx
-            .insert(participants)
-            .values({
-              eventId: event.id,
-              name: userName,
-              deviceId,
-              isHost: false,
-            })
-            .returning();
-          participantId = newParticipant.id;
-        } else {
-          participantId = participant.id;
-        }
-
-        // Create item
-        await tx.insert(items).values({
-          eventId: event.id,
-          participantId,
-          name: form.data.name,
-          category: form.data.category,
-          quantity: form.data.quantity || null,
-        });
+      await db.insert(items).values({
+        eventId: event.id,
+        participantId,
+        name: form.data.name,
+        category: form.data.category,
+        quantity: form.data.quantity || null,
       });
 
       return { form };

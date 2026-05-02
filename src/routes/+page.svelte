@@ -36,7 +36,7 @@
         size="sm"
         class="text-muted-foreground hover:text-foreground"
       >
-        👤 Sync. Appareils
+        👤 Mon Compte
       </Button>
     </div>
     <div class="text-center space-y-2">

@@ -9,7 +9,6 @@ declare global {
   namespace App {
     // interface Error {}
     interface Locals {
-      deviceId?: string;
       user?: AuthSession["user"];
       session?: AuthSession["session"];
       auth: Auth;

@@ -1,28 +1,35 @@
-import { DEVICE_ID_KEY } from "$lib/utils/device-id";
 import type { Handle } from "@sveltejs/kit";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { building } from "$app/environment";
 import { createAuth } from "$lib/server/auth";
-import { db } from "void/db";
 
 export const handle: Handle = async ({ event, resolve }) => {
-  // Extract device ID from cookie
-  const deviceId = event.cookies.get(DEVICE_ID_KEY);
+  const auth = createAuth();
+  event.locals.auth = auth;
 
-  // Attach to event.locals for use in routes
-  if (deviceId) {
-    event.locals.deviceId = deviceId;
+  let session = await auth.api.getSession({ headers: event.request.headers });
+
+  // Auto-create an anonymous session for any request that doesn't have one,
+  // so every visitor has a stable user.id we can attach data to.
+  if (!session && !event.url.pathname.startsWith("/api/auth")) {
+    try {
+      await auth.api.signInAnonymous({ headers: event.request.headers });
+      const cookieHeader = event.cookies
+        .getAll()
+        .map((c) => `${c.name}=${c.value}`)
+        .join("; ");
+      const headers = new Headers(event.request.headers);
+      headers.set("cookie", cookieHeader);
+      session = await auth.api.getSession({ headers });
+    } catch (err) {
+      console.error("Failed to sign in anonymously:", err);
+    }
   }
-
-  event.locals.auth = createAuth();
-
-  const { auth } = event.locals;
-  const session = await auth.api.getSession({ headers: event.request.headers });
 
   if (session) {
     event.locals.session = session.session;
     event.locals.user = session.user;
   }
 
-  return resolve(event);
+  return svelteKitHandler({ event, resolve, auth, building });
 };

@@ -7,84 +7,63 @@ import { events, participants } from "$lib/server/db/schema";
 import { generateUniqueShareCode } from "$lib/server/db/utils";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
-import { DEVICE_ID_KEY, USER_NAME_KEY } from "$lib/utils/device-id";
 
-export const load: PageServerLoad = async ({ cookies }) => {
-  // Get stored username from cookie
-  const storedUserName = cookies.get(USER_NAME_KEY);
-
-  // Pre-fill form with stored username if available
+export const load: PageServerLoad = async ({ locals }) => {
   const form = await superValidate(zod4(createEventSchema));
-  if (storedUserName) {
-    form.data.host_name = storedUserName;
+  if (locals.user?.name) {
+    form.data.host_name = locals.user.name;
   }
 
   return { form };
 };
 
 export const actions: Actions = {
-  default: async ({ request, cookies }) => {
+  default: async ({ request, locals }) => {
     const form = await superValidate(request, zod4(createEventSchema));
 
     if (!form.valid) {
       return fail(400, { form });
     }
+
+    if (!locals.user) {
+      return fail(401, { form, error: "Session invalide." });
+    }
+
     let shareCode: string = "";
     try {
-      // Get device ID from cookie or generate new one
-      let deviceId = cookies.get(DEVICE_ID_KEY);
-      if (!deviceId) {
-        deviceId = crypto.randomUUID();
-        cookies.set(DEVICE_ID_KEY, deviceId, {
-          path: "/",
-          maxAge: 60 * 60 * 24 * 365, // 1 year
-        });
-      }
-
       shareCode = await generateUniqueShareCode();
 
-      // Create event and host participant in a transaction (atomic operation)
-      const result = await db.transaction(async (tx) => {
-        const [newEvent] = await tx
-          .insert(events)
-          .values({
-            name: form.data.name,
-            date: new Date(form.data.date),
-            location: form.data.location || null,
-            description: form.data.description || null,
-            hostName: form.data.host_name,
-            hostDeviceId: deviceId,
-            shareCode,
-          })
-          .returning();
+      const [newEvent] = await db
+        .insert(events)
+        .values({
+          name: form.data.name,
+          date: new Date(form.data.date),
+          location: form.data.location || null,
+          description: form.data.description || null,
+          hostName: form.data.host_name,
+          hostUserId: locals.user!.id,
+          shareCode,
+        })
+        .returning();
 
-        const [hostParticipant] = await tx
-          .insert(participants)
-          .values({
-            eventId: newEvent.id,
-            name: form.data.host_name,
-            deviceId,
-            isHost: true,
-          })
-          .returning();
+      const [hostParticipant] = await db
+        .insert(participants)
+        .values({
+          eventId: newEvent.id,
+          name: form.data.host_name,
+          userId: locals.user!.id,
+          isHost: true,
+        })
+        .returning();
 
-        return { event: newEvent, participant: hostParticipant };
-      });
+      const result = { event: newEvent, participant: hostParticipant };
 
       log("info", "Event created via form action", {
         eventId: result.event.id,
         shareCode: shareCode,
       });
-
-      // Store host name in cookie for future use
-      cookies.set(USER_NAME_KEY, form.data.host_name, {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 365,
-      });
-
-      // Redirect to event page
     } catch (err) {
-      if (err instanceof Response) throw err; // Re-throw redirects
+      if (err instanceof Response) throw err;
       console.error("Error creating event:", err);
       log("error", "Failed to create event", { error: JSON.stringify(err) });
       return fail(500, {

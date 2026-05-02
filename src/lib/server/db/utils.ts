@@ -1,5 +1,5 @@
 import { db } from "void/db";
-import { events, syncCodes } from "./schema";
+import { events } from "./schema";
 import { eq } from "drizzle-orm";
 
 /**
@@ -53,30 +53,7 @@ export async function generateUniqueShareCode(): Promise<string> {
   );
 }
 
-/**
- * Validate share code format
- */
 export function isValidShareCode(code: string): boolean {
   const regex = /^[A-Z0-9]{6,8}$/;
   return regex.test(code);
-}
-
-/**
- * Generate a unique sync code for device transfer
- */
-export async function generateUniqueSyncCode(): Promise<string> {
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const code = generateCode(6);
-    const existing = await db
-      .select()
-      .from(syncCodes)
-      .where(eq(syncCodes.code, code))
-      .limit(1);
-
-    if (existing.length === 0) {
-      return code;
-    }
-  }
-
-  throw new Error("Failed to generate unique sync code");
 }

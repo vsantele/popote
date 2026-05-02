@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:5173/api/auth/ok)",
+      "mcp__svelte__svelte-autofixer",
+      "Bash(pnpm void *)",
+      "Bash(pnpm svelte-kit *)",
+      "Bash(pnpm svelte-check *)"
+    ]
+  }
+}

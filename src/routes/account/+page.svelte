@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { enhance } from "$app/forms";
   import { Button } from "$lib/components/ui/button";
   import {
     Card,
@@ -10,20 +9,34 @@
   } from "$lib/components/ui/card";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { DEVICE_ID_KEY } from "$lib/utils/device-id";
-  import { goto } from "$app/navigation";
+  import { superForm } from "sveltekit-superforms/client";
   import type { PageProps } from "./$types";
 
-  let { data, form }: PageProps = $props();
+  let { data }: PageProps = $props();
 
-  $effect(() => {
-    if (form?.success && form.newDeviceId) {
-      localStorage.setItem(DEVICE_ID_KEY, form.newDeviceId);
-      goto("/", { invalidateAll: true });
-    }
+  const {
+    form: signUpForm,
+    errors: signUpErrors,
+    message: signUpMessage,
+    enhance: signUpEnhance,
+    delayed: signUpDelayed,
+  } = superForm(data.signUpForm, {
+    id: "signUp",
+    resetForm: false,
   });
 
-  let inputCode = $state("");
+  const {
+    form: signInForm,
+    errors: signInErrors,
+    message: signInMessage,
+    enhance: signInEnhance,
+    delayed: signInDelayed,
+  } = superForm(data.signInForm, {
+    id: "signIn",
+    resetForm: false,
+  });
+
+  const isLoggedIn = $derived(!!data.user && !data.user.isAnonymous);
 </script>
 
 <div class="min-h-screen flex items-center justify-center p-4">
@@ -31,95 +44,187 @@
     <div class="text-center space-y-2">
       <h1 class="text-4xl font-bold">👤 Compte</h1>
       <p class="text-muted-foreground">
-        Gérez votre session sur plusieurs appareils
+        {#if isLoggedIn}
+          Connecté en tant que {data.user?.email}
+        {:else}
+          Créez un compte pour retrouver vos soirées sur tous vos appareils
+        {/if}
       </p>
     </div>
 
-    <!-- Export Section -->
-    <Card>
-      <CardHeader>
-        <CardTitle>Exporter ma session</CardTitle>
-        <CardDescription>
-          Générez un code pour synchroniser cet appareil avec un autre.
-        </CardDescription>
-      </CardHeader>
-      <CardContent class="space-y-4">
-        {#if form?.code}
-          <div
-            class="p-6 bg-primary/10 border border-primary/20 rounded-lg text-center space-y-2 animate-in fade-in zoom-in duration-300"
-          >
-            <div
-              class="text-sm font-medium uppercase tracking-wider text-muted-foreground"
-            >
-              Code de transfert
-            </div>
-            <div class="text-4xl font-mono font-bold tracking-[0.2em] py-2">
-              {form.code}
-            </div>
-            <div class="text-xs text-muted-foreground">Valable 15 minutes</div>
-          </div>
-        {:else}
-          <form method="POST" action="?/generateCode" use:enhance>
-            <Button type="submit" class="w-full">Obtenir un code</Button>
+    {#if isLoggedIn}
+      <Card>
+        <CardHeader>
+          <CardTitle>Mon compte</CardTitle>
+          <CardDescription>
+            {data.user?.name}<br />
+            <span class="text-xs">{data.user?.email}</span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form method="POST" action="?/signOut">
+            <Button type="submit" variant="outline" class="w-full">
+              Se déconnecter
+            </Button>
           </form>
-        {/if}
-      </CardContent>
-    </Card>
-
-    <!-- Import Section -->
-    <Card>
-      <CardHeader>
-        <CardTitle>Importer une session</CardTitle>
-        <CardDescription>
-          Entrez un code généré sur un autre appareil pour récupérer vos
-          événements.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form method="POST" action="?/useCode" use:enhance class="space-y-4">
-          <div class="space-y-2">
-            <Label for="code">Code de transfert</Label>
-            <Input
-              id="code"
-              name="code"
-              bind:value={inputCode}
-              placeholder="ABC123"
-              class="uppercase text-center text-lg font-mono tracking-widest"
-              maxlength={6}
-              required
-            />
-          </div>
-
-          {#if form?.error && !form.success}
-            <p class="text-sm text-destructive">{form.error}</p>
-          {/if}
-
-          <Button
-            type="submit"
-            class="w-full"
-            variant="outline"
-            disabled={inputCode.length < 6}
+        </CardContent>
+      </Card>
+    {:else}
+      <Card>
+        <CardHeader>
+          <CardTitle>Créer un compte</CardTitle>
+          <CardDescription>
+            Vos soirées en cours seront automatiquement liées à votre nouveau
+            compte.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            method="POST"
+            action="?/signUp"
+            use:signUpEnhance
+            class="space-y-4"
           >
-            Synchroniser cet appareil
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <div class="space-y-2">
+              <Label for="signup-name">Votre nom *</Label>
+              <Input
+                id="signup-name"
+                name="name"
+                bind:value={$signUpForm.name}
+                placeholder="Votre prénom"
+                required
+                aria-invalid={$signUpErrors.name ? "true" : undefined}
+              />
+              {#if $signUpErrors.name}
+                <p class="text-sm text-destructive">{$signUpErrors.name}</p>
+              {/if}
+            </div>
+
+            <div class="space-y-2">
+              <Label for="signup-email">Email *</Label>
+              <Input
+                id="signup-email"
+                name="email"
+                type="email"
+                bind:value={$signUpForm.email}
+                placeholder="vous@exemple.fr"
+                required
+                aria-invalid={$signUpErrors.email ? "true" : undefined}
+              />
+              {#if $signUpErrors.email}
+                <p class="text-sm text-destructive">{$signUpErrors.email}</p>
+              {/if}
+            </div>
+
+            <div class="space-y-2">
+              <Label for="signup-password">Mot de passe *</Label>
+              <Input
+                id="signup-password"
+                name="password"
+                type="password"
+                bind:value={$signUpForm.password}
+                placeholder="8 caractères minimum"
+                required
+                aria-invalid={$signUpErrors.password ? "true" : undefined}
+              />
+              {#if $signUpErrors.password}
+                <p class="text-sm text-destructive">
+                  {$signUpErrors.password}
+                </p>
+              {/if}
+            </div>
+
+            {#if $signUpMessage}
+              <p class="text-sm text-destructive">{$signUpMessage}</p>
+            {/if}
+
+            <Button type="submit" class="w-full" disabled={$signUpDelayed}>
+              {$signUpDelayed ? "Création..." : "Créer mon compte"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Se connecter</CardTitle>
+          <CardDescription>
+            J'ai déjà un compte sur un autre appareil.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            method="POST"
+            action="?/signIn"
+            use:signInEnhance
+            class="space-y-4"
+          >
+            <div class="space-y-2">
+              <Label for="signin-email">Email</Label>
+              <Input
+                id="signin-email"
+                name="email"
+                type="email"
+                bind:value={$signInForm.email}
+                placeholder="vous@exemple.fr"
+                required
+                aria-invalid={$signInErrors.email ? "true" : undefined}
+              />
+              {#if $signInErrors.email}
+                <p class="text-sm text-destructive">{$signInErrors.email}</p>
+              {/if}
+            </div>
+
+            <div class="space-y-2">
+              <Label for="signin-password">Mot de passe</Label>
+              <Input
+                id="signin-password"
+                name="password"
+                type="password"
+                bind:value={$signInForm.password}
+                required
+                aria-invalid={$signInErrors.password ? "true" : undefined}
+              />
+              {#if $signInErrors.password}
+                <p class="text-sm text-destructive">
+                  {$signInErrors.password}
+                </p>
+              {/if}
+            </div>
+
+            {#if $signInMessage}
+              <p class="text-sm text-destructive">{$signInMessage}</p>
+            {/if}
+
+            <Button
+              type="submit"
+              variant="outline"
+              class="w-full"
+              disabled={$signInDelayed}
+            >
+              {$signInDelayed ? "Connexion..." : "Se connecter"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    {/if}
 
     <div class="text-center">
       <Button href="/" variant="ghost" size="sm">Retour à l'accueil</Button>
     </div>
 
-    <!-- Advanced: Manual ID -->
-    <div class="pt-8 text-center">
-      <details class="text-xs text-muted-foreground">
-        <summary class="cursor-pointer hover:underline"
-          >Informations avancées</summary
-        >
-        <div class="mt-2 p-2 bg-muted rounded break-all font-mono">
-          ID Personnel : {data.deviceId || "Non généré"}
-        </div>
-      </details>
-    </div>
+    {#if data.user}
+      <div class="pt-8 text-center">
+        <details class="text-xs text-muted-foreground">
+          <summary class="cursor-pointer hover:underline">
+            Informations avancées
+          </summary>
+          <div class="mt-2 p-2 bg-muted rounded break-all font-mono space-y-1">
+            <div>ID utilisateur : {data.user.id}</div>
+            <div>Anonyme : {data.user.isAnonymous ? "oui" : "non"}</div>
+          </div>
+        </details>
+      </div>
+    {/if}
   </div>
 </div>

@@ -54,6 +54,7 @@
     "void": "npm:@void-sdk/void@^0.6.1"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "1.6.9",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/auto-instrumentations-node": "^0.74.0",
     "@opentelemetry/exporter-logs-otlp-grpc": "^0.216.0",
