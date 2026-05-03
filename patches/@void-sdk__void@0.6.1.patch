@@ -1,0 +1,23 @@
+diff --git a/dist/deploy-GEj13pFE.mjs b/dist/deploy-GEj13pFE.mjs
+index 5c5c8d63c7be4d0d930b437eabb94af222a802aa..8c29ed56f898998c1c37375c004483ee4d0b0557 100644
+--- a/dist/deploy-GEj13pFE.mjs
++++ b/dist/deploy-GEj13pFE.mjs
+@@ -1324,7 +1324,8 @@ async function generateWrapper(workerDir, workerMain, root, features) {
+ 		const { collectMigrations } = await import("./collect-Qiy984Tb.mjs").then((n) => n.n);
+ 		migrations = collectMigrations(join$1(root, "db", "migrations"));
+ 		const handlerFilename_ = features.migrationDialect === "postgresql" ? "migration-handler-pg.mjs" : "migration-handler.mjs";
+-		let handlerPath = join$1(import.meta.dirname, "..", "runtime", handlerFilename_);
++		let handlerPath = join$1(import.meta.dirname, "runtime", handlerFilename_);
++		if (!existsSync(handlerPath)) handlerPath = join$1(import.meta.dirname, "..", "runtime", handlerFilename_);
+ 		if (!existsSync(handlerPath)) handlerPath = join$1(import.meta.dirname, "..", "..", "dist", "runtime", handlerFilename_);
+ 		if (!existsSync(handlerPath)) throw new Error(`Migration handler not found: ${handlerFilename_}. Run "pnpm -C packages/void build" first.`);
+ 		copyFileSync(handlerPath, join$1(workerDir, "__void_migration_handler.mjs"));
+@@ -1369,7 +1370,7 @@ async function bundleEntry(root, entry) {
+ 		}
+ 	});
+ 	return {
+-		entryFilename: readdirSync(outDir).filter((f) => f.startsWith("index"))[0] ?? "index.mjs",
++		entryFilename: readdirSync(outDir).find((f) => /^index\.(m?js|cjs)$/.test(f)) ?? "index.mjs",
+ 		outputDir: outDir
+ 	};
+ }
