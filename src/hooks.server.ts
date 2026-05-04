@@ -1,16 +1,32 @@
 import type { Handle } from "@sveltejs/kit";
+import { sequence } from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { building } from "$app/environment";
 import { createAuth } from "$lib/server/auth";
+import { paraglideMiddleware } from "$lib/paraglide/server";
+import { getTextDirection } from "$lib/paraglide/runtime";
 
-export const handle: Handle = async ({ event, resolve }) => {
+const paraglideHandle: Handle = ({ event, resolve }) =>
+  paraglideMiddleware(
+    event.request,
+    ({ request: localizedRequest, locale }) => {
+      event.request = localizedRequest;
+      return resolve(event, {
+        transformPageChunk: ({ html }) => {
+          return html
+            .replace("%lang%", locale)
+            .replace("%dir%", getTextDirection(locale));
+        },
+      });
+    },
+  );
+
+const authHandle: Handle = async ({ event, resolve }) => {
   const auth = createAuth();
   event.locals.auth = auth;
 
   let session = await auth.api.getSession({ headers: event.request.headers });
 
-  // Auto-create an anonymous session for any request that doesn't have one,
-  // so every visitor has a stable user.id we can attach data to.
   if (!session && !event.url.pathname.startsWith("/api/auth")) {
     try {
       await auth.api.signInAnonymous({ headers: event.request.headers });
@@ -33,3 +49,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   return svelteKitHandler({ event, resolve, auth, building });
 };
+
+export const handle: Handle = sequence(paraglideHandle, authHandle);

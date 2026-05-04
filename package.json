@@ -20,7 +20,8 @@
     "test:coverage": "vitest run --coverage",
     "db:migrate": "void db migrate",
     "db:studio": "void db studio",
-    "db:push": "void db push"
+    "db:push": "void db push",
+    "machine-translate": "inlang machine translate --project project.inlang"
   },
   "devDependencies": {
     "@fontsource-variable/geist": "^5.2.8",
@@ -51,7 +52,9 @@
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "vitest": "catalog:",
-    "void": "npm:@void-sdk/void@^0.6.1"
+    "void": "npm:@void-sdk/void@^0.6.1",
+    "@inlang/paraglide-js": "^2.18.0",
+    "@inlang/cli": "^3.0.0"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.6.9",
