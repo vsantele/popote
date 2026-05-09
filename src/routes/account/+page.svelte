@@ -23,6 +23,7 @@
     message: signUpMessage,
     enhance: signUpEnhance,
     delayed: signUpDelayed,
+    // svelte-ignore state_referenced_locally
   } = superForm(data.signUpForm, {
     id: "signUp",
     resetForm: false,
@@ -34,6 +35,7 @@
     message: signInMessage,
     enhance: signInEnhance,
     delayed: signInDelayed,
+    // svelte-ignore state_referenced_locally
   } = superForm(data.signInForm, {
     id: "signIn",
     resetForm: false,

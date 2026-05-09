@@ -17,6 +17,7 @@
 
   let { data }: PageProps = $props()
 
+  // svelte-ignore state_referenced_locally
   const { form, errors, enhance, message } = superForm(data.joinForm)
 
   function formatDate(dateStr: string): string {

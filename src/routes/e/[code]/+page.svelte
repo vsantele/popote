@@ -66,6 +66,7 @@
   let participants = $derived(data.participants)
 
   // Setup Superform for adding items
+  // svelte-ignore state_referenced_locally
   const { form, errors, enhance, delayed, message } = superForm(data.form, {
     resetForm: true,
     onUpdated: async ({ form }) => {
