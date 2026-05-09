@@ -4,21 +4,26 @@ import { z } from "zod";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms/server";
 import { APIError } from "better-auth/api";
+import * as m from "$lib/paraglide/messages";
 
-const signUpSchema = z.object({
-  name: z.string().min(1, "Nom requis").max(100),
-  email: z.email("Email invalide"),
-  password: z.string().min(8, "Mot de passe trop court (8 caractères minimum)"),
-});
+function signUpSchema() {
+  return z.object({
+    name: z.string().min(1, m.validation_signup_name_required()).max(100),
+    email: z.email(m.validation_email_invalid()),
+    password: z.string().min(8, m.validation_password_too_short()),
+  });
+}
 
-const signInSchema = z.object({
-  email: z.email("Email invalide"),
-  password: z.string().min(1, "Mot de passe requis"),
-});
+function signInSchema() {
+  return z.object({
+    email: z.email(m.validation_email_invalid()),
+    password: z.string().min(1, m.validation_password_required()),
+  });
+}
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const signUpForm = await superValidate(zod4(signUpSchema));
-  const signInForm = await superValidate(zod4(signInSchema));
+  const signUpForm = await superValidate(zod4(signUpSchema()));
+  const signInForm = await superValidate(zod4(signInSchema()));
 
   if (locals.user && !locals.user.isAnonymous) {
     signUpForm.data.name = locals.user.name;
@@ -43,7 +48,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   signUp: async ({ request, locals }) => {
-    const form = await superValidate(request, zod4(signUpSchema));
+    const form = await superValidate(request, zod4(signUpSchema()));
     if (!form.valid) return fail(400, { form, error: null });
 
     try {
@@ -64,7 +69,7 @@ export const actions: Actions = {
       console.error("Sign-up failed:", err);
       return fail(500, {
         form,
-        error: "Erreur lors de la création du compte.",
+        error: m.error_signup_failed(),
       });
     }
 
@@ -72,7 +77,7 @@ export const actions: Actions = {
   },
 
   signIn: async ({ request, locals }) => {
-    const form = await superValidate(request, zod4(signInSchema));
+    const form = await superValidate(request, zod4(signInSchema()));
     if (!form.valid) return fail(400, { form, error: null });
 
     try {
@@ -88,7 +93,7 @@ export const actions: Actions = {
         return fail(400, { form, error: err.message });
       }
       console.error("Sign-in failed:", err);
-      return fail(500, { form, error: "Erreur lors de la connexion." });
+      return fail(500, { form, error: m.error_signin_failed() });
     }
 
     throw redirect(303, "/");

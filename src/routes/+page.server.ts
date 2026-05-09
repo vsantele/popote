@@ -4,17 +4,20 @@ import { z } from "zod";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms/server";
 import { fail, redirect } from "@sveltejs/kit";
+import * as m from "$lib/paraglide/messages";
 
-const schema = z.object({
-  shareCode: z
-    .string()
-    .min(1, "Code is required")
-    .max(6, "Code must be at most 6 characters")
-    .toUpperCase(),
-});
+function shareCodeSchema() {
+  return z.object({
+    shareCode: z
+      .string()
+      .min(1, m.validation_share_code_required())
+      .max(6, m.validation_share_code_max())
+      .toUpperCase(),
+  });
+}
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const joinForm = await superValidate(zod4(schema));
+  const joinForm = await superValidate(zod4(shareCodeSchema()));
 
   if (!locals.user) {
     return {
@@ -53,7 +56,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions = {
   join: async ({ request }) => {
-    const form = await superValidate(request, zod4(schema));
+    const form = await superValidate(request, zod4(shareCodeSchema()));
 
     if (!form.valid) {
       return fail(400, { form });

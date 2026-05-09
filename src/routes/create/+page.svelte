@@ -10,6 +10,7 @@
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { superForm } from "sveltekit-superforms/client";
+  import * as m from "$lib/paraglide/messages";
   import type { PageProps } from "./$types";
 
   let { data }: PageProps = $props();
@@ -23,18 +24,18 @@
   <div class="w-full max-w-md">
     <Card>
       <CardHeader>
-        <CardTitle>Créer une soirée</CardTitle>
-        <CardDescription>Organisez votre repas collaboratif</CardDescription>
+        <CardTitle>{m.home_create_title()}</CardTitle>
+        <CardDescription>{m.create_card_description()}</CardDescription>
       </CardHeader>
       <CardContent>
         <form method="POST" use:enhance class="space-y-4">
           <div class="space-y-2">
-            <Label for="host_name">Votre nom *</Label>
+            <Label for="host_name">{m.create_field_host_name_label()}</Label>
             <Input
               id="host_name"
               name="host_name"
               bind:value={$form.host_name}
-              placeholder="Votre prénom"
+              placeholder={m.create_field_host_name_placeholder()}
               required
               aria-invalid={$errors.host_name ? "true" : undefined}
             />
@@ -44,12 +45,12 @@
           </div>
 
           <div class="space-y-2">
-            <Label for="name">Nom de la soirée *</Label>
+            <Label for="name">{m.create_field_event_name_label()}</Label>
             <Input
               id="name"
               name="name"
               bind:value={$form.name}
-              placeholder="Barbecue chez Nico"
+              placeholder={m.create_field_event_name_placeholder()}
               required
               aria-invalid={$errors.name ? "true" : undefined}
             />
@@ -59,7 +60,7 @@
           </div>
 
           <div class="space-y-2">
-            <Label for="date">Date *</Label>
+            <Label for="date">{m.create_field_date_label()}</Label>
             <Input
               id="date"
               name="date"
@@ -74,31 +75,31 @@
           </div>
 
           <div class="space-y-2">
-            <Label for="location">Lieu</Label>
+            <Label for="location">{m.create_field_location_label()}</Label>
             <Input
               id="location"
               name="location"
               bind:value={$form.location}
-              placeholder="12 rue de la Paix, Paris"
+              placeholder={m.create_field_location_placeholder()}
             />
           </div>
 
           <div class="space-y-2">
-            <Label for="description">Description</Label>
+            <Label for="description">{m.create_field_description_label()}</Label>
             <Input
               id="description"
               name="description"
               bind:value={$form.description}
-              placeholder="Ramenez vos spécialités !"
+              placeholder={m.create_field_description_placeholder()}
             />
           </div>
 
           <div class="flex gap-2">
             <Button type="button" variant="outline" href="/" class="flex-1">
-              Annuler
+              {m.common_cancel()}
             </Button>
             <Button type="submit" class="flex-1" disabled={$delayed}>
-              {$delayed ? "Création..." : "Créer"}
+              {$delayed ? m.create_submitting() : m.create_submit()}
             </Button>
           </div>
         </form>

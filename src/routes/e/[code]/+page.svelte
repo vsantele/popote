@@ -39,6 +39,8 @@
   import { invalidateAll, goto } from "$app/navigation";
   import { page } from "$app/state";
   import { RefreshCw } from "@lucide/svelte";
+  import * as m from "$lib/paraglide/messages";
+  import { getLocale } from "$lib/paraglide/runtime";
   import type { PageProps } from "./$types";
 
   let { data }: PageProps = $props();
@@ -158,13 +160,16 @@
 
   // Get participant name by ID
   function getParticipantName(participantId: string): string {
-    return participants.find((p) => p.id === participantId)?.name || "Inconnu";
+    return (
+      participants.find((p) => p.id === participantId)?.name ||
+      m.event_participant_unknown()
+    );
   }
 
   // Format date
   function formatDate(dateStr: string): string {
     const date = new Date(dateStr);
-    return new Intl.DateTimeFormat("fr-FR", {
+    return new Intl.DateTimeFormat(getLocale(), {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -177,7 +182,10 @@
   // Share event
   async function shareEvent() {
     const shareUrl = `${window.location.origin}/e/${data.event.share_code}`;
-    const shareText = `Rejoignez "${data.event.name}" sur Popote !\n${shareUrl}`;
+    const shareText = m.event_share_text({
+      name: data.event.name,
+      url: shareUrl,
+    });
 
     try {
       if (navigator.share) {
@@ -188,7 +196,7 @@
         });
       } else {
         await navigator.clipboard.writeText(shareUrl);
-        alert("Lien copié dans le presse-papiers !");
+        alert(m.event_share_clipboard());
       }
     } catch (err) {
       log("error", "Failed to share", { error: String(err) });
@@ -235,7 +243,7 @@
               {data.event.share_code}
             </Badge>
             <Button variant="outline" size="sm" onclick={shareEvent}>
-              Partager
+              {m.event_share_button()}
             </Button>
           </div>
         </div>
@@ -252,8 +260,8 @@
         onvaluechange={(value) => value && setViewMode(value as "category" | "person")}
         type="single"
       >
-        <ToggleGroupItem value="category">Par catégorie</ToggleGroupItem>
-        <ToggleGroupItem value="person">Par personne</ToggleGroupItem>
+        <ToggleGroupItem value="category">{m.event_view_by_category()}</ToggleGroupItem>
+        <ToggleGroupItem value="person">{m.event_view_by_person()}</ToggleGroupItem>
       </ToggleGroup>
 
       <div class="flex gap-2">
@@ -267,14 +275,14 @@
             class={isRefreshing ? "animate-spin mr-2" : "mr-2"}
             size={16}
           />
-          Actualiser
+          {m.event_refresh()}
         </Button>
 
         <Dialog bind:open={dialogOpen}>
-          <DialogTrigger>Ajouter un item</DialogTrigger>
+          <DialogTrigger>{m.event_add_item_trigger()}</DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Qu'apportez-vous ?</DialogTitle>
+              <DialogTitle>{m.event_add_item_dialog_title()}</DialogTitle>
             </DialogHeader>
             <form
               method="POST"
@@ -283,12 +291,12 @@
               class="space-y-4"
             >
               <div class="space-y-2">
-                <Label for="name">Nom de l'item *</Label>
+                <Label for="name">{m.event_field_item_name_label()}</Label>
                 <Input
                   id="name"
                   name="name"
                   bind:value={$form.name}
-                  placeholder="Tiramisu maison"
+                  placeholder={m.event_field_item_name_placeholder()}
                   required
                   aria-invalid={$errors.name ? "true" : undefined}
                 />
@@ -298,7 +306,7 @@
               </div>
 
               <div class="space-y-2">
-                <Label for="category">Catégorie *</Label>
+                <Label for="category">{m.event_field_category_label()}</Label>
                 <Select
                   name="category"
                   bind:value={$form.category}
@@ -309,9 +317,9 @@
                   </SelectTrigger>
                   <SelectContent>
                     {#each CATEGORY_ORDER as cat}
-                      <SelectItem value={cat} label={CATEGORIES[cat].label}>
+                      <SelectItem value={cat} label={CATEGORIES[cat].label()}>
                         {CATEGORIES[cat].emoji}
-                        {CATEGORIES[cat].label}
+                        {CATEGORIES[cat].label()}
                       </SelectItem>
                     {/each}
                   </SelectContent>
@@ -322,12 +330,12 @@
               </div>
 
               <div class="space-y-2">
-                <Label for="quantity">Quantité</Label>
+                <Label for="quantity">{m.event_field_quantity_label()}</Label>
                 <Input
                   id="quantity"
                   name="quantity"
                   bind:value={$form.quantity}
-                  placeholder="Pour 8 personnes"
+                  placeholder={m.event_field_quantity_placeholder()}
                 />
               </div>
 
@@ -342,10 +350,10 @@
                   onclick={() => (dialogOpen = false)}
                   class="flex-1"
                 >
-                  Annuler
+                  {m.common_cancel()}
                 </Button>
                 <Button type="submit" class="flex-1" disabled={$delayed}>
-                  {$delayed ? "Ajout..." : "Ajouter"}
+                  {$delayed ? m.event_add_item_submitting() : m.event_add_item_submit()}
                 </Button>
               </div>
             </form>
@@ -365,7 +373,7 @@
               <CardHeader>
                 <CardTitle class="text-lg">
                   {CATEGORIES[category].emoji}
-                  {CATEGORIES[category].label}
+                  {CATEGORIES[category].label()}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -377,7 +385,9 @@
                       <div class="flex-1">
                         <p class="font-medium">{item.name}</p>
                         <p class="text-sm text-muted-foreground">
-                          Par {getParticipantName(item.participant)}
+                          {m.event_item_by_participant({
+                            name: getParticipantName(item.participant),
+                          })}
                           {#if item.quantity}
                             • {item.quantity}
                           {/if}
@@ -402,7 +412,7 @@
                 <CardTitle class="text-lg">
                   {participant.name}
                   {#if participant.is_host}
-                    <Badge variant="secondary" class="ml-2">Hôte</Badge>
+                    <Badge variant="secondary" class="ml-2">{m.event_role_host()}</Badge>
                   {/if}
                 </CardTitle>
               </CardHeader>
@@ -418,7 +428,7 @@
                           {item.name}
                         </p>
                         <p class="text-sm text-muted-foreground">
-                          {CATEGORIES[item.category as ItemCategory].label}
+                          {CATEGORIES[item.category as ItemCategory].label()}
                           {#if item.quantity}
                             • {item.quantity}
                           {/if}
@@ -438,8 +448,8 @@
       <Card>
         <CardContent class="py-12 text-center">
           <p class="text-muted-foreground">
-            Aucun item pour le moment.<br />
-            Soyez le premier à ajouter quelque chose !
+            {m.event_no_items()}<br />
+            {m.event_no_items_cta()}
           </p>
         </CardContent>
       </Card>

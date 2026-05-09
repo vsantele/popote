@@ -7,9 +7,10 @@ import { events, participants } from "$lib/server/db/schema";
 import { generateUniqueShareCode } from "$lib/server/db/utils";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
+import * as m from "$lib/paraglide/messages";
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const form = await superValidate(zod4(createEventSchema));
+  const form = await superValidate(zod4(createEventSchema()));
   if (locals.user?.name) {
     form.data.host_name = locals.user.name;
   }
@@ -19,14 +20,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   default: async ({ request, locals }) => {
-    const form = await superValidate(request, zod4(createEventSchema));
+    const form = await superValidate(request, zod4(createEventSchema()));
 
     if (!form.valid) {
       return fail(400, { form });
     }
 
     if (!locals.user) {
-      return fail(401, { form, error: "Session invalide." });
+      return fail(401, { form, error: m.error_session_invalid() });
     }
 
     let shareCode: string = "";
@@ -68,7 +69,7 @@ export const actions: Actions = {
       log("error", "Failed to create event", { error: JSON.stringify(err) });
       return fail(500, {
         form,
-        error: "Impossible de créer la soirée. Veuillez réessayer.",
+        error: m.error_create_event_failed(),
       });
     }
     return redirect(303, `/e/${shareCode}`);

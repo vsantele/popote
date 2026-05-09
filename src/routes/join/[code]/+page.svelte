@@ -10,6 +10,7 @@
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { superForm } from "sveltekit-superforms/client";
+  import * as m from "$lib/paraglide/messages";
   import type { PageProps } from "./$types";
 
   let { data }: PageProps = $props();
@@ -23,20 +24,18 @@
   <div class="w-full max-w-md">
     <Card>
       <CardHeader>
-        <CardTitle>Rejoindre "{data.event.name}"</CardTitle>
-        <CardDescription>
-          Entrez votre nom pour participer à cet événement
-        </CardDescription>
+        <CardTitle>{m.join_title({ name: data.event.name })}</CardTitle>
+        <CardDescription>{m.join_description()}</CardDescription>
       </CardHeader>
       <CardContent>
         <form method="POST" use:enhance class="space-y-4">
           <div class="space-y-2">
-            <Label for="name">Votre nom *</Label>
+            <Label for="name">{m.join_field_name_label()}</Label>
             <Input
               id="name"
               name="name"
               bind:value={$form.name}
-              placeholder="Votre prénom"
+              placeholder={m.join_field_name_placeholder()}
               required
               autofocus
               aria-invalid={$errors.name ? "true" : undefined}
@@ -48,10 +47,10 @@
 
           <div class="flex gap-2">
             <Button type="button" variant="outline" href="/" class="flex-1">
-              Annuler
+              {m.common_cancel()}
             </Button>
             <Button type="submit" class="flex-1" disabled={$delayed}>
-              {$delayed ? "Connexion..." : "Rejoindre"}
+              {$delayed ? m.join_submitting() : m.join_submit()}
             </Button>
           </div>
         </form>

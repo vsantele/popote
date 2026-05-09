@@ -3,6 +3,7 @@
   import favicon from "$lib/assets/favicon.svg";
   import { measurePageLoad } from "$lib/utils/logger";
   import { onMount } from "svelte";
+  import * as m from "$lib/paraglide/messages";
 
   let { children } = $props();
 
@@ -22,6 +23,7 @@
 </script>
 
 <svelte:head>
+  <title>{m.app_name()}</title>
   <link rel="icon" href={favicon} />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#FF6B35" />

@@ -14,8 +14,6 @@ catalog:
 overrides:
   vite: "catalog:"
   vitest: "catalog:"
-patchedDependencies:
-  "@void-sdk/void@0.6.1": patches/@void-sdk__void@0.6.1.patch
 peerDependencyRules:
   allowAny:
     - vite

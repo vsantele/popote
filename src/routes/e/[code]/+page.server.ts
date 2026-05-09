@@ -7,6 +7,7 @@ import { superValidate } from "sveltekit-superforms/server";
 import { addItemSchema } from "$lib/schemas/item.schema";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
+import * as m from "$lib/paraglide/messages";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const shareCode = params.code.toUpperCase();
@@ -21,7 +22,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   });
 
   if (!event) {
-    throw error(404, "Événement introuvable");
+    throw error(404, m.error_event_not_found());
   }
 
   // If the visitor isn't the host and isn't already a participant, send them
@@ -68,7 +69,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     (p) => p.user_id === userId,
   );
 
-  const form = await superValidate(zod4(addItemSchema));
+  const form = await superValidate(zod4(addItemSchema()));
 
   return {
     event: transformedEvent,
@@ -81,7 +82,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 export const actions: Actions = {
   addItem: async ({ request, params, locals }) => {
-    const form = await superValidate(request, zod4(addItemSchema));
+    const form = await superValidate(request, zod4(addItemSchema()));
 
     if (!form.valid) {
       return fail(400, { form });
@@ -90,7 +91,7 @@ export const actions: Actions = {
     if (!locals.user) {
       return fail(401, {
         form,
-        error: "Session invalide. Veuillez rejoindre l'événement.",
+        error: m.error_session_invalid_join(),
       });
     }
 
@@ -110,7 +111,7 @@ export const actions: Actions = {
       if (!event) {
         return fail(404, {
           form,
-          error: "Événement introuvable",
+          error: m.error_event_not_found(),
         });
       }
 
@@ -145,7 +146,7 @@ export const actions: Actions = {
       log("error", "Failed to add item", { error: String(err) });
       return fail(500, {
         form,
-        error: "Impossible d'ajouter l'item. Veuillez réessayer.",
+        error: m.error_add_item_failed(),
       });
     }
   },

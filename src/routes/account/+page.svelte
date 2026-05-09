@@ -10,6 +10,8 @@
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { superForm } from "sveltekit-superforms/client";
+  import * as m from "$lib/paraglide/messages";
+  import LocaleSwitcher from "$lib/components/locale-switcher.svelte";
   import type { PageProps } from "./$types";
 
   let { data }: PageProps = $props();
@@ -41,13 +43,16 @@
 
 <div class="min-h-screen flex items-center justify-center p-4">
   <div class="w-full max-w-md space-y-6">
+    <div class="flex justify-end">
+      <LocaleSwitcher />
+    </div>
     <div class="text-center space-y-2">
-      <h1 class="text-4xl font-bold">👤 Compte</h1>
+      <h1 class="text-4xl font-bold">{m.account_title()}</h1>
       <p class="text-muted-foreground">
         {#if isLoggedIn}
-          Connecté en tant que {data.user?.email}
+          {m.account_logged_in_as({ email: data.user?.email ?? "" })}
         {:else}
-          Créez un compte pour retrouver vos soirées sur tous vos appareils
+          {m.account_signup_intro()}
         {/if}
       </p>
     </div>
@@ -55,7 +60,7 @@
     {#if isLoggedIn}
       <Card>
         <CardHeader>
-          <CardTitle>Mon compte</CardTitle>
+          <CardTitle>{m.account_my_account_title()}</CardTitle>
           <CardDescription>
             {data.user?.name}<br />
             <span class="text-xs">{data.user?.email}</span>
@@ -64,7 +69,7 @@
         <CardContent>
           <form method="POST" action="?/signOut">
             <Button type="submit" variant="outline" class="w-full">
-              Se déconnecter
+              {m.account_signout_button()}
             </Button>
           </form>
         </CardContent>
@@ -72,11 +77,8 @@
     {:else}
       <Card>
         <CardHeader>
-          <CardTitle>Créer un compte</CardTitle>
-          <CardDescription>
-            Vos soirées en cours seront automatiquement liées à votre nouveau
-            compte.
-          </CardDescription>
+          <CardTitle>{m.account_signup_card_title()}</CardTitle>
+          <CardDescription>{m.account_signup_card_description()}</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -86,12 +88,12 @@
             class="space-y-4"
           >
             <div class="space-y-2">
-              <Label for="signup-name">Votre nom *</Label>
+              <Label for="signup-name">{m.account_field_name_label()}</Label>
               <Input
                 id="signup-name"
                 name="name"
                 bind:value={$signUpForm.name}
-                placeholder="Votre prénom"
+                placeholder={m.account_field_name_placeholder()}
                 required
                 aria-invalid={$signUpErrors.name ? "true" : undefined}
               />
@@ -101,13 +103,13 @@
             </div>
 
             <div class="space-y-2">
-              <Label for="signup-email">Email *</Label>
+              <Label for="signup-email">{m.account_field_email_label()}</Label>
               <Input
                 id="signup-email"
                 name="email"
                 type="email"
                 bind:value={$signUpForm.email}
-                placeholder="vous@exemple.fr"
+                placeholder={m.account_field_email_placeholder()}
                 required
                 aria-invalid={$signUpErrors.email ? "true" : undefined}
               />
@@ -117,13 +119,13 @@
             </div>
 
             <div class="space-y-2">
-              <Label for="signup-password">Mot de passe *</Label>
+              <Label for="signup-password">{m.account_field_password_label()}</Label>
               <Input
                 id="signup-password"
                 name="password"
                 type="password"
                 bind:value={$signUpForm.password}
-                placeholder="8 caractères minimum"
+                placeholder={m.account_field_password_placeholder()}
                 required
                 aria-invalid={$signUpErrors.password ? "true" : undefined}
               />
@@ -139,7 +141,7 @@
             {/if}
 
             <Button type="submit" class="w-full" disabled={$signUpDelayed}>
-              {$signUpDelayed ? "Création..." : "Créer mon compte"}
+              {$signUpDelayed ? m.create_submitting() : m.account_signup_submit()}
             </Button>
           </form>
         </CardContent>
@@ -147,10 +149,8 @@
 
       <Card>
         <CardHeader>
-          <CardTitle>Se connecter</CardTitle>
-          <CardDescription>
-            J'ai déjà un compte sur un autre appareil.
-          </CardDescription>
+          <CardTitle>{m.account_signin_card_title()}</CardTitle>
+          <CardDescription>{m.account_signin_card_description()}</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -160,13 +160,13 @@
             class="space-y-4"
           >
             <div class="space-y-2">
-              <Label for="signin-email">Email</Label>
+              <Label for="signin-email">{m.account_signin_email_label()}</Label>
               <Input
                 id="signin-email"
                 name="email"
                 type="email"
                 bind:value={$signInForm.email}
-                placeholder="vous@exemple.fr"
+                placeholder={m.account_field_email_placeholder()}
                 required
                 aria-invalid={$signInErrors.email ? "true" : undefined}
               />
@@ -176,7 +176,7 @@
             </div>
 
             <div class="space-y-2">
-              <Label for="signin-password">Mot de passe</Label>
+              <Label for="signin-password">{m.account_signin_password_label()}</Label>
               <Input
                 id="signin-password"
                 name="password"
@@ -202,7 +202,7 @@
               class="w-full"
               disabled={$signInDelayed}
             >
-              {$signInDelayed ? "Connexion..." : "Se connecter"}
+              {$signInDelayed ? m.account_signin_submitting() : m.account_signin_submit()}
             </Button>
           </form>
         </CardContent>
@@ -210,18 +210,22 @@
     {/if}
 
     <div class="text-center">
-      <Button href="/" variant="ghost" size="sm">Retour à l'accueil</Button>
+      <Button href="/" variant="ghost" size="sm">{m.nav_back_home()}</Button>
     </div>
 
     {#if data.user}
       <div class="pt-8 text-center">
         <details class="text-xs text-muted-foreground">
           <summary class="cursor-pointer hover:underline">
-            Informations avancées
+            {m.account_advanced_summary()}
           </summary>
           <div class="mt-2 p-2 bg-muted rounded break-all font-mono space-y-1">
-            <div>ID utilisateur : {data.user.id}</div>
-            <div>Anonyme : {data.user.isAnonymous ? "oui" : "non"}</div>
+            <div>{m.account_advanced_user_id({ id: data.user.id })}</div>
+            <div>
+              {data.user.isAnonymous
+                ? m.account_advanced_anonymous_yes()
+                : m.account_advanced_anonymous_no()}
+            </div>
           </div>
         </details>
       </div>

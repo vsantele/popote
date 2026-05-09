@@ -1,4 +1,5 @@
 import adapter from "@sveltejs/adapter-cloudflare";
+import { withVoidTSConfig } from "void/sveltekit";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -6,9 +7,7 @@ const config = {
     // adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
     // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
     // See https://svelte.dev/docs/kit/adapters for more information about adapters.
-    adapter: adapter({
-      platformProxy: { persist: { path: ".void/v3" } },
-    }),
+    adapter: adapter(),
     serviceWorker: {
       register: false, // Manual registration in layout for better control
     },
@@ -22,15 +21,7 @@ const config = {
       remoteFunctions: true,
     },
     typescript: {
-      config: (config) => {
-        config.files ??= [];
-        config.files.push("../.void/db.d.ts");
-        config.files.push("../.void/env.d.ts");
-        config.compilerOptions.paths["void/db"] = ["../.void/db.d.ts"];
-        config.compilerOptions.paths["@schema"] = ["../db/schema.ts"];
-        config.compilerOptions.paths["@schema/*"] = ["../db/schema/*"];
-        return config;
-      },
+      config: withVoidTSConfig(),
     },
   },
   compilerOptions: {
