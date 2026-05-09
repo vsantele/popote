@@ -138,7 +138,7 @@
     items.forEach((item) => {
       const cat = item.category as ItemCategory
       if (groups.has(cat)) {
-        groups.get(cat)!.push(item)
+        groups.get(cat)!.push(item as Item)
       }
     })
     return groups
@@ -151,7 +151,7 @@
       if (!groups.has(item.participant)) {
         groups.set(item.participant, [])
       }
-      groups.get(item.participant)!.push(item)
+      groups.get(item.participant)!.push(item as Item)
     })
     return groups
   })
@@ -255,7 +255,7 @@
     <div class="flex items-center justify-between gap-2">
       <ToggleGroup
         value={viewMode}
-        onvaluechange={(value) =>
+        onValueChange={(value) =>
           value && setViewMode(value as "category" | "person")}
         type="single"
       >
