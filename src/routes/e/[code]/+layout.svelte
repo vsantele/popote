@@ -1,8 +1,9 @@
 <script lang="ts">
-  import * as m from "$lib/paraglide/messages";
-  import LocaleSwitcher from "$lib/components/locale-switcher.svelte";
+  import * as m from "$lib/paraglide/messages"
+  import { localizeHref } from "$lib/paraglide/runtime"
+  import LocaleSwitcher from "$lib/components/locale-switcher.svelte"
 
-  let { children } = $props();
+  let { children } = $props()
 </script>
 
 <header
@@ -10,7 +11,7 @@
 >
   <div class="container flex h-14 items-center justify-between px-4 mx-auto">
     <a
-      href="/"
+      href={localizeHref("/")}
       class="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity"
     >
       {m.app_name()}

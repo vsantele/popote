@@ -1,22 +1,19 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import {
-    Card,
-    CardContent,
-  } from "$lib/components/ui/card";
-  import * as m from "$lib/paraglide/messages";
-  import { getLocale } from "$lib/paraglide/runtime";
-  import type { PageProps } from "./$types";
+  import { Button } from "$lib/components/ui/button"
+  import { Card, CardContent } from "$lib/components/ui/card"
+  import * as m from "$lib/paraglide/messages"
+  import { getLocale, localizeHref } from "$lib/paraglide/runtime"
+  import type { PageProps } from "./$types"
 
-  let { data }: PageProps = $props();
+  let { data }: PageProps = $props()
 
   function formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
+    const date = new Date(dateStr)
     return date.toLocaleDateString(getLocale(), {
       day: "numeric",
       month: "long",
       year: "numeric",
-    });
+    })
   }
 </script>
 
@@ -27,7 +24,9 @@
         <h1 class="text-2xl font-bold">{m.past_title()}</h1>
         <p class="text-sm text-muted-foreground">{m.past_description()}</p>
       </div>
-      <Button href="/" variant="outline" size="sm">{m.nav_back()}</Button>
+      <Button href={localizeHref("/")} variant="outline" size="sm"
+        >{m.nav_back()}</Button
+      >
     </div>
 
     {#if data.hosted.length === 0 && data.joined.length === 0}
@@ -45,7 +44,7 @@
             </h3>
             {#each data.hosted as event}
               <a
-                href="/e/{event.share_code}"
+                href={localizeHref(`/e/${event.share_code}`)}
                 class="block p-3 rounded-lg border hover:bg-accent transition-colors"
               >
                 <div class="font-medium">{event.name}</div>
@@ -70,7 +69,7 @@
             </h3>
             {#each data.joined as event}
               <a
-                href="/e/{event.share_code}"
+                href={localizeHref(`/e/${event.share_code}`)}
                 class="block p-3 rounded-lg border hover:bg-accent transition-colors"
               >
                 <div class="font-medium">{event.name}</div>

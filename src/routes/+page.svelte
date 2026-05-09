@@ -9,10 +9,9 @@
   } from "$lib/components/ui/card"
   import { Input } from "$lib/components/ui/input"
   import { Label } from "$lib/components/ui/label"
-  import { goto } from "$app/navigation"
   import { superForm } from "sveltekit-superforms"
   import * as m from "$lib/paraglide/messages"
-  import { getLocale } from "$lib/paraglide/runtime"
+  import { getLocale, localizeHref } from "$lib/paraglide/runtime"
   import LocaleSwitcher from "$lib/components/locale-switcher.svelte"
   import type { PageProps } from "./$types"
 
@@ -35,7 +34,7 @@
     <div class="flex items-center justify-end gap-2">
       <LocaleSwitcher />
       <Button
-        href="/account"
+        href={localizeHref("/account")}
         variant="ghost"
         size="sm"
         class="text-muted-foreground hover:text-foreground"
@@ -56,7 +55,8 @@
           <CardDescription>{m.home_create_description()}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button href="/create" class="w-full">{m.home_create_action()}</Button
+          <Button href={localizeHref("/create")} class="w-full"
+            >{m.home_create_action()}</Button
           >
         </CardContent>
       </Card>
@@ -100,7 +100,11 @@
                 <CardTitle>{m.home_events_title()}</CardTitle>
                 <CardDescription>{m.home_events_description()}</CardDescription>
               </div>
-              <Button href="/past-sessions" variant="outline" size="sm">
+              <Button
+                href={localizeHref("/past-sessions")}
+                variant="outline"
+                size="sm"
+              >
                 {m.home_events_history()}
               </Button>
             </div>
@@ -113,7 +117,7 @@
                 </h3>
                 {#each data.hosted as event}
                   <a
-                    href="/e/{event.share_code}"
+                    href={localizeHref(`/e/${event.share_code}`)}
                     class="block p-3 rounded-lg border hover:bg-accent transition-colors"
                   >
                     <div class="font-medium">{event.name}</div>
@@ -138,7 +142,7 @@
                 </h3>
                 {#each data.joined as event}
                   <a
-                    href="/e/{event.share_code}"
+                    href={localizeHref(`/e/${event.share_code}`)}
                     class="block p-3 rounded-lg border hover:bg-accent transition-colors"
                   >
                     <div class="font-medium">{event.name}</div>

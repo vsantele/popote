@@ -1,20 +1,21 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button"
   import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { superForm } from "sveltekit-superforms/client";
-  import * as m from "$lib/paraglide/messages";
-  import LocaleSwitcher from "$lib/components/locale-switcher.svelte";
-  import type { PageProps } from "./$types";
+  } from "$lib/components/ui/card"
+  import { Input } from "$lib/components/ui/input"
+  import { Label } from "$lib/components/ui/label"
+  import { superForm } from "sveltekit-superforms/client"
+  import * as m from "$lib/paraglide/messages"
+  import { localizeHref } from "$lib/paraglide/runtime"
+  import type { PageProps } from "./$types"
+  import LocaleSwitcher from "$lib/components/locale-switcher.svelte"
 
-  let { data }: PageProps = $props();
+  let { data }: PageProps = $props()
 
   const {
     form: signUpForm,
@@ -25,7 +26,7 @@
   } = superForm(data.signUpForm, {
     id: "signUp",
     resetForm: false,
-  });
+  })
 
   const {
     form: signInForm,
@@ -36,9 +37,9 @@
   } = superForm(data.signInForm, {
     id: "signIn",
     resetForm: false,
-  });
+  })
 
-  const isLoggedIn = $derived(!!data.user && !data.user.isAnonymous);
+  const isLoggedIn = $derived(!!data.user && !data.user.isAnonymous)
 </script>
 
 <div class="min-h-screen flex items-center justify-center p-4">
@@ -78,7 +79,9 @@
       <Card>
         <CardHeader>
           <CardTitle>{m.account_signup_card_title()}</CardTitle>
-          <CardDescription>{m.account_signup_card_description()}</CardDescription>
+          <CardDescription
+            >{m.account_signup_card_description()}</CardDescription
+          >
         </CardHeader>
         <CardContent>
           <form
@@ -119,7 +122,9 @@
             </div>
 
             <div class="space-y-2">
-              <Label for="signup-password">{m.account_field_password_label()}</Label>
+              <Label for="signup-password"
+                >{m.account_field_password_label()}</Label
+              >
               <Input
                 id="signup-password"
                 name="password"
@@ -141,7 +146,9 @@
             {/if}
 
             <Button type="submit" class="w-full" disabled={$signUpDelayed}>
-              {$signUpDelayed ? m.create_submitting() : m.account_signup_submit()}
+              {$signUpDelayed
+                ? m.create_submitting()
+                : m.account_signup_submit()}
             </Button>
           </form>
         </CardContent>
@@ -150,7 +157,9 @@
       <Card>
         <CardHeader>
           <CardTitle>{m.account_signin_card_title()}</CardTitle>
-          <CardDescription>{m.account_signin_card_description()}</CardDescription>
+          <CardDescription
+            >{m.account_signin_card_description()}</CardDescription
+          >
         </CardHeader>
         <CardContent>
           <form
@@ -176,7 +185,9 @@
             </div>
 
             <div class="space-y-2">
-              <Label for="signin-password">{m.account_signin_password_label()}</Label>
+              <Label for="signin-password"
+                >{m.account_signin_password_label()}</Label
+              >
               <Input
                 id="signin-password"
                 name="password"
@@ -202,7 +213,9 @@
               class="w-full"
               disabled={$signInDelayed}
             >
-              {$signInDelayed ? m.account_signin_submitting() : m.account_signin_submit()}
+              {$signInDelayed
+                ? m.account_signin_submitting()
+                : m.account_signin_submit()}
             </Button>
           </form>
         </CardContent>
@@ -210,7 +223,9 @@
     {/if}
 
     <div class="text-center">
-      <Button href="/" variant="ghost" size="sm">{m.nav_back_home()}</Button>
+      <Button href={localizeHref("/")} variant="ghost" size="sm"
+        >{m.nav_back_home()}</Button
+      >
     </div>
 
     {#if data.user}

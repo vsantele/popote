@@ -1,123 +1,120 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button"
   import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card";
-  import { Badge } from "$lib/components/ui/badge";
-  import { Separator } from "$lib/components/ui/separator";
-  import {
-    ToggleGroup,
-    ToggleGroupItem,
-  } from "$lib/components/ui/toggle-group";
+  } from "$lib/components/ui/card"
+  import { Badge } from "$lib/components/ui/badge"
+  import { Separator } from "$lib/components/ui/separator"
+  import { ToggleGroup, ToggleGroupItem } from "$lib/components/ui/toggle-group"
   import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-  } from "$lib/components/ui/dialog";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
+  } from "$lib/components/ui/dialog"
+  import { Input } from "$lib/components/ui/input"
+  import { Label } from "$lib/components/ui/label"
   import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-  } from "$lib/components/ui/select";
+  } from "$lib/components/ui/select"
   import {
     CATEGORIES,
     CATEGORY_ORDER,
     type Item,
     type ItemCategory,
-  } from "$lib/types/index";
-  import { log } from "$lib/utils/logger";
-  import { superForm } from "sveltekit-superforms/client";
-  import { invalidateAll, goto } from "$app/navigation";
-  import { page } from "$app/state";
-  import { RefreshCw } from "@lucide/svelte";
-  import * as m from "$lib/paraglide/messages";
-  import { getLocale } from "$lib/paraglide/runtime";
-  import type { PageProps } from "./$types";
+  } from "$lib/types/index"
+  import { log } from "$lib/utils/logger"
+  import { superForm } from "sveltekit-superforms/client"
+  import { invalidateAll, goto } from "$app/navigation"
+  import { page } from "$app/state"
+  import { RefreshCw } from "@lucide/svelte"
+  import * as m from "$lib/paraglide/messages"
+  import { getLocale, localizeHref } from "$lib/paraglide/runtime"
+  import type { PageProps } from "./$types"
 
-  let { data }: PageProps = $props();
+  let { data }: PageProps = $props()
 
   // Derive viewMode from URL (single source of truth)
   let viewMode = $derived<"category" | "person">(
-    page.url.searchParams.get("view") === "person" ? "person" : "category"
-  );
+    page.url.searchParams.get("view") === "person" ? "person" : "category",
+  )
 
   // Update URL through event handler (not effect)
   function setViewMode(newMode: "category" | "person") {
-    const url = new URL(page.url);
+    const url = new URL(page.url)
     if (newMode === "category") {
-      url.searchParams.delete("view");
+      url.searchParams.delete("view")
     } else {
-      url.searchParams.set("view", newMode);
+      url.searchParams.set("view", newMode)
     }
-    goto(url, { replaceState: true, noScroll: true, keepFocus: true });
+    goto(url, { replaceState: true, noScroll: true, keepFocus: true })
   }
 
-  let dialogOpen = $state(false);
-  let isRefreshing = $state(false);
+  let dialogOpen = $state(false)
+  let isRefreshing = $state(false)
 
   // Use data directly from server load (no polling)
-  let items = $derived(data.items);
-  let participants = $derived(data.participants);
+  let items = $derived(data.items)
+  let participants = $derived(data.participants)
 
   // Setup Superform for adding items
   const { form, errors, enhance, delayed, message } = superForm(data.form, {
     resetForm: true,
     onUpdated: async ({ form }) => {
       if (form.valid) {
-        dialogOpen = false;
-        await invalidateAll();
+        dialogOpen = false
+        await invalidateAll()
       }
     },
-  });
+  })
 
   // Set default category to 'plat' if not set
   if (!$form.category) {
-    $form.category = "plat";
+    $form.category = "plat"
   }
 
   // Manual refresh function
   async function handleRefresh() {
-    isRefreshing = true;
+    isRefreshing = true
     try {
-      await invalidateAll();
+      await invalidateAll()
     } finally {
-      isRefreshing = false;
+      isRefreshing = false
     }
   }
 
   // Pull-to-refresh support (mobile gesture)
-  let touchStartY = 0;
-  let isPulling = $state(false);
-  let pullDistance = $state(0);
+  let touchStartY = 0
+  let isPulling = $state(false)
+  let pullDistance = $state(0)
 
   function handleTouchStart(e: TouchEvent) {
     if (window.scrollY === 0) {
-      touchStartY = e.touches[0].clientY;
+      touchStartY = e.touches[0].clientY
     }
   }
 
   function handleTouchMove(e: TouchEvent) {
-    if (touchStartY === 0) return;
+    if (touchStartY === 0) return
 
-    const touchY = e.touches[0].clientY;
-    const distance = touchY - touchStartY;
+    const touchY = e.touches[0].clientY
+    const distance = touchY - touchStartY
 
     if (distance > 0 && window.scrollY === 0) {
-      isPulling = true;
-      pullDistance = Math.min(distance, 80);
+      isPulling = true
+      pullDistance = Math.min(distance, 80)
 
       // Prevent default scrolling when pulling
       if (distance > 10) {
-        e.preventDefault();
+        e.preventDefault()
       }
     }
   }
@@ -125,50 +122,50 @@
   async function handleTouchEnd() {
     if (isPulling && pullDistance > 60) {
       // Trigger refresh if pulled far enough
-      await handleRefresh();
+      await handleRefresh()
     }
 
-    touchStartY = 0;
-    isPulling = false;
-    pullDistance = 0;
+    touchStartY = 0
+    isPulling = false
+    pullDistance = 0
   }
 
   // Group items by category
   const itemsByCategory = $derived.by(() => {
-    const groups = new Map<ItemCategory, Item[]>();
-    CATEGORY_ORDER.forEach((cat) => groups.set(cat, []));
+    const groups = new Map<ItemCategory, Item[]>()
+    CATEGORY_ORDER.forEach((cat) => groups.set(cat, []))
     items.forEach((item) => {
-      const cat = item.category as ItemCategory;
+      const cat = item.category as ItemCategory
       if (groups.has(cat)) {
-        groups.get(cat)!.push(item);
+        groups.get(cat)!.push(item)
       }
-    });
-    return groups;
-  });
+    })
+    return groups
+  })
 
   // Group items by participant
   const itemsByParticipant = $derived.by(() => {
-    const groups = new Map<string, Item[]>();
+    const groups = new Map<string, Item[]>()
     items.forEach((item) => {
       if (!groups.has(item.participant)) {
-        groups.set(item.participant, []);
+        groups.set(item.participant, [])
       }
-      groups.get(item.participant)!.push(item);
-    });
-    return groups;
-  });
+      groups.get(item.participant)!.push(item)
+    })
+    return groups
+  })
 
   // Get participant name by ID
   function getParticipantName(participantId: string): string {
     return (
       participants.find((p) => p.id === participantId)?.name ||
       m.event_participant_unknown()
-    );
+    )
   }
 
   // Format date
   function formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
+    const date = new Date(dateStr)
     return new Intl.DateTimeFormat(getLocale(), {
       weekday: "long",
       year: "numeric",
@@ -176,16 +173,16 @@
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(date);
+    }).format(date)
   }
 
   // Share event
   async function shareEvent() {
-    const shareUrl = `${window.location.origin}/e/${data.event.share_code}`;
+    const shareUrl = localizeHref(`/e/${data.event.share_code}`)
     const shareText = m.event_share_text({
       name: data.event.name,
       url: shareUrl,
-    });
+    })
 
     try {
       if (navigator.share) {
@@ -193,13 +190,13 @@
           title: data.event.name,
           text: shareText,
           url: shareUrl,
-        });
+        })
       } else {
-        await navigator.clipboard.writeText(shareUrl);
-        alert(m.event_share_clipboard());
+        await navigator.clipboard.writeText(shareUrl)
+        alert(m.event_share_clipboard())
       }
     } catch (err) {
-      log("error", "Failed to share", { error: String(err) });
+      log("error", "Failed to share", { error: String(err) })
     }
   }
 </script>
@@ -257,11 +254,16 @@
     <div class="flex items-center justify-between gap-2">
       <ToggleGroup
         value={viewMode}
-        onvaluechange={(value) => value && setViewMode(value as "category" | "person")}
+        onvaluechange={(value) =>
+          value && setViewMode(value as "category" | "person")}
         type="single"
       >
-        <ToggleGroupItem value="category">{m.event_view_by_category()}</ToggleGroupItem>
-        <ToggleGroupItem value="person">{m.event_view_by_person()}</ToggleGroupItem>
+        <ToggleGroupItem value="category"
+          >{m.event_view_by_category()}</ToggleGroupItem
+        >
+        <ToggleGroupItem value="person"
+          >{m.event_view_by_person()}</ToggleGroupItem
+        >
       </ToggleGroup>
 
       <div class="flex gap-2">
@@ -353,7 +355,9 @@
                   {m.common_cancel()}
                 </Button>
                 <Button type="submit" class="flex-1" disabled={$delayed}>
-                  {$delayed ? m.event_add_item_submitting() : m.event_add_item_submit()}
+                  {$delayed
+                    ? m.event_add_item_submitting()
+                    : m.event_add_item_submit()}
                 </Button>
               </div>
             </form>
@@ -412,7 +416,9 @@
                 <CardTitle class="text-lg">
                   {participant.name}
                   {#if participant.is_host}
-                    <Badge variant="secondary" class="ml-2">{m.event_role_host()}</Badge>
+                    <Badge variant="secondary" class="ml-2"
+                      >{m.event_role_host()}</Badge
+                    >
                   {/if}
                 </CardTitle>
               </CardHeader>

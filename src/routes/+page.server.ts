@@ -5,6 +5,7 @@ import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms/server";
 import { fail, redirect } from "@sveltejs/kit";
 import * as m from "$lib/paraglide/messages";
+import { localizeHref } from "$lib/paraglide/runtime";
 
 function shareCodeSchema() {
   return z.object({
@@ -55,13 +56,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions = {
-  join: async ({ request }) => {
+  join: async ({ request, url }) => {
     const form = await superValidate(request, zod4(shareCodeSchema()));
 
     if (!form.valid) {
       return fail(400, { form });
     }
 
-    throw redirect(303, `/join/${form.data.shareCode}`);
+    throw redirect(303, localizeHref(`/join/${form.data.shareCode}`));
   },
 } satisfies Actions;

@@ -7,7 +7,9 @@ import { events, participants } from "$lib/server/db/schema";
 import { generateUniqueShareCode } from "$lib/server/db/utils";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
+
 import * as m from "$lib/paraglide/messages";
+import { localizeHref } from "$lib/paraglide/runtime";
 
 export const load: PageServerLoad = async ({ locals }) => {
   const form = await superValidate(zod4(createEventSchema()));
@@ -72,6 +74,6 @@ export const actions: Actions = {
         error: m.error_create_event_failed(),
       });
     }
-    return redirect(303, `/e/${shareCode}`);
+    return redirect(303, localizeHref(`/e/${shareCode}`));
   },
 };

@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
 import * as m from "$lib/paraglide/messages";
+import { localizeHref } from "$lib/paraglide/runtime";
 
 function joinEventSchema() {
   return z.object({
@@ -33,7 +34,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
 
   if (event.participants.length > 0) {
-    return redirect(303, `/e/${shareCode}`);
+    return redirect(303, localizeHref(`/e/${shareCode}`));
   }
 
   const transformedEvent = {
@@ -104,6 +105,6 @@ export const actions: Actions = {
       });
     }
 
-    return redirect(303, `/e/${params.code}`);
+    return redirect(303, localizeHref(`/e/${params.code}`));
   },
 };

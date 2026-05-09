@@ -7,7 +7,9 @@ import { superValidate } from "sveltekit-superforms/server";
 import { addItemSchema } from "$lib/schemas/item.schema";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
+
 import * as m from "$lib/paraglide/messages";
+import { localizeHref } from "$lib/paraglide/runtime";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const shareCode = params.code.toUpperCase();
@@ -31,7 +33,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const alreadyJoined = event.participants.some((p) => p.userId === userId);
 
   if (!isHost && !alreadyJoined) {
-    return redirect(303, `/join/${shareCode}`);
+    return redirect(303, localizeHref(`/join/${shareCode}`));
   }
 
   const transformedEvent = {

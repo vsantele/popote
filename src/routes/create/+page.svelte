@@ -1,23 +1,24 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button"
   import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { superForm } from "sveltekit-superforms/client";
-  import * as m from "$lib/paraglide/messages";
-  import type { PageProps } from "./$types";
+  } from "$lib/components/ui/card"
+  import { Input } from "$lib/components/ui/input"
+  import { Label } from "$lib/components/ui/label"
+  import { superForm } from "sveltekit-superforms/client"
+  import * as m from "$lib/paraglide/messages"
+  import { localizeHref } from "$lib/paraglide/runtime"
+  import type { PageProps } from "./$types"
 
-  let { data }: PageProps = $props();
+  let { data }: PageProps = $props()
 
   const { form, errors, enhance, delayed } = superForm(data.form, {
     resetForm: false,
-  });
+  })
 </script>
 
 <div class="min-h-screen flex items-center justify-center p-4">
@@ -85,7 +86,8 @@
           </div>
 
           <div class="space-y-2">
-            <Label for="description">{m.create_field_description_label()}</Label>
+            <Label for="description">{m.create_field_description_label()}</Label
+            >
             <Input
               id="description"
               name="description"
@@ -95,7 +97,12 @@
           </div>
 
           <div class="flex gap-2">
-            <Button type="button" variant="outline" href="/" class="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              href={localizeHref("/")}
+              class="flex-1"
+            >
               {m.common_cancel()}
             </Button>
             <Button type="submit" class="flex-1" disabled={$delayed}>

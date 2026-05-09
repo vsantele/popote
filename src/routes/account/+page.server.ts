@@ -5,6 +5,7 @@ import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms/server";
 import { APIError } from "better-auth/api";
 import * as m from "$lib/paraglide/messages";
+import { localizeHref } from "$lib/paraglide/runtime";
 
 function signUpSchema() {
   return z.object({
@@ -73,7 +74,7 @@ export const actions: Actions = {
       });
     }
 
-    throw redirect(303, "/");
+    throw redirect(303, localizeHref("/"));
   },
 
   signIn: async ({ request, locals }) => {
@@ -96,7 +97,7 @@ export const actions: Actions = {
       return fail(500, { form, error: m.error_signin_failed() });
     }
 
-    throw redirect(303, "/");
+    throw redirect(303, localizeHref("/"));
   },
 
   signOut: async ({ request, locals }) => {
@@ -105,6 +106,6 @@ export const actions: Actions = {
     } catch (err) {
       console.error("Sign-out failed:", err);
     }
-    throw redirect(303, "/");
+    throw redirect(303, localizeHref("/"));
   },
 };
