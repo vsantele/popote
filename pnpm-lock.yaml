@@ -116,8 +116,8 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5(@voidzero-dev/vite-plus-test@0.1.20)
       '@void/svelte':
-        specifier: ^0.7.1
-        version: 0.7.1(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(void@0.7.1(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2))
+        specifier: ^0.7.3
+        version: 0.7.3(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(void@0.7.3(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2))
       bits-ui:
         specifier: 2.18.0
         version: 2.18.0(@internationalized/date@3.12.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(svelte@5.55.5)
@@ -164,8 +164,8 @@ importers:
         specifier: npm:@voidzero-dev/vite-plus-test@latest
         version: '@voidzero-dev/vite-plus-test@0.1.20(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/ui@4.1.5)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(esbuild@0.27.7)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@2.2.0))(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3)'
       void:
-        specifier: ^0.7.1
-        version: 0.7.1(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2)
+        specifier: ^0.7.3
+        version: 0.7.3(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2)
 
 packages:
 
@@ -295,8 +295,8 @@ packages:
     resolution: {integrity: sha512-jxQYkj8dSIzc0cD6cMMNdOc1UVjqSqu8BZdor5s8cGjW2I8BjODt/kWPVdY+u9zj3ms75Q5qaZgnxUad83+eAg==}
     engines: {node: '>=22.0.0'}
 
-  '@cloudflare/sandbox@0.9.4':
-    resolution: {integrity: sha512-T7Z90ZlVaODyFJdwU7wxXN6ZWO9O9NEy95I45Uyliqjy5cGEsStJG1FNFhvIOJp+u0qFuN4/8b+StAiM78Lf3w==}
+  '@cloudflare/sandbox@0.10.0':
+    resolution: {integrity: sha512-RHbkxRfwso4S2TDxOGNLmGklMadoGY890g53Mw8ZqZkk/h4RwRn5O3RSewygBAyzIzw2pSFCnkB7iOK6juACbQ==}
     peerDependencies:
       '@openai/agents': ^0.3.3
       '@opencode-ai/sdk': ^1.1.40
@@ -2609,12 +2609,12 @@ packages:
   '@vitest/utils@4.1.5':
     resolution: {integrity: sha512-76wdkrmfXfqGjueGgnb45ITPyUi1ycZ4IHgC2bhPDUfWHklY/q3MdLOAB+TF1e6xfl8NxNY0ZYaPCFNWSsw3Ug==}
 
-  '@void/svelte@0.7.1':
-    resolution: {integrity: sha512-shOvJ9vf56863XtCglirjxQwuSaM4SyR5Q6W7ZEHdYApavnewVi4m90nKNb4sicozZLagxPEQTB8z+ssoBhmVQ==}
+  '@void/svelte@0.7.3':
+    resolution: {integrity: sha512-9kYOJ5508ZSLaxjCSBuDUuYq+I/xbnpFOnvVk5/GJ9+E+NOjGjYgOZGBCZ/SteBLFDUWLxeWbPOE8EMWniAwRw==}
     peerDependencies:
       svelte: ^5.0.0
-      vite: ^8.0.10
-      void: 0.7.1
+      vite: npm:@voidzero-dev/vite-plus-core@0.1.20
+      void: 0.7.3
 
   '@voidzero-dev/vite-plus-core@0.1.20':
     resolution: {integrity: sha512-4KmzRfzwTeG3JuvDijrdqWusSgRvLMKDPrVsDdtbDVVjEMq0VnM8lSH+Nvepd6Pg+SuSVUP212OIfH/3Yn1bfA==}
@@ -4087,11 +4087,11 @@ packages:
       vite:
         optional: true
 
-  void@0.7.1:
-    resolution: {integrity: sha512-PxhEvkCjenPVLiFEa12WHuzQjSinIK2Ja7BZo0KJmzGLaUpvty2A3/M42THcWMlJvC8t8e5Vjtg/xG4s0FYXyQ==}
+  void@0.7.3:
+    resolution: {integrity: sha512-kW3n1MNbQkgkY1HIQM2ujKyzUOHabQZjrSoJFWcbS0nGefkBRSXNLBh9j7c7zZzuvpqYw5x4QB1UiuUeVHad9Q==}
     hasBin: true
     peerDependencies:
-      '@void/md': 0.7.1
+      '@void/md': 0.7.3
       arktype: '>=2.0.0'
       valibot: '>=1.0.0-beta.7'
       vite: ^8.0.0
@@ -4334,7 +4334,7 @@ snapshots:
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
-  '@cloudflare/sandbox@0.9.4':
+  '@cloudflare/sandbox@0.10.0':
     dependencies:
       '@cloudflare/containers': 0.3.3
       aws4fetch: 1.0.20
@@ -6266,12 +6266,12 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
 
-  '@void/svelte@0.7.1(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(void@0.7.1(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2))':
+  '@void/svelte@0.7.3(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(void@0.7.3(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 7.1.2(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)
       svelte: 5.55.5
       vite: '@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3)'
-      void: 0.7.1(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2)
+      void: 0.7.3(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2)
 
   '@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3)':
     dependencies:
@@ -7724,9 +7724,9 @@ snapshots:
     optionalDependencies:
       vite: '@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3)'
 
-  void@0.7.1(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2):
+  void@0.7.3(@opentelemetry/api@1.9.1)(@sveltejs/kit@2.59.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@7.0.0(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5))(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(svelte@5.55.5)(typescript@6.0.3))(@types/pg@8.15.6)(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(@voidzero-dev/vite-plus-test@0.1.20)(arktype@2.2.0)(kysely@0.28.16)(postgres@3.4.9)(svelte@5.55.5)(valibot@1.3.1(typescript@6.0.3))(workerd@1.20260507.1)(zod@4.4.2):
     dependencies:
-      '@cloudflare/sandbox': 0.9.4
+      '@cloudflare/sandbox': 0.10.0
       '@cloudflare/vite-plugin': 1.36.3(@voidzero-dev/vite-plus-core@0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)(typescript@6.0.3)(yaml@2.8.3))(workerd@1.20260507.1)(wrangler@4.90.0(@cloudflare/workers-types@4.20260508.1))
       '@cloudflare/workers-types': 4.20260508.1
       '@hono/oauth-providers': 0.8.5(hono@4.12.18)
