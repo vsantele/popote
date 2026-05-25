@@ -2,6 +2,10 @@
   "name": "popote",
   "compatibility_date": "2026-02-24",
   "compatibility_flags": ["nodejs_als", "nodejs_compat"],
+  "vars": {
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://signoz.pri.vsantele.dev/http",
+    "OTEL_SERVICE_NAME": "popote-server",
+  },
   "d1_databases": [
     {
       "binding": "DB",

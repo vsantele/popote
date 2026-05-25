@@ -56,7 +56,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions = {
-  join: async ({ request, url }) => {
+  join: async ({ request }) => {
     const form = await superValidate(request, zod4(shareCodeSchema()));
 
     if (!form.valid) {

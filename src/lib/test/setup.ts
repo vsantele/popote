@@ -1,4 +1,4 @@
-import { expect, afterEach } from "vite-plus/test";
+import { afterEach } from "vite-plus/test";
 import { cleanup } from "@testing-library/svelte";
 import "@testing-library/jest-dom";
 

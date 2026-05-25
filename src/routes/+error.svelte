@@ -1,15 +1,20 @@
 <script lang="ts">
-  import * as m from "$lib/paraglide/messages"
-  import { localizeHref } from "$lib/paraglide/runtime"
+  import { getErrorPageVariant } from "$lib/error-page";
+  import * as m from "$lib/paraglide/messages";
+  import { localizeHref } from "$lib/paraglide/runtime";
 
   let { status, error } = $props<{
-    status: number
-    error: App.Error & { message?: string }
-  }>()
+    status: number;
+    error: App.Error & { message?: string };
+  }>();
+
+  const variant = $derived(getErrorPageVariant(status));
 </script>
 
 <svelte:head>
-  <title>{m.not_found_title()} · {m.app_name()}</title>
+  <title>
+    {variant === "not-found" ? m.not_found_title() : m.server_error_title()} · {m.app_name()}
+  </title>
 </svelte:head>
 
 <div
@@ -33,7 +38,9 @@
           <div
             class="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
           >
-            {m.not_found_badge()}
+            {variant === "not-found"
+              ? m.not_found_badge()
+              : m.server_error_badge()}
           </div>
 
           <div class="space-y-3">
@@ -45,12 +52,16 @@
             <h1
               class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
             >
-              {m.not_found_title()}
+              {variant === "not-found"
+                ? m.not_found_title()
+                : m.server_error_title()}
             </h1>
             <p
               class="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg"
             >
-              {m.not_found_description()}
+              {variant === "not-found"
+                ? m.not_found_description()
+                : m.server_error_description()}
             </p>
           </div>
 
@@ -59,7 +70,9 @@
               href={localizeHref("/")}
               class="inline-flex min-w-36 items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {m.not_found_home()}
+              {variant === "not-found"
+                ? m.not_found_home()
+                : m.server_error_home()}
             </a>
           </div>
 
@@ -83,7 +96,9 @@
           <div class="space-y-2">
             <h2 class="text-xl font-semibold">{m.app_name()}</h2>
             <p class="text-sm leading-6 text-muted-foreground">
-              {m.not_found_hint()}
+              {variant === "not-found"
+                ? m.not_found_hint()
+                : m.server_error_hint()}
             </p>
           </div>
         </div>
@@ -92,7 +107,11 @@
           class="mt-8 rounded-2xl border bg-background/80 p-4 text-sm text-muted-foreground shadow-sm"
         >
           <p class="font-medium text-foreground">{m.app_tagline()}</p>
-          <p class="mt-2">{m.not_found_description()}</p>
+          <p class="mt-2">
+            {variant === "not-found"
+              ? m.not_found_description()
+              : m.server_error_description()}
+          </p>
         </div>
       </aside>
     </div>
