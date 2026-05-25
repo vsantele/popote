@@ -125,18 +125,18 @@ export async function ensureCloudflareTelemetry(
   telemetryState.configKey = configKey;
   telemetryState.initPromise = (async () => {
     const [
-      { OTLPTraceExporter },
-      { BasicTracerProvider, BatchSpanProcessor },
+      { OTLPExporter, BatchTraceSpanProcessor },
+      { BasicTracerProvider },
       { resourceFromAttributes },
       { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION },
     ] = await Promise.all([
-      import("@opentelemetry/exporter-trace-otlp-http"),
+      import("@microlabs/otel-cf-workers"),
       import("@opentelemetry/sdk-trace-base"),
       import("@opentelemetry/resources"),
       import("@opentelemetry/semantic-conventions"),
     ]);
 
-    const exporter = new OTLPTraceExporter({
+    const exporter = new OTLPExporter({
       url: config.exporter.url,
       headers: config.exporter.headers,
     });
@@ -150,7 +150,7 @@ export async function ensureCloudflareTelemetry(
 
     const provider = new BasicTracerProvider({
       resource,
-      spanProcessors: [new BatchSpanProcessor(exporter)],
+      spanProcessors: [new BatchTraceSpanProcessor(exporter)],
     });
 
     trace.setGlobalTracerProvider(provider);
