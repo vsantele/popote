@@ -13,10 +13,10 @@ const config = {
     },
     experimental: {
       tracing: {
-        server: true,
+        server: false,
       },
       instrumentation: {
-        server: true,
+        server: false,
       },
       remoteFunctions: true,
     },
