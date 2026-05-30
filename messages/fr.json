@@ -174,5 +174,14 @@
   "validation_email_invalid": "Email invalide",
   "validation_password_too_short": "Mot de passe trop court (8 caractères minimum)",
   "validation_password_required": "Mot de passe requis",
-  "validation_signup_name_required": "Nom requis"
+  "validation_signup_name_required": "Nom requis",
+  "push_title": "Rappels d'événement",
+  "push_description": "Recevez une notification la veille, pour ne pas oublier ce que vous apportez.",
+  "push_enable": "Activer les rappels",
+  "push_enabling": "Activation…",
+  "push_disable": "Désactiver les rappels",
+  "push_enabled_badge": "Rappels activés",
+  "push_unsupported": "Votre navigateur ne prend pas en charge les notifications.",
+  "push_denied": "Les notifications sont bloquées. Activez-les dans les réglages de votre navigateur.",
+  "push_error": "Impossible d'activer les rappels. Veuillez réessayer."
 }

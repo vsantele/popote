@@ -61,7 +61,14 @@ function renderAccount(user: User | null) {
     props: {
       params: {},
       form: null,
-      data: { user, signUpForm, signInForm },
+      data: {
+        user,
+        signUpForm,
+        signInForm,
+        // Provided by the root layout load; the component ignores them.
+        vapidPublicKey: null,
+        pushEnabled: false,
+      },
     },
   });
 }
