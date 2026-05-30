@@ -1,5 +1,15 @@
 // Data models for Popote application
 
+export type DietaryTag =
+  | "vegetarian"
+  | "vegan"
+  | "gluten-free"
+  | "contains-nuts"
+  | "lactose-free"
+  | "halal"
+  | "kosher"
+  | "spicy";
+
 export interface Event {
   id: string;
   name: string;
@@ -28,6 +38,7 @@ export interface Item {
   name: string;
   category: ItemCategory;
   quantity?: string;
+  dietary_tags: DietaryTag[];
   created: string;
 }
 
@@ -72,3 +83,28 @@ export const CATEGORY_ORDER: ItemCategory[] = [
   "jeux",
   "autre",
 ];
+
+export const VALID_DIETARY_TAGS = [
+  "vegetarian",
+  "vegan",
+  "gluten-free",
+  "contains-nuts",
+  "lactose-free",
+  "halal",
+  "kosher",
+  "spicy",
+] as const satisfies DietaryTag[];
+
+export const DIETARY_TAGS: Record<
+  DietaryTag,
+  { emoji: string; label: () => string }
+> = {
+  vegetarian: { emoji: "🌱", label: m.tag_vegetarian },
+  vegan: { emoji: "🥦", label: m.tag_vegan },
+  "gluten-free": { emoji: "🌾", label: m.tag_gluten_free },
+  "contains-nuts": { emoji: "🥜", label: m.tag_contains_nuts },
+  "lactose-free": { emoji: "🥛", label: m.tag_lactose_free },
+  halal: { emoji: "☪️", label: m.tag_halal },
+  kosher: { emoji: "✡️", label: m.tag_kosher },
+  spicy: { emoji: "🌶️", label: m.tag_spicy },
+};

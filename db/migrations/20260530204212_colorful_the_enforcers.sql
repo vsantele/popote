@@ -1,0 +1,1 @@
+ALTER TABLE `items` ADD `dietary_tags` text DEFAULT '[]' NOT NULL;

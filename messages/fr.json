@@ -57,6 +57,9 @@
   "join_submit": "Rejoindre",
   "join_submitting": "Connexion...",
   "event_add_to_calendar": "Ajouter au calendrier",
+  "event_qr_button_label": "Afficher le QR code",
+  "event_qr_dialog_title": "QR code — {name}",
+  "event_qr_image_label": "QR code pour rejoindre l'événement : {url}",
   "event_share_button": "Partager",
   "event_share_clipboard": "Lien copié dans le presse-papiers !",
   "event_share_text": "Rejoignez \"{name}\" sur Popote !\n{url}",
@@ -183,5 +186,14 @@
   "push_enabled_badge": "Rappels activés",
   "push_unsupported": "Votre navigateur ne prend pas en charge les notifications.",
   "push_denied": "Les notifications sont bloquées. Activez-les dans les réglages de votre navigateur.",
-  "push_error": "Impossible d'activer les rappels. Veuillez réessayer."
+  "push_error": "Impossible d'activer les rappels. Veuillez réessayer.",
+  "event_field_dietary_tags_label": "Tags alimentaires",
+  "tag_vegetarian": "Végétarien",
+  "tag_vegan": "Vegan",
+  "tag_gluten_free": "Sans gluten",
+  "tag_contains_nuts": "Contient des noix",
+  "tag_lactose_free": "Sans lactose",
+  "tag_halal": "Halal",
+  "tag_kosher": "Casher",
+  "tag_spicy": "Épicé"
 }

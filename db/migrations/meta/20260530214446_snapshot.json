@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2dc22acd-0a18-4a73-8ed6-f8c5d56ec79b",
-  "prevId": "5f728248-7934-4e19-a295-0ba48cb76c5d",
+  "id": "bfbd7f67-5f47-4630-aa70-073dcee9d6e7",
+  "prevId": "c2933ca9-bcf8-4b26-9f91-f4738cb18111",
   "tables": {
     "account": {
       "name": "account",
@@ -297,6 +297,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "dietary_tags": {
+          "name": "dietary_tags",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
         },
         "created_at": {
           "name": "created_at",

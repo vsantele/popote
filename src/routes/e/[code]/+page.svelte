@@ -19,8 +19,11 @@
   import {
     CATEGORIES,
     CATEGORY_ORDER,
+    DIETARY_TAGS,
+    VALID_DIETARY_TAGS,
     type Item,
     type ItemCategory,
+    type DietaryTag,
   } from "$lib/types/index"
   import { computeHeadcount } from "$lib/utils/headcount"
   import { log } from "$lib/utils/logger"
@@ -43,6 +46,7 @@
   import * as m from "$lib/paraglide/messages"
   import { getLocale, localizeHref } from "$lib/paraglide/runtime"
   import PushOptIn from "$lib/components/push-opt-in.svelte"
+  import QrDialog from "$lib/components/qr-dialog.svelte"
   import type { PageProps } from "./$types"
 
   let { data }: PageProps = $props()
@@ -111,6 +115,7 @@
     $editFormData.name = item.name
     $editFormData.category = item.category
     $editFormData.quantity = item.quantity ?? ""
+    $editFormData.dietaryTags = item.dietary_tags ?? []
     editDialogOpen = true
   }
 
@@ -402,6 +407,21 @@
     <div class="min-w-0 flex-1">
       <p class="leading-tight font-semibold">{item.name}</p>
       <p class="text-sm text-muted-foreground">{secondary}</p>
+      {#if item.dietary_tags && item.dietary_tags.length > 0}
+        <div class="mt-1 flex flex-wrap gap-1" aria-label="dietary tags">
+          {#each item.dietary_tags as tag (tag)}
+            {#if DIETARY_TAGS[tag]}
+              <span
+                class="inline-flex items-center gap-0.5 rounded-full border border-border bg-secondary/60 px-1.5 py-0.5 text-xs font-medium text-secondary-foreground"
+                data-dietary-tag={tag}
+              >
+                <span aria-hidden="true">{DIETARY_TAGS[tag].emoji}</span>
+                {DIETARY_TAGS[tag].label()}
+              </span>
+            {/if}
+          {/each}
+        </div>
+      {/if}
     </div>
     {#if canModify(item)}
       <div
@@ -544,6 +564,10 @@
             <Copy class="size-4 text-muted-foreground group-hover:text-foreground" />
           {/if}
         </button>
+        <QrDialog
+          url="{page.url.origin}{localizeHref(`/e/${data.event.share_code}`)}"
+          eventName={data.event.name}
+        />
         <Button variant="default" size="default" onclick={shareEvent} class="flex-1">
           {m.event_share_button()}
         </Button>
@@ -800,6 +824,35 @@
           />
         </div>
 
+        <div class="space-y-2">
+          <Label>{m.event_field_dietary_tags_label()}</Label>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label={m.event_field_dietary_tags_label()}>
+            {#each VALID_DIETARY_TAGS as tag (tag)}
+              {@const isSelected = $form.dietaryTags?.includes(tag)}
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors {isSelected
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-secondary/50 text-secondary-foreground hover:bg-secondary'}"
+                aria-pressed={isSelected}
+                data-tag={tag}
+                onclick={() => {
+                  const current = $form.dietaryTags ?? []
+                  $form.dietaryTags = isSelected
+                    ? current.filter((t) => t !== tag)
+                    : [...current, tag]
+                }}
+              >
+                <span aria-hidden="true">{DIETARY_TAGS[tag].emoji}</span>
+                {DIETARY_TAGS[tag].label()}
+              </button>
+            {/each}
+          </div>
+          {#each $form.dietaryTags ?? [] as tag (tag)}
+            <input type="hidden" name="dietaryTags" value={tag} />
+          {/each}
+        </div>
+
         {#if $message}
           <p class="text-sm text-destructive">{$message}</p>
         {/if}
@@ -888,6 +941,35 @@
             bind:value={$editFormData.quantity}
             placeholder={m.event_field_quantity_placeholder()}
           />
+        </div>
+
+        <div class="space-y-2">
+          <Label>{m.event_field_dietary_tags_label()}</Label>
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label={m.event_field_dietary_tags_label()}>
+            {#each VALID_DIETARY_TAGS as tag (tag)}
+              {@const isSelected = $editFormData.dietaryTags?.includes(tag)}
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors {isSelected
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-secondary/50 text-secondary-foreground hover:bg-secondary'}"
+                aria-pressed={isSelected}
+                data-tag={tag}
+                onclick={() => {
+                  const current = $editFormData.dietaryTags ?? []
+                  $editFormData.dietaryTags = isSelected
+                    ? current.filter((t) => t !== tag)
+                    : [...current, tag]
+                }}
+              >
+                <span aria-hidden="true">{DIETARY_TAGS[tag].emoji}</span>
+                {DIETARY_TAGS[tag].label()}
+              </button>
+            {/each}
+          </div>
+          {#each $editFormData.dietaryTags ?? [] as tag (tag)}
+            <input type="hidden" name="dietaryTags" value={tag} />
+          {/each}
         </div>
 
         {#if $editMessage}

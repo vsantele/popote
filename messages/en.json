@@ -57,6 +57,9 @@
   "join_submit": "Join",
   "join_submitting": "Connecting...",
   "event_add_to_calendar": "Add to calendar",
+  "event_qr_button_label": "Show QR code",
+  "event_qr_dialog_title": "QR code — {name}",
+  "event_qr_image_label": "QR code to join the event: {url}",
   "event_share_button": "Share",
   "event_share_clipboard": "Link copied to clipboard!",
   "event_share_text": "Join \"{name}\" on Popote!\n{url}",
@@ -183,5 +186,14 @@
   "push_enabled_badge": "Reminders on",
   "push_unsupported": "Your browser does not support notifications.",
   "push_denied": "Notifications are blocked. Enable them in your browser settings.",
-  "push_error": "Could not enable reminders. Please try again."
+  "push_error": "Could not enable reminders. Please try again.",
+  "event_field_dietary_tags_label": "Dietary tags",
+  "tag_vegetarian": "Vegetarian",
+  "tag_vegan": "Vegan",
+  "tag_gluten_free": "Gluten-free",
+  "tag_contains_nuts": "Contains nuts",
+  "tag_lactose_free": "Lactose-free",
+  "tag_halal": "Halal",
+  "tag_kosher": "Kosher",
+  "tag_spicy": "Spicy"
 }

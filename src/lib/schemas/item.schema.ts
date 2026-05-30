@@ -1,5 +1,11 @@
 import { z } from "zod";
 import * as m from "$lib/paraglide/messages";
+import { VALID_DIETARY_TAGS } from "$lib/types/index";
+
+const DIETARY_TAG_ENUM = VALID_DIETARY_TAGS as unknown as [
+  string,
+  ...string[],
+];
 
 export function addItemSchema() {
   return z.object({
@@ -8,6 +14,7 @@ export function addItemSchema() {
       .enum(["apero", "entree", "plat", "dessert", "boissons", "jeux", "autre"])
       .default("plat"),
     quantity: z.string().optional(),
+    dietaryTags: z.array(z.enum(DIETARY_TAG_ENUM)).default([]),
   });
 }
 
@@ -21,6 +28,7 @@ export function editItemSchema() {
       .enum(["apero", "entree", "plat", "dessert", "boissons", "jeux", "autre"])
       .default("plat"),
     quantity: z.string().optional(),
+    dietaryTags: z.array(z.enum(DIETARY_TAG_ENUM)).default([]),
   });
 }
 
