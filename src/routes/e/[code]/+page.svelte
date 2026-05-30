@@ -472,7 +472,13 @@
         {#if data.event.location}
           <div class="flex items-center gap-2">
             <MapPin class="size-4 shrink-0 text-primary" />
-            <span>{data.event.location}</span>
+            <a
+              href="https://www.google.com/maps/search/?api=1&query={encodeURIComponent(data.event.location)}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="underline decoration-dotted underline-offset-2 hover:text-foreground"
+              aria-label="{m.event_location_maps_label()}: {data.event.location}"
+            >{data.event.location}</a>
           </div>
         {/if}
         <div class="flex items-center gap-2">
