@@ -1,21 +1,12 @@
 <script lang="ts">
   import { Button } from "$lib/components/ui/button"
-  import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-  } from "$lib/components/ui/card"
   import { Badge } from "$lib/components/ui/badge"
-  import { Separator } from "$lib/components/ui/separator"
   import { ToggleGroup, ToggleGroupItem } from "$lib/components/ui/toggle-group"
   import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
   } from "$lib/components/ui/dialog"
   import { Input } from "$lib/components/ui/input"
   import { Label } from "$lib/components/ui/label"
@@ -35,7 +26,15 @@
   import { superForm } from "sveltekit-superforms/client"
   import { invalidateAll, goto } from "$app/navigation"
   import { page } from "$app/state"
-  import { RefreshCw } from "@lucide/svelte"
+  import {
+    RefreshCw,
+    Plus,
+    Calendar,
+    MapPin,
+    Copy,
+    Check,
+    Users,
+  } from "@lucide/svelte"
   import * as m from "$lib/paraglide/messages"
   import { getLocale, localizeHref } from "$lib/paraglide/runtime"
   import type { PageProps } from "./$types"
@@ -47,7 +46,6 @@
     page.url.searchParams.get("view") === "person" ? "person" : "category",
   )
 
-  // Update URL through event handler (not effect)
   function setViewMode(newMode: "category" | "person") {
     const url = new URL(page.url)
     if (newMode === "category") {
@@ -60,8 +58,9 @@
 
   let dialogOpen = $state(false)
   let isRefreshing = $state(false)
+  let copied = $state(false)
 
-  // Use data directly from server load (no polling)
+  // Use data directly from server load
   let items = $derived(data.items)
   let participants = $derived(data.participants)
 
@@ -77,12 +76,10 @@
     },
   })
 
-  // Set default category to 'plat' if not set
   if (!$form.category) {
     $form.category = "plat"
   }
 
-  // Manual refresh function
   async function handleRefresh() {
     isRefreshing = true
     try {
@@ -91,6 +88,26 @@
       isRefreshing = false
     }
   }
+
+  // ── Keep the shared list feeling live ──────────────────────────────
+  // Gently re-fetch while the tab is visible, and whenever the user
+  // returns to the page, so contributions from friends appear on their
+  // own — no manual refresh needed.
+  $effect(() => {
+    const tick = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        invalidateAll()
+      }
+    }
+    const interval = setInterval(tick, 20000)
+    window.addEventListener("focus", tick)
+    document.addEventListener("visibilitychange", tick)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("focus", tick)
+      document.removeEventListener("visibilitychange", tick)
+    }
+  })
 
   // Pull-to-refresh support (mobile gesture)
   let touchStartY = 0
@@ -105,27 +122,19 @@
 
   function handleTouchMove(e: TouchEvent) {
     if (touchStartY === 0) return
-
     const touchY = e.touches[0].clientY
     const distance = touchY - touchStartY
-
     if (distance > 0 && window.scrollY === 0) {
       isPulling = true
       pullDistance = Math.min(distance, 80)
-
-      // Prevent default scrolling when pulling
-      if (distance > 10) {
-        e.preventDefault()
-      }
+      if (distance > 10) e.preventDefault()
     }
   }
 
   async function handleTouchEnd() {
     if (isPulling && pullDistance > 60) {
-      // Trigger refresh if pulled far enough
       await handleRefresh()
     }
-
     touchStartY = 0
     isPulling = false
     pullDistance = 0
@@ -137,9 +146,7 @@
     CATEGORY_ORDER.forEach((cat) => groups.set(cat, []))
     items.forEach((item) => {
       const cat = item.category as ItemCategory
-      if (groups.has(cat)) {
-        groups.get(cat)!.push(item as Item)
-      }
+      if (groups.has(cat)) groups.get(cat)!.push(item as Item)
     })
     return groups
   })
@@ -148,15 +155,26 @@
   const itemsByParticipant = $derived.by(() => {
     const groups = new Map<string, Item[]>()
     items.forEach((item) => {
-      if (!groups.has(item.participant)) {
-        groups.set(item.participant, [])
-      }
+      if (!groups.has(item.participant)) groups.set(item.participant, [])
       groups.get(item.participant)!.push(item as Item)
     })
     return groups
   })
 
-  // Get participant name by ID
+  // Which essential courses are still empty? (only flag once things start)
+  const ESSENTIALS: ItemCategory[] = [
+    "apero",
+    "entree",
+    "plat",
+    "dessert",
+    "boissons",
+  ]
+  const gaps = $derived(
+    items.length > 0
+      ? ESSENTIALS.filter((c) => (itemsByCategory.get(c) || []).length === 0)
+      : [],
+  )
+
   function getParticipantName(participantId: string): string {
     return (
       participants.find((p) => p.id === participantId)?.name ||
@@ -164,7 +182,6 @@
     )
   }
 
-  // Format date
   function formatDate(dateStr: string): string {
     const date = new Date(dateStr)
     return new Intl.DateTimeFormat(getLocale(), {
@@ -177,14 +194,22 @@
     }).format(date)
   }
 
-  // Share event
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(data.event.share_code)
+      copied = true
+      setTimeout(() => (copied = false), 1600)
+    } catch (err) {
+      log("error", "Failed to copy code", { error: String(err) })
+    }
+  }
+
   async function shareEvent() {
     const shareUrl = localizeHref(`/e/${data.event.share_code}`)
     const shareText = m.event_share_text({
       name: data.event.name,
       url: shareUrl,
     })
-
     try {
       if (navigator.share) {
         await navigator.share({
@@ -202,17 +227,31 @@
   }
 </script>
 
+{#snippet itemRow(emoji: string, name: string, secondary: string, accent: string)}
+  <li
+    class="animate-pop-in flex items-center gap-3 rounded-xl border-l-[3px] bg-background/55 py-2.5 pr-3 pl-3"
+    style="border-color:{accent}"
+  >
+    {#if emoji}
+      <span class="text-lg leading-none" aria-hidden="true">{emoji}</span>
+    {/if}
+    <div class="min-w-0 flex-1">
+      <p class="leading-tight font-semibold">{name}</p>
+      <p class="text-sm text-muted-foreground">{secondary}</p>
+    </div>
+  </li>
+{/snippet}
+
 <div
-  class="min-h-screen p-4"
+  class="min-h-screen px-4 pt-4 pb-28"
   role="main"
   ontouchstart={handleTouchStart}
   ontouchmove={handleTouchMove}
   ontouchend={handleTouchEnd}
 >
-  <!-- Pull-to-refresh indicator -->
   {#if isPulling}
     <div
-      class="fixed top-0 left-0 right-0 flex items-center justify-center transition-all"
+      class="fixed top-0 right-0 left-0 z-50 flex items-center justify-center text-primary transition-all"
       style="height: {pullDistance}px; opacity: {pullDistance / 80}"
     >
       <RefreshCw class={pullDistance > 60 ? "animate-spin" : ""} />
@@ -220,38 +259,83 @@
   {/if}
 
   <div
-    class="max-w-4xl mx-auto space-y-6"
+    class="mx-auto max-w-2xl space-y-5"
     style="padding-top: {isPulling ? pullDistance : 0}px"
   >
-    <!-- Event Header -->
-    <Card>
-      <CardHeader>
-        <div class="flex items-start justify-between">
-          <div class="space-y-1">
-            <CardTitle class="text-2xl">{data.event.name}</CardTitle>
-            <CardDescription>
-              {formatDate(data.event.date)}
-              {#if data.event.location}
-                <br />📍 {data.event.location}
-              {/if}
-            </CardDescription>
-          </div>
-          <div class="flex gap-2">
-            <Badge variant="secondary">
-              {data.event.share_code}
-            </Badge>
-            <Button variant="outline" size="sm" onclick={shareEvent}>
-              {m.event_share_button()}
-            </Button>
-          </div>
-        </div>
-        {#if data.event.description}
-          <p class="text-sm">{data.event.description}</p>
-        {/if}
-      </CardHeader>
-    </Card>
+    <!-- Event header -->
+    <header class="card-pop animate-pop-in relative overflow-hidden rounded-3xl bg-card p-5">
+      <div
+        class="pointer-events-none absolute -top-6 -right-4 text-7xl opacity-10 select-none"
+        aria-hidden="true"
+      >
+        🍲
+      </div>
+      <h1 class="font-display text-3xl leading-tight font-semibold tracking-tight">
+        {data.event.name}
+      </h1>
 
-    <!-- View Toggle + Add Button -->
+      <div class="mt-3 space-y-1.5 text-sm text-muted-foreground">
+        <div class="flex items-center gap-2">
+          <Calendar class="size-4 shrink-0 text-primary" />
+          <span class="capitalize">{formatDate(data.event.date)}</span>
+        </div>
+        {#if data.event.location}
+          <div class="flex items-center gap-2">
+            <MapPin class="size-4 shrink-0 text-primary" />
+            <span>{data.event.location}</span>
+          </div>
+        {/if}
+        <div class="flex items-center gap-2">
+          <Users class="size-4 shrink-0 text-primary" />
+          <span>{m.event_guests_count({ count: participants.length })}</span>
+        </div>
+      </div>
+
+      {#if data.event.description}
+        <p class="mt-3 text-sm">{data.event.description}</p>
+      {/if}
+
+      <div class="mt-4 flex items-center gap-2">
+        <button
+          type="button"
+          onclick={copyCode}
+          class="code-chip group inline-flex items-center gap-2 rounded-xl border-[1.5px] border-dashed border-border-strong/60 bg-secondary/50 px-3 py-2 font-bold text-secondary-foreground transition-colors hover:bg-secondary"
+          title={data.event.share_code}
+        >
+          {data.event.share_code}
+          {#if copied}
+            <Check class="size-4 text-[var(--cat-entree)]" />
+          {:else}
+            <Copy class="size-4 text-muted-foreground group-hover:text-foreground" />
+          {/if}
+        </button>
+        <Button variant="default" size="default" onclick={shareEvent} class="flex-1">
+          {m.event_share_button()}
+        </Button>
+      </div>
+    </header>
+
+    <!-- Gap hint -->
+    {#if gaps.length > 0}
+      <div
+        class="animate-pop-in flex flex-wrap items-center gap-2 rounded-2xl border-[1.5px] border-dashed border-primary/40 bg-primary/8 px-4 py-3"
+      >
+        <span class="text-sm font-semibold text-primary">
+          {m.event_gap_title()} —
+        </span>
+        {#each gaps as cat (cat)}
+          <span
+            class="inline-flex items-center gap-1 rounded-full bg-card px-2.5 py-1 text-sm font-medium shadow-sm"
+            style="border:1px solid {CATEGORIES[cat].color}"
+          >
+            {CATEGORIES[cat].emoji}
+            {CATEGORIES[cat].label()}
+          </span>
+        {/each}
+      </div>
+    {/if}
+
+    <!-- Toolbar -->
     <div class="flex items-center justify-between gap-2">
       <ToggleGroup
         value={viewMode}
@@ -259,207 +343,212 @@
           value && setViewMode(value as "category" | "person")}
         type="single"
       >
-        <ToggleGroupItem value="category"
-          >{m.event_view_by_category()}</ToggleGroupItem
-        >
-        <ToggleGroupItem value="person"
-          >{m.event_view_by_person()}</ToggleGroupItem
-        >
+        <ToggleGroupItem value="category">
+          {m.event_view_by_category()}
+        </ToggleGroupItem>
+        <ToggleGroupItem value="person">
+          {m.event_view_by_person()}
+        </ToggleGroupItem>
       </ToggleGroup>
 
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
+        <span class="relative flex size-2.5" title={m.event_updated_just_now()}>
+          <span
+            class="absolute inline-flex size-full animate-ping rounded-full bg-[var(--cat-entree)] opacity-70"
+          ></span>
+          <span
+            class="relative inline-flex size-2.5 rounded-full bg-[var(--cat-entree)]"
+          ></span>
+        </span>
         <Button
           variant="outline"
-          size="sm"
+          size="icon"
           onclick={handleRefresh}
           disabled={isRefreshing}
+          aria-label={m.event_refresh()}
         >
-          <RefreshCw
-            class={isRefreshing ? "animate-spin mr-2" : "mr-2"}
-            size={16}
-          />
-          {m.event_refresh()}
+          <RefreshCw class={isRefreshing ? "animate-spin" : ""} size={16} />
         </Button>
-
-        <Dialog bind:open={dialogOpen}>
-          <DialogTrigger>{m.event_add_item_trigger()}</DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{m.event_add_item_dialog_title()}</DialogTitle>
-            </DialogHeader>
-            <form
-              method="POST"
-              action="?/addItem"
-              use:enhance
-              class="space-y-4"
-            >
-              <div class="space-y-2">
-                <Label for="name">{m.event_field_item_name_label()}</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  bind:value={$form.name}
-                  placeholder={m.event_field_item_name_placeholder()}
-                  required
-                  aria-invalid={$errors.name ? "true" : undefined}
-                />
-                {#if $errors.name}
-                  <p class="text-sm text-destructive">{$errors.name}</p>
-                {/if}
-              </div>
-
-              <div class="space-y-2">
-                <Label for="category">{m.event_field_category_label()}</Label>
-                <Select
-                  name="category"
-                  bind:value={$form.category}
-                  type="single"
-                >
-                  <SelectTrigger>
-                    {$form.category}
-                  </SelectTrigger>
-                  <SelectContent>
-                    {#each CATEGORY_ORDER as cat}
-                      <SelectItem value={cat} label={CATEGORIES[cat].label()}>
-                        {CATEGORIES[cat].emoji}
-                        {CATEGORIES[cat].label()}
-                      </SelectItem>
-                    {/each}
-                  </SelectContent>
-                </Select>
-                {#if $errors.category}
-                  <p class="text-sm text-destructive">{$errors.category}</p>
-                {/if}
-              </div>
-
-              <div class="space-y-2">
-                <Label for="quantity">{m.event_field_quantity_label()}</Label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  bind:value={$form.quantity}
-                  placeholder={m.event_field_quantity_placeholder()}
-                />
-              </div>
-
-              {#if $message}
-                <p class="text-sm text-destructive">{$message}</p>
-              {/if}
-
-              <div class="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onclick={() => (dialogOpen = false)}
-                  class="flex-1"
-                >
-                  {m.common_cancel()}
-                </Button>
-                <Button type="submit" class="flex-1" disabled={$delayed}>
-                  {$delayed
-                    ? m.event_add_item_submitting()
-                    : m.event_add_item_submit()}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
 
-    <!-- Items List -->
-    {#if viewMode === "category"}
-      <!-- By Category -->
+    <!-- Items -->
+    {#if items.length === 0}
+      <div
+        class="card-pop animate-pop-in flex flex-col items-center gap-2 rounded-3xl bg-card px-6 py-14 text-center"
+      >
+        <span class="text-5xl" aria-hidden="true">🍽️</span>
+        <p class="font-display text-lg font-semibold">{m.event_no_items()}</p>
+        <p class="text-sm text-muted-foreground">{m.event_no_items_cta()}</p>
+      </div>
+    {:else if viewMode === "category"}
       <div class="space-y-4">
-        {#each CATEGORY_ORDER as category}
+        {#each CATEGORY_ORDER as category (category)}
           {@const categoryItems = itemsByCategory.get(category) || []}
           {#if categoryItems.length > 0}
-            <Card>
-              <CardHeader>
-                <CardTitle class="text-lg">
-                  {CATEGORIES[category].emoji}
-                  {CATEGORIES[category].label()}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div class="space-y-2">
-                  {#each categoryItems as item}
-                    <div
-                      class="flex items-center justify-between p-2 rounded-lg border"
-                    >
-                      <div class="flex-1">
-                        <p class="font-medium">{item.name}</p>
-                        <p class="text-sm text-muted-foreground">
-                          {m.event_item_by_participant({
-                            name: getParticipantName(item.participant),
-                          })}
-                          {#if item.quantity}
-                            • {item.quantity}
-                          {/if}
-                        </p>
-                      </div>
-                    </div>
-                  {/each}
-                </div>
-              </CardContent>
-            </Card>
+            {@const cat = CATEGORIES[category]}
+            <section class="card-pop overflow-hidden rounded-2xl bg-card">
+              <header
+                class="flex items-center gap-3 px-4 py-3"
+                style="background: color-mix(in oklab, {cat.color}, transparent 90%)"
+              >
+                <span
+                  class="grid size-10 shrink-0 place-items-center rounded-xl text-xl"
+                  style="background: color-mix(in oklab, {cat.color}, white 76%)"
+                  aria-hidden="true"
+                >
+                  {cat.emoji}
+                </span>
+                <h2 class="font-display flex-1 text-lg font-semibold tracking-tight">
+                  {cat.label()}
+                </h2>
+                <span
+                  class="grid size-7 place-items-center rounded-full text-sm font-bold text-white"
+                  style="background:{cat.color}"
+                >
+                  {categoryItems.length}
+                </span>
+              </header>
+              <ul class="space-y-2 p-3">
+                {#each categoryItems as item (item.id)}
+                  {@render itemRow(
+                    "",
+                    item.name,
+                    `${m.event_item_by_participant({ name: getParticipantName(item.participant) })}${item.quantity ? ` · ${item.quantity}` : ""}`,
+                    cat.color,
+                  )}
+                {/each}
+              </ul>
+            </section>
           {/if}
         {/each}
       </div>
     {:else}
-      <!-- By Person -->
       <div class="space-y-4">
-        {#each participants as participant}
+        {#each participants as participant (participant.id)}
           {@const personItems = itemsByParticipant.get(participant.id) || []}
           {#if personItems.length > 0}
-            <Card>
-              <CardHeader>
-                <CardTitle class="text-lg">
+            <section class="card-pop overflow-hidden rounded-2xl bg-card">
+              <header class="flex items-center gap-3 bg-secondary/40 px-4 py-3">
+                <span
+                  class="grid size-10 shrink-0 place-items-center rounded-xl bg-card text-lg font-bold text-primary shadow-sm"
+                  aria-hidden="true"
+                >
+                  {participant.name.charAt(0).toUpperCase()}
+                </span>
+                <h2 class="font-display flex-1 text-lg font-semibold tracking-tight">
                   {participant.name}
-                  {#if participant.is_host}
-                    <Badge variant="secondary" class="ml-2"
-                      >{m.event_role_host()}</Badge
-                    >
-                  {/if}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div class="space-y-2">
-                  {#each personItems as item}
-                    <div
-                      class="flex items-center justify-between p-2 rounded-lg border"
-                    >
-                      <div class="flex-1">
-                        <p class="font-medium">
-                          {CATEGORIES[item.category as ItemCategory].emoji}
-                          {item.name}
-                        </p>
-                        <p class="text-sm text-muted-foreground">
-                          {CATEGORIES[item.category as ItemCategory].label()}
-                          {#if item.quantity}
-                            • {item.quantity}
-                          {/if}
-                        </p>
-                      </div>
-                    </div>
-                  {/each}
-                </div>
-              </CardContent>
-            </Card>
+                </h2>
+                {#if participant.is_host}
+                  <Badge variant="default">{m.event_role_host()}</Badge>
+                {/if}
+              </header>
+              <ul class="space-y-2 p-3">
+                {#each personItems as item (item.id)}
+                  {@const cat = CATEGORIES[item.category as ItemCategory]}
+                  {@render itemRow(
+                    cat.emoji,
+                    item.name,
+                    `${cat.label()}${item.quantity ? ` · ${item.quantity}` : ""}`,
+                    cat.color,
+                  )}
+                {/each}
+              </ul>
+            </section>
           {/if}
         {/each}
       </div>
     {/if}
-
-    {#if items.length === 0}
-      <Card>
-        <CardContent class="py-12 text-center">
-          <p class="text-muted-foreground">
-            {m.event_no_items()}<br />
-            {m.event_no_items_cta()}
-          </p>
-        </CardContent>
-      </Card>
-    {/if}
   </div>
+
+  <!-- Sticky add button -->
+  <Button
+    size="lg"
+    onclick={() => (dialogOpen = true)}
+    class="fixed bottom-5 left-1/2 z-40 -translate-x-1/2 shadow-[0_6px_20px_-4px_oklch(0.5_0.18_34/0.55)]"
+    style="bottom: calc(1.25rem + env(safe-area-inset-bottom))"
+  >
+    <Plus />
+    {m.event_add_item_trigger()}
+  </Button>
+
+  <!-- Add item dialog -->
+  <Dialog bind:open={dialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle class="font-display text-xl"
+          >{m.event_add_item_dialog_title()}</DialogTitle
+        >
+      </DialogHeader>
+      <form method="POST" action="?/addItem" use:enhance class="space-y-4">
+        <div class="space-y-2">
+          <Label for="name">{m.event_field_item_name_label()}</Label>
+          <Input
+            id="name"
+            name="name"
+            bind:value={$form.name}
+            placeholder={m.event_field_item_name_placeholder()}
+            required
+            aria-invalid={$errors.name ? "true" : undefined}
+          />
+          {#if $errors.name}
+            <p class="text-sm text-destructive">{$errors.name}</p>
+          {/if}
+        </div>
+
+        <div class="space-y-2">
+          <Label for="category">{m.event_field_category_label()}</Label>
+          <Select name="category" bind:value={$form.category} type="single">
+            <SelectTrigger>
+              {#if $form.category}
+                {CATEGORIES[$form.category as ItemCategory].emoji}
+                {CATEGORIES[$form.category as ItemCategory].label()}
+              {/if}
+            </SelectTrigger>
+            <SelectContent>
+              {#each CATEGORY_ORDER as cat (cat)}
+                <SelectItem value={cat} label={CATEGORIES[cat].label()}>
+                  {CATEGORIES[cat].emoji}
+                  {CATEGORIES[cat].label()}
+                </SelectItem>
+              {/each}
+            </SelectContent>
+          </Select>
+          {#if $errors.category}
+            <p class="text-sm text-destructive">{$errors.category}</p>
+          {/if}
+        </div>
+
+        <div class="space-y-2">
+          <Label for="quantity">{m.event_field_quantity_label()}</Label>
+          <Input
+            id="quantity"
+            name="quantity"
+            bind:value={$form.quantity}
+            placeholder={m.event_field_quantity_placeholder()}
+          />
+        </div>
+
+        {#if $message}
+          <p class="text-sm text-destructive">{$message}</p>
+        {/if}
+
+        <div class="flex gap-2 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            onclick={() => (dialogOpen = false)}
+            class="flex-1"
+          >
+            {m.common_cancel()}
+          </Button>
+          <Button type="submit" class="flex-1" disabled={$delayed}>
+            {$delayed
+              ? m.event_add_item_submitting()
+              : m.event_add_item_submit()}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
 </div>

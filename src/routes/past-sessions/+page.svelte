@@ -45,16 +45,16 @@
             {#each data.hosted as event}
               <a
                 href={localizeHref(`/e/${event.share_code}`)}
-                class="block p-3 rounded-lg border hover:bg-accent transition-colors"
+                class="card-pop block rounded-2xl bg-card px-4 py-3 opacity-90 transition-all hover:opacity-100 active:translate-y-0.5"
               >
-                <div class="font-medium">{event.name}</div>
+                <div class="font-semibold">{event.name}</div>
                 <div class="text-sm text-muted-foreground">
                   {formatDate(event.date)}
                   {#if event.location}
                     · {event.location}
                   {/if}
                 </div>
-                <div class="text-xs text-muted-foreground mt-1">
+                <div class="code-chip text-muted-foreground mt-1 text-xs">
                   {m.event_code_label({ code: event.share_code })}
                 </div>
               </a>
@@ -70,16 +70,16 @@
             {#each data.joined as event}
               <a
                 href={localizeHref(`/e/${event.share_code}`)}
-                class="block p-3 rounded-lg border hover:bg-accent transition-colors"
+                class="card-pop block rounded-2xl bg-card px-4 py-3 opacity-90 transition-all hover:opacity-100 active:translate-y-0.5"
               >
-                <div class="font-medium">{event.name}</div>
+                <div class="font-semibold">{event.name}</div>
                 <div class="text-sm text-muted-foreground">
                   {formatDate(event.date)}
                   {#if event.location}
                     · {event.location}
                   {/if}
                 </div>
-                <div class="text-xs text-muted-foreground mt-1">
+                <div class="code-chip text-muted-foreground mt-1 text-xs">
                   {m.event_code_label({ code: event.share_code })}
                 </div>
               </a>

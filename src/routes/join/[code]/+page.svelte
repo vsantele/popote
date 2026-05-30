@@ -13,6 +13,7 @@
   import * as m from "$lib/paraglide/messages"
   import type { PageProps } from "./$types"
   import { localizeHref } from "$lib/paraglide/runtime"
+  import BrandMark from "$lib/components/brand-mark.svelte"
 
   let { data }: PageProps = $props()
 
@@ -22,9 +23,13 @@
   })
 </script>
 
-<div class="min-h-screen flex items-center justify-center p-4">
+<div class="flex min-h-screen flex-col items-center justify-center p-4">
   <div class="w-full max-w-md">
-    <Card>
+    <div class="animate-pop-in mb-5 flex flex-col items-center gap-1 text-center">
+      <BrandMark size={56} />
+      <span class="wordmark text-2xl">Popote</span>
+    </div>
+    <Card class="animate-pop-in" style="animation-delay:60ms">
       <CardHeader>
         <CardTitle>{m.join_title({ name: data.event.name })}</CardTitle>
         <CardDescription>{m.join_description()}</CardDescription>

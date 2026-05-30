@@ -44,15 +44,23 @@ import * as m from "$lib/paraglide/messages";
 
 export const CATEGORIES: Record<
   ItemCategory,
-  { emoji: string; label: () => string }
+  { emoji: string; label: () => string; color: string }
 > = {
-  apero: { emoji: "🥂", label: m.category_apero },
-  entree: { emoji: "🥗", label: m.category_entree },
-  plat: { emoji: "🍖", label: m.category_plat },
-  dessert: { emoji: "🍰", label: m.category_dessert },
-  boissons: { emoji: "🍷", label: m.category_boissons },
-  jeux: { emoji: "🎲", label: m.category_jeux },
-  autre: { emoji: "📦", label: m.category_autre },
+  apero: { emoji: "🥂", label: m.category_apero, color: "var(--cat-apero)" },
+  entree: { emoji: "🥗", label: m.category_entree, color: "var(--cat-entree)" },
+  plat: { emoji: "🍖", label: m.category_plat, color: "var(--cat-plat)" },
+  dessert: {
+    emoji: "🍰",
+    label: m.category_dessert,
+    color: "var(--cat-dessert)",
+  },
+  boissons: {
+    emoji: "🍷",
+    label: m.category_boissons,
+    color: "var(--cat-boissons)",
+  },
+  jeux: { emoji: "🎲", label: m.category_jeux, color: "var(--cat-jeux)" },
+  autre: { emoji: "📦", label: m.category_autre, color: "var(--cat-autre)" },
 };
 
 export const CATEGORY_ORDER: ItemCategory[] = [
