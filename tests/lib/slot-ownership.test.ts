@@ -214,6 +214,22 @@ describe("updateSlot / deleteSlot host-only enforcement", () => {
     if (!result.ok) expect(result.reason).toBe("not_found");
     expect(deleteMock).not.toHaveBeenCalled();
   });
+
+  it("host delete unlinks claimed items before removing the slot", async () => {
+    seedSlotRow();
+    const unlink = { ran: false };
+    const del = { ran: false };
+    updateMock.mockReturnValue(makeMutation(unlink));
+    deleteMock.mockReturnValue(makeMutation(del));
+
+    const result = await deleteSlot({ slotId: 9, userId: HOST });
+
+    expect(result.ok).toBe(true);
+    // Claimed contributions are detached (slotId nulled) so they survive,
+    // BEFORE the slot row is deleted.
+    expect(unlink.ran).toBe(true);
+    expect(del.ran).toBe(true);
+  });
 });
 
 describe("claimSlot — creates an item and prevents over-claiming", () => {

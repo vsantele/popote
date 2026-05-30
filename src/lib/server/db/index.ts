@@ -475,6 +475,17 @@ export async function deleteSlot(params: {
     return { ok: false, reason: auth.reason };
   }
 
+  // Detach already-claimed contributions before removing the slot so they
+  // survive (the item stays, just unlinked). We null `slotId` explicitly
+  // rather than rely on `onDelete: set null`, because SQLite's
+  // ALTER TABLE ADD COLUMN drops the FK action — the migration emits a bare
+  // REFERENCES, so D1 would otherwise block the delete (or leave a dangling
+  // ref). Doing it here is correct regardless of the column's FK action.
+  await db
+    .update(items)
+    .set({ slotId: null })
+    .where(eq(items.slotId, params.slotId));
+
   await db.delete(eventSlots).where(eq(eventSlots.id, params.slotId));
 
   return { ok: true };
