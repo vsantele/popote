@@ -35,7 +35,6 @@
     "@lucide/svelte": "^1.17.0",
     "@playwright/test": "^1.60.0",
     "@sveltejs/adapter-cloudflare": "^7.2.8",
-    "@sveltejs/adapter-node": "^5.5.4",
     "@sveltejs/kit": "^2.61.1",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tailwindcss/typography": "^0.5.19",
