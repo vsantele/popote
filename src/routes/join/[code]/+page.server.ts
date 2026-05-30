@@ -13,6 +13,13 @@ import { localizeHref } from "$lib/paraglide/runtime";
 function joinEventSchema() {
   return z.object({
     name: z.string().min(1, m.validation_name_required()),
+    rsvp: z.enum(["going", "maybe", "not"]).default("going"),
+    extraGuests: z.coerce
+      .number()
+      .int(m.validation_extra_guests_invalid())
+      .min(0, m.validation_extra_guests_invalid())
+      .max(50, m.validation_extra_guests_invalid())
+      .default(0),
   });
 }
 
@@ -97,6 +104,8 @@ export const actions: Actions = {
         name: form.data.name,
         userId: locals.user.id,
         isHost: false,
+        rsvp: form.data.rsvp,
+        extraGuests: Math.max(0, Math.trunc(form.data.extraGuests || 0)),
       });
 
       log("info", "Guest joined event", {

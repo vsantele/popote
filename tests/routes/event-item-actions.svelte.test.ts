@@ -8,6 +8,7 @@ import {
   editItemSchema,
   deleteItemSchema,
 } from "../../src/lib/schemas/item.schema";
+import { rsvpSchema } from "../../src/lib/schemas/rsvp.schema";
 import EventPage from "../../src/routes/e/[code]/+page.svelte";
 import type { ComponentProps } from "svelte";
 
@@ -39,11 +40,13 @@ const HOST = "user-host";
 let addForm: unknown;
 let editForm: unknown;
 let deleteForm: unknown;
+let rsvpForm: unknown;
 
 beforeAll(async () => {
   addForm = await superValidate(zod4(addItemSchema()));
   editForm = await superValidate(zod4(editItemSchema()));
   deleteForm = await superValidate(zod4(deleteItemSchema()));
+  rsvpForm = await superValidate(zod4(rsvpSchema()));
 });
 
 type RenderOpts = { currentUserId: string | null; isHost: boolean };
@@ -62,9 +65,9 @@ function renderEvent({ currentUserId, isHost }: RenderOpts) {
   };
 
   const participants = [
-    { id: "p1", event: "1", name: "Nico", user_id: HOST, is_host: true, created: "" },
-    { id: "p2", event: "1", name: "Moi", user_id: VIEWER, is_host: false, created: "" },
-    { id: "p3", event: "1", name: "Autre", user_id: OTHER, is_host: false, created: "" },
+    { id: "p1", event: "1", name: "Nico", user_id: HOST, is_host: true, rsvp: "going", extra_guests: 0, created: "" },
+    { id: "p2", event: "1", name: "Moi", user_id: VIEWER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
+    { id: "p3", event: "1", name: "Autre", user_id: OTHER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
   ];
 
   const items = [
@@ -87,6 +90,7 @@ function renderEvent({ currentUserId, isHost }: RenderOpts) {
       form: addForm,
       editForm,
       deleteForm,
+      rsvpForm,
     },
   } as unknown as ComponentProps<typeof EventPage>;
 
