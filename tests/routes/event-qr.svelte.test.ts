@@ -10,6 +10,12 @@ import {
   deleteItemSchema,
 } from "../../src/lib/schemas/item.schema"
 import { rsvpSchema } from "../../src/lib/schemas/rsvp.schema"
+import {
+  createSlotSchema,
+  editSlotSchema,
+  deleteSlotSchema,
+  claimSlotSchema,
+} from "../../src/lib/schemas/slot.schema"
 import EventPage from "../../src/routes/e/[code]/+page.svelte"
 import type { ComponentProps } from "svelte"
 
@@ -35,12 +41,20 @@ let addForm: unknown
 let editForm: unknown
 let deleteForm: unknown
 let rsvpForm: unknown
+let createSlotForm: unknown
+let editSlotForm: unknown
+let deleteSlotForm: unknown
+let claimSlotForm: unknown
 
 beforeAll(async () => {
   addForm = await superValidate(zod4(addItemSchema()))
   editForm = await superValidate(zod4(editItemSchema()))
   deleteForm = await superValidate(zod4(deleteItemSchema()))
   rsvpForm = await superValidate(zod4(rsvpSchema()))
+  createSlotForm = await superValidate(zod4(createSlotSchema()))
+  editSlotForm = await superValidate(zod4(editSlotSchema()))
+  deleteSlotForm = await superValidate(zod4(deleteSlotSchema()))
+  claimSlotForm = await superValidate(zod4(claimSlotSchema()))
 })
 
 function renderEvent() {
@@ -83,6 +97,10 @@ function renderEvent() {
       editForm,
       deleteForm,
       rsvpForm,
+      createSlotForm,
+      editSlotForm,
+      deleteSlotForm,
+      claimSlotForm,
     },
   } as unknown as ComponentProps<typeof EventPage>
 

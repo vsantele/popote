@@ -1,6 +1,6 @@
-import { events, participants, items } from "@schema";
+import { events, participants, items, eventSlots } from "@schema";
 import { generateUniqueShareCode } from "./utils";
-import { db, eq, and, desc } from "void/db";
+import { db, eq, and, desc, sql } from "void/db";
 import { VALID_DIETARY_TAGS } from "$lib/types/index";
 import type { DietaryTag } from "$lib/types/index";
 
@@ -303,6 +303,249 @@ export async function updateRsvp(params: {
     .where(eq(participants.id, params.participantId));
 
   return { ok: true };
+}
+
+// ── Host wishlist / needed slots (issue #5) ──────────────────────────────
+//
+// The host defines "needed slots" (label + count, optional category). Guests
+// claim an open slot, which creates an item owned by that guest and linked to
+// the slot. A slot's open count = neededCount − (items linked to that slot).
+
+export type SlotWithOpenCount = {
+  id: number;
+  eventId: number;
+  label: string;
+  category: string | null;
+  neededCount: number;
+  claimedCount: number;
+  openCount: number;
+};
+
+/**
+ * List an event's slots together with how many of each are already claimed
+ * (i.e. how many items link to them) and how many remain open. One grouped
+ * LEFT JOIN keeps this to a single query.
+ */
+export async function getSlotsByEventId(
+  eventId: number,
+): Promise<SlotWithOpenCount[]> {
+  const rows = await db
+    .select({
+      id: eventSlots.id,
+      eventId: eventSlots.eventId,
+      label: eventSlots.label,
+      category: eventSlots.category,
+      neededCount: eventSlots.neededCount,
+      // count(items.id) ignores the NULL produced by a slot with no claims.
+      claimedCount: sql<number>`count(${items.id})`,
+    })
+    .from(eventSlots)
+    .leftJoin(items, eq(items.slotId, eventSlots.id))
+    .where(eq(eventSlots.eventId, eventId))
+    .groupBy(eventSlots.id)
+    .orderBy(eventSlots.id);
+
+  return rows.map((r) => {
+    const claimed = Number(r.claimedCount ?? 0);
+    return {
+      id: r.id,
+      eventId: r.eventId,
+      label: r.label,
+      category: r.category,
+      neededCount: r.neededCount,
+      claimedCount: claimed,
+      openCount: Math.max(0, r.neededCount - claimed),
+    };
+  });
+}
+
+export type SlotMutationResult =
+  | { ok: true }
+  | { ok: false; reason: "not_found" | "forbidden" | "invalid" };
+
+/**
+ * Re-derive, server-side, whether `userId` hosts the event the slot belongs to.
+ * Only the host may create/edit/delete slots — never trusted from the client.
+ */
+async function authorizeSlotMutation(slotId: number, userId: string) {
+  const [row] = await db
+    .select({ slot: eventSlots, event: events })
+    .from(eventSlots)
+    .leftJoin(events, eq(eventSlots.eventId, events.id))
+    .where(eq(eventSlots.id, slotId))
+    .limit(1);
+
+  if (!row || !row.slot) {
+    return { authorized: false as const, reason: "not_found" as const };
+  }
+
+  if (row.event?.hostUserId !== userId) {
+    return { authorized: false as const, reason: "forbidden" as const };
+  }
+
+  return { authorized: true as const, slot: row.slot };
+}
+
+/** Clamp a needed-count request into a sane [1, 99] integer range. */
+function normalizeNeededCount(raw: number): number {
+  return Math.min(99, Math.max(1, Math.trunc(Number(raw) || 1)));
+}
+
+/**
+ * Create a slot for an event, but ONLY if `userId` is that event's host.
+ * Host ownership is re-derived from (event, hostUserId) at this data layer so
+ * it cannot be bypassed by a crafted request.
+ */
+export async function createSlot(params: {
+  eventId: number;
+  userId: string;
+  data: { label: string; category: string | null; neededCount: number };
+}): Promise<SlotMutationResult> {
+  const [event] = await db
+    .select({ id: events.id, hostUserId: events.hostUserId })
+    .from(events)
+    .where(eq(events.id, params.eventId))
+    .limit(1);
+
+  if (!event) {
+    return { ok: false, reason: "not_found" };
+  }
+  if (event.hostUserId !== params.userId) {
+    return { ok: false, reason: "forbidden" };
+  }
+
+  const label = params.data.label.trim();
+  if (!label) {
+    return { ok: false, reason: "invalid" };
+  }
+
+  await db.insert(eventSlots).values({
+    eventId: params.eventId,
+    label,
+    category: params.data.category || null,
+    neededCount: normalizeNeededCount(params.data.neededCount),
+  });
+
+  return { ok: true };
+}
+
+/**
+ * Edit a slot's label / category / needed count, host-only.
+ */
+export async function updateSlot(params: {
+  slotId: number;
+  userId: string;
+  data: { label: string; category: string | null; neededCount: number };
+}): Promise<SlotMutationResult> {
+  const auth = await authorizeSlotMutation(params.slotId, params.userId);
+  if (!auth.authorized) {
+    return { ok: false, reason: auth.reason };
+  }
+
+  const label = params.data.label.trim();
+  if (!label) {
+    return { ok: false, reason: "invalid" };
+  }
+
+  await db
+    .update(eventSlots)
+    .set({
+      label,
+      category: params.data.category || null,
+      neededCount: normalizeNeededCount(params.data.neededCount),
+      // Bump updatedAt so the realtime version probe sees the change.
+      updatedAt: new Date(),
+    })
+    .where(eq(eventSlots.id, params.slotId));
+
+  return { ok: true };
+}
+
+/**
+ * Delete a slot, host-only. Items previously claimed against it keep existing
+ * as contributions (the FK is ON DELETE SET NULL), they just stop counting
+ * toward a slot.
+ */
+export async function deleteSlot(params: {
+  slotId: number;
+  userId: string;
+}): Promise<SlotMutationResult> {
+  const auth = await authorizeSlotMutation(params.slotId, params.userId);
+  if (!auth.authorized) {
+    return { ok: false, reason: auth.reason };
+  }
+
+  // Detach already-claimed contributions before removing the slot so they
+  // survive (the item stays, just unlinked). We null `slotId` explicitly
+  // rather than rely on `onDelete: set null`, because SQLite's
+  // ALTER TABLE ADD COLUMN drops the FK action — the migration emits a bare
+  // REFERENCES, so D1 would otherwise block the delete (or leave a dangling
+  // ref). Doing it here is correct regardless of the column's FK action.
+  await db
+    .update(items)
+    .set({ slotId: null })
+    .where(eq(items.slotId, params.slotId));
+
+  await db.delete(eventSlots).where(eq(eventSlots.id, params.slotId));
+
+  return { ok: true };
+}
+
+export type ClaimSlotResult =
+  | { ok: true; itemId: number }
+  | { ok: false; reason: "not_found" | "full" };
+
+/**
+ * Claim an open slot for `participantId`: this creates an item owned by that
+ * participant, linked to the slot, and seeded from the slot (its label becomes
+ * the item name, its category carries over — defaulting to "autre" when the
+ * slot is category-less). Any event participant may claim.
+ *
+ * Over-claim protection: the slot's open count is re-derived here (neededCount
+ * − items already linked) and the claim is refused with "full" if none remain.
+ * The count is read immediately before the insert; D1/SQLite serialises writes
+ * within a request, so under normal contention a second concurrent claim that
+ * would exceed neededCount loses the race and is rejected here.
+ */
+export async function claimSlot(params: {
+  slotId: number;
+  participantId: number;
+  data?: { quantity?: string };
+}): Promise<ClaimSlotResult> {
+  const [slot] = await db
+    .select()
+    .from(eventSlots)
+    .where(eq(eventSlots.id, params.slotId))
+    .limit(1);
+
+  if (!slot) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  const [agg] = await db
+    .select({ claimed: sql<number>`count(*)` })
+    .from(items)
+    .where(eq(items.slotId, params.slotId));
+
+  const claimed = Number(agg?.claimed ?? 0);
+  if (claimed >= slot.neededCount) {
+    return { ok: false, reason: "full" };
+  }
+
+  const [newItem] = await db
+    .insert(items)
+    .values({
+      eventId: slot.eventId,
+      participantId: params.participantId,
+      slotId: slot.id,
+      name: slot.label,
+      category: slot.category || "autre",
+      quantity: params.data?.quantity || null,
+      dietaryTags: "[]",
+    })
+    .returning();
+
+  return { ok: true, itemId: newItem.id };
 }
 
 /**

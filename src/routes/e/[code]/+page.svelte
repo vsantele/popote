@@ -24,6 +24,7 @@
     type Item,
     type ItemCategory,
     type DietaryTag,
+    type EventSlot,
   } from "$lib/types/index"
   import { computeHeadcount } from "$lib/utils/headcount"
   import { log } from "$lib/utils/logger"
@@ -42,6 +43,8 @@
     Users,
     Pencil,
     Trash2,
+    Gift,
+    HandHeart,
   } from "@lucide/svelte"
   import * as m from "$lib/paraglide/messages"
   import { getLocale, localizeHref } from "$lib/paraglide/runtime"
@@ -171,6 +174,105 @@
     rsvpDialogOpen = true
   }
 
+  // ── Host wishlist / needed slots (issue #5) ────────────────────────
+  let slots = $derived(data.slots ?? [])
+
+  // Create-slot flow (host only).
+  let createSlotDialogOpen = $state(false)
+  // svelte-ignore state_referenced_locally
+  const {
+    form: createSlotForm,
+    errors: createSlotErrors,
+    enhance: createSlotEnhance,
+    delayed: createSlotDelayed,
+    message: createSlotMessage,
+  } = superForm(data.createSlotForm, {
+    id: "createSlot",
+    resetForm: true,
+    onUpdated: async ({ form }) => {
+      if (form.valid) {
+        createSlotDialogOpen = false
+        await invalidateAll()
+      }
+    },
+  })
+
+  // Edit-slot flow (host only).
+  let editSlotDialogOpen = $state(false)
+  // svelte-ignore state_referenced_locally
+  const {
+    form: editSlotForm,
+    errors: editSlotErrors,
+    enhance: editSlotEnhance,
+    delayed: editSlotDelayed,
+    message: editSlotMessage,
+  } = superForm(data.editSlotForm, {
+    id: "editSlot",
+    onUpdated: async ({ form }) => {
+      if (form.valid) {
+        editSlotDialogOpen = false
+        await invalidateAll()
+      }
+    },
+  })
+
+  function openCreateSlotDialog() {
+    $createSlotForm.label = ""
+    $createSlotForm.category = undefined
+    $createSlotForm.neededCount = 1
+    createSlotDialogOpen = true
+  }
+
+  function openEditSlotDialog(slot: EventSlot) {
+    $editSlotForm.id = slot.id
+    $editSlotForm.label = slot.label
+    $editSlotForm.category = slot.category
+    $editSlotForm.neededCount = slot.needed_count
+    editSlotDialogOpen = true
+  }
+
+  // Delete-slot flow (host only).
+  let deleteSlotDialogOpen = $state(false)
+  let pendingSlotDelete = $state<EventSlot | null>(null)
+  // svelte-ignore state_referenced_locally
+  const {
+    form: deleteSlotForm,
+    enhance: deleteSlotEnhance,
+    delayed: deleteSlotDelayed,
+    message: deleteSlotMessage,
+  } = superForm(data.deleteSlotForm, {
+    id: "deleteSlot",
+    onUpdated: async ({ form }) => {
+      if (form.valid) {
+        deleteSlotDialogOpen = false
+        pendingSlotDelete = null
+        await invalidateAll()
+      }
+    },
+  })
+
+  function openDeleteSlotDialog(slot: EventSlot) {
+    pendingSlotDelete = slot
+    $deleteSlotForm.id = slot.id
+    deleteSlotDialogOpen = true
+  }
+
+  // Claim-slot flow (any participant). Submits via a hidden id field so it
+  // works without opening a dialog — a one-tap "I'll bring this".
+  // svelte-ignore state_referenced_locally
+  const {
+    form: claimSlotForm,
+    enhance: claimSlotEnhance,
+    message: claimSlotMessage,
+  } = superForm(data.claimSlotForm, {
+    id: "claimSlot",
+    onUpdated: async ({ form }) => {
+      if (form.valid) {
+        await invalidateAll()
+      }
+    },
+  })
+
   // Re-derive ownership on the client purely to decide which affordances to
   // show. The server independently enforces the real ownership rule, so this
   // is never the source of truth — only a UI convenience.
@@ -189,6 +291,20 @@
     }
   }
 
+  // Any open dialog suppresses live refetches so in-progress form input
+  // isn't reset out from under the user.
+  function anyDialogOpen(): boolean {
+    return (
+      dialogOpen ||
+      editDialogOpen ||
+      deleteDialogOpen ||
+      rsvpDialogOpen ||
+      createSlotDialogOpen ||
+      editSlotDialogOpen ||
+      deleteSlotDialogOpen
+    )
+  }
+
   // ── Keep the shared list feeling live ──────────────────────────────
   // A single SSE connection to /e/[code]/live tells us when another guest
   // changed the board; we then re-run the page load so new contributions
@@ -205,7 +321,7 @@
     onChange: async () => {
       // Don't refetch while a dialog is open — it would reset in-progress
       // form input. The store will reconcile again on the next signal/poll.
-      if (dialogOpen || editDialogOpen || deleteDialogOpen) return
+      if (anyDialogOpen()) return
       await invalidateAll()
     },
   })
@@ -222,9 +338,7 @@
       if (
         typeof document !== "undefined" &&
         !document.hidden &&
-        !dialogOpen &&
-        !editDialogOpen &&
-        !deleteDialogOpen
+        !anyDialogOpen()
       ) {
         invalidateAll()
       }
@@ -319,6 +433,12 @@
       ? ESSENTIALS.filter((c) => (itemsByCategory.get(c) || []).length === 0)
       : [],
   )
+
+  // Open (unclaimed) host slots feed the gap hint too: each still-needed slot
+  // is surfaced as something the event is short on. The hint shows whenever
+  // there's an empty essential course OR an open slot.
+  const openSlots = $derived(slots.filter((s) => s.open_count > 0))
+  const hasGapHint = $derived(gaps.length > 0 || openSlots.length > 0)
 
   // Rough "light catering" signal: once a real crowd is confirmed (4+ heads),
   // warn if the number of food/drink contributions is well below the headcount
@@ -580,14 +700,31 @@
       eventId={Number(data.event.id)}
     />
 
-    <!-- Gap hint -->
-    {#if gaps.length > 0}
+    <!-- Gap hint: empty essential courses + unclaimed host slots -->
+    {#if hasGapHint}
       <div
         class="animate-pop-in flex flex-wrap items-center gap-2 rounded-2xl border-[1.5px] border-dashed border-primary/40 bg-primary/8 px-4 py-3"
       >
         <span class="text-sm font-semibold text-primary">
           {m.event_gap_title()} —
         </span>
+        {#each openSlots as slot (slot.id)}
+          <span
+            class="inline-flex items-center gap-1 rounded-full bg-card px-2.5 py-1 text-sm font-medium shadow-sm"
+            style="border:1px solid {slot.category
+              ? CATEGORIES[slot.category].color
+              : 'var(--cat-autre)'}"
+            data-open-slot={slot.id}
+          >
+            {#if slot.category}{CATEGORIES[slot.category].emoji}{:else}🎁{/if}
+            {slot.label}
+            {#if slot.open_count > 1}
+              <span class="text-xs text-muted-foreground"
+                >×{slot.open_count}</span
+              >
+            {/if}
+          </span>
+        {/each}
         {#each gaps as cat (cat)}
           <span
             class="inline-flex items-center gap-1 rounded-full bg-card px-2.5 py-1 text-sm font-medium shadow-sm"
@@ -609,6 +746,129 @@
           🍽️ {m.event_headcount_gap({ count: headcount.confirmed })}
         </span>
       </div>
+    {/if}
+
+    <!-- Host wishlist / needed slots (issue #5) -->
+    {#if data.isHost || slots.length > 0}
+      <section class="card-pop animate-pop-in overflow-hidden rounded-2xl bg-card">
+        <header class="flex items-center gap-3 bg-secondary/40 px-4 py-3">
+          <span
+            class="grid size-10 shrink-0 place-items-center rounded-xl bg-card text-lg text-primary shadow-sm"
+            aria-hidden="true"
+          >
+            <Gift class="size-5" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <h2 class="font-display text-lg font-semibold tracking-tight">
+              {m.event_slots_title()}
+            </h2>
+            {#if data.isHost}
+              <p class="text-xs text-muted-foreground">
+                {m.event_slots_host_hint()}
+              </p>
+            {/if}
+          </div>
+          {#if data.isHost}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onclick={openCreateSlotDialog}
+            >
+              <Plus class="size-4" />
+              {m.event_slots_add_trigger()}
+            </Button>
+          {/if}
+        </header>
+
+        {#if slots.length === 0}
+          <p class="px-4 py-5 text-center text-sm text-muted-foreground">
+            {m.event_slots_empty_host()}
+          </p>
+        {:else}
+          <ul class="space-y-2 p-3">
+            {#each slots as slot (slot.id)}
+              {@const slotCat = slot.category
+                ? CATEGORIES[slot.category]
+                : null}
+              <li
+                class="flex items-center gap-3 rounded-xl border-l-[3px] bg-background/55 py-2.5 pr-3 pl-3"
+                style="border-color:{slotCat
+                  ? slotCat.color
+                  : 'var(--cat-autre)'}"
+                data-slot={slot.id}
+                data-slot-open={slot.open_count}
+              >
+                <span class="text-lg leading-none" aria-hidden="true">
+                  {#if slotCat}{slotCat.emoji}{:else}🎁{/if}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="leading-tight font-semibold">{slot.label}</p>
+                  <p class="text-sm text-muted-foreground">
+                    {m.event_slots_progress({
+                      claimed: slot.claimed_count,
+                      needed: slot.needed_count,
+                    })}
+                    {#if slot.open_count > 0}
+                      · {m.event_slots_open_label({ count: slot.open_count })}
+                    {:else}
+                      · {m.event_slots_filled_label()}
+                    {/if}
+                  </p>
+                </div>
+
+                {#if slot.open_count > 0}
+                  <form
+                    method="POST"
+                    action="?/claimSlot"
+                    use:claimSlotEnhance
+                    class="shrink-0"
+                  >
+                    <input type="hidden" name="id" value={slot.id} />
+                    <Button type="submit" size="sm" data-claim-slot={slot.id}>
+                      <HandHeart class="size-4" />
+                      {m.event_slots_claim()}
+                    </Button>
+                  </form>
+                {/if}
+
+                {#if data.isHost}
+                  <div
+                    class="flex shrink-0 items-center gap-1"
+                    aria-label={m.event_slot_actions_label({
+                      label: slot.label,
+                    })}
+                  >
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      class="size-8 text-muted-foreground hover:text-foreground"
+                      onclick={() => openEditSlotDialog(slot)}
+                      aria-label={m.event_item_edit()}
+                    >
+                      <Pencil size={16} />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      class="size-8 text-muted-foreground hover:text-destructive"
+                      onclick={() => openDeleteSlotDialog(slot)}
+                      aria-label={m.event_item_delete()}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        {#if $claimSlotMessage}
+          <p class="px-4 pb-3 text-sm text-destructive">{$claimSlotMessage}</p>
+        {/if}
+      </section>
     {/if}
 
     <!-- Toolbar -->
@@ -1104,6 +1364,246 @@
           </Button>
           <Button type="submit" class="flex-1" disabled={$rsvpDelayed}>
             {$rsvpDelayed ? m.event_rsvp_saving() : m.event_rsvp_save()}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+
+  <!-- Create slot dialog (host) -->
+  <Dialog bind:open={createSlotDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle class="font-display text-xl">
+          {m.event_slots_add_dialog_title()}
+        </DialogTitle>
+      </DialogHeader>
+      <form
+        method="POST"
+        action="?/createSlot"
+        use:createSlotEnhance
+        class="space-y-4"
+      >
+        <div class="space-y-2">
+          <Label for="slot-label">{m.event_slots_field_label()}</Label>
+          <Input
+            id="slot-label"
+            name="label"
+            bind:value={$createSlotForm.label}
+            placeholder={m.event_slots_field_label_placeholder()}
+            required
+            aria-invalid={$createSlotErrors.label ? "true" : undefined}
+          />
+          {#if $createSlotErrors.label}
+            <p class="text-sm text-destructive">{$createSlotErrors.label}</p>
+          {/if}
+        </div>
+
+        <div class="space-y-2">
+          <Label for="slot-count">{m.event_slots_field_count()}</Label>
+          <Input
+            id="slot-count"
+            name="neededCount"
+            type="number"
+            min="1"
+            max="99"
+            bind:value={$createSlotForm.neededCount}
+          />
+          {#if $createSlotErrors.neededCount}
+            <p class="text-sm text-destructive">
+              {$createSlotErrors.neededCount}
+            </p>
+          {/if}
+        </div>
+
+        <div class="space-y-2">
+          <Label for="slot-category">{m.event_slots_field_category()}</Label>
+          <Select
+            name="category"
+            bind:value={$createSlotForm.category}
+            type="single"
+          >
+            <SelectTrigger>
+              {#if $createSlotForm.category}
+                {CATEGORIES[$createSlotForm.category].emoji}
+                {CATEGORIES[$createSlotForm.category].label()}
+              {:else}
+                {m.event_slots_category_none()}
+              {/if}
+            </SelectTrigger>
+            <SelectContent>
+              {#each CATEGORY_ORDER as cat (cat)}
+                <SelectItem value={cat} label={CATEGORIES[cat].label()}>
+                  {CATEGORIES[cat].emoji}
+                  {CATEGORIES[cat].label()}
+                </SelectItem>
+              {/each}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {#if $createSlotMessage}
+          <p class="text-sm text-destructive">{$createSlotMessage}</p>
+        {/if}
+
+        <div class="flex gap-2 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            onclick={() => (createSlotDialogOpen = false)}
+            class="flex-1"
+          >
+            {m.common_cancel()}
+          </Button>
+          <Button type="submit" class="flex-1" disabled={$createSlotDelayed}>
+            {$createSlotDelayed
+              ? m.event_slots_saving()
+              : m.event_slots_save()}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+
+  <!-- Edit slot dialog (host) -->
+  <Dialog bind:open={editSlotDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle class="font-display text-xl">
+          {m.event_slots_edit_dialog_title()}
+        </DialogTitle>
+      </DialogHeader>
+      <form
+        method="POST"
+        action="?/editSlot"
+        use:editSlotEnhance
+        class="space-y-4"
+      >
+        <input type="hidden" name="id" bind:value={$editSlotForm.id} />
+        <div class="space-y-2">
+          <Label for="edit-slot-label">{m.event_slots_field_label()}</Label>
+          <Input
+            id="edit-slot-label"
+            name="label"
+            bind:value={$editSlotForm.label}
+            placeholder={m.event_slots_field_label_placeholder()}
+            required
+            aria-invalid={$editSlotErrors.label ? "true" : undefined}
+          />
+          {#if $editSlotErrors.label}
+            <p class="text-sm text-destructive">{$editSlotErrors.label}</p>
+          {/if}
+        </div>
+
+        <div class="space-y-2">
+          <Label for="edit-slot-count">{m.event_slots_field_count()}</Label>
+          <Input
+            id="edit-slot-count"
+            name="neededCount"
+            type="number"
+            min="1"
+            max="99"
+            bind:value={$editSlotForm.neededCount}
+          />
+          {#if $editSlotErrors.neededCount}
+            <p class="text-sm text-destructive">
+              {$editSlotErrors.neededCount}
+            </p>
+          {/if}
+        </div>
+
+        <div class="space-y-2">
+          <Label for="edit-slot-category">
+            {m.event_slots_field_category()}
+          </Label>
+          <Select
+            name="category"
+            bind:value={$editSlotForm.category}
+            type="single"
+          >
+            <SelectTrigger>
+              {#if $editSlotForm.category}
+                {CATEGORIES[$editSlotForm.category].emoji}
+                {CATEGORIES[$editSlotForm.category].label()}
+              {:else}
+                {m.event_slots_category_none()}
+              {/if}
+            </SelectTrigger>
+            <SelectContent>
+              {#each CATEGORY_ORDER as cat (cat)}
+                <SelectItem value={cat} label={CATEGORIES[cat].label()}>
+                  {CATEGORIES[cat].emoji}
+                  {CATEGORIES[cat].label()}
+                </SelectItem>
+              {/each}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {#if $editSlotMessage}
+          <p class="text-sm text-destructive">{$editSlotMessage}</p>
+        {/if}
+
+        <div class="flex gap-2 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            onclick={() => (editSlotDialogOpen = false)}
+            class="flex-1"
+          >
+            {m.common_cancel()}
+          </Button>
+          <Button type="submit" class="flex-1" disabled={$editSlotDelayed}>
+            {$editSlotDelayed ? m.event_slots_saving() : m.event_slots_save()}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+
+  <!-- Delete slot dialog (host) -->
+  <Dialog bind:open={deleteSlotDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle class="font-display text-xl">
+          {m.event_slots_delete_dialog_title()}
+        </DialogTitle>
+      </DialogHeader>
+      <p class="text-sm text-muted-foreground">
+        {m.event_slots_delete_dialog_description({
+          label: pendingSlotDelete?.label ?? "",
+        })}
+      </p>
+      <form
+        method="POST"
+        action="?/deleteSlot"
+        use:deleteSlotEnhance
+        class="space-y-4"
+      >
+        <input type="hidden" name="id" bind:value={$deleteSlotForm.id} />
+
+        {#if $deleteSlotMessage}
+          <p class="text-sm text-destructive">{$deleteSlotMessage}</p>
+        {/if}
+
+        <div class="flex gap-2 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            onclick={() => (deleteSlotDialogOpen = false)}
+            class="flex-1"
+          >
+            {m.common_cancel()}
+          </Button>
+          <Button
+            type="submit"
+            variant="destructive"
+            class="flex-1"
+            disabled={$deleteSlotDelayed}
+          >
+            {$deleteSlotDelayed
+              ? m.event_delete_item_submitting()
+              : m.event_delete_item_confirm()}
           </Button>
         </div>
       </form>

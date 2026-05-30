@@ -18,7 +18,7 @@
  * a live connection.
  */
 import { db } from "void/db";
-import { events, participants, items } from "$lib/server/db/schema";
+import { events, participants, items, eventSlots } from "$lib/server/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 export interface EventVersion {
@@ -63,6 +63,18 @@ export async function eventVersion(shareCode: string): Promise<EventVersion> {
     .from(items)
     .where(eq(items.eventId, event.id));
 
+  // Host slot changes (issue #5) must propagate live too. Claims already move
+  // the items aggregate above (claiming creates an item); this catches the
+  // host adding / editing / removing the slots themselves.
+  const [sAgg] = await db
+    .select({
+      count: sql<number>`count(*)`,
+      maxCreated: sql<number>`coalesce(max(${eventSlots.createdAt}), 0)`,
+      maxUpdated: sql<number>`coalesce(max(${eventSlots.updatedAt}), 0)`,
+    })
+    .from(eventSlots)
+    .where(eq(eventSlots.eventId, event.id));
+
   // Counts catch deletes (a delete lowers count even if max timestamps are
   // stale); max timestamps catch inserts and in-place edits.
   const token = [
@@ -72,6 +84,9 @@ export async function eventVersion(shareCode: string): Promise<EventVersion> {
     iAgg?.count ?? 0,
     iAgg?.maxCreated ?? 0,
     iAgg?.maxUpdated ?? 0,
+    sAgg?.count ?? 0,
+    sAgg?.maxCreated ?? 0,
+    sAgg?.maxUpdated ?? 0,
     Number(event.updatedAt instanceof Date ? event.updatedAt.getTime() : 0),
   ].join(":");
 
