@@ -172,6 +172,7 @@ export const items = sqliteTable(
     name: text("name", { length: 100 }).notNull(),
     category: text("category", { length: 32 }).notNull(),
     quantity: text("quantity", { length: 32 }),
+    dietaryTags: text("dietary_tags").default("[]").notNull(),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),

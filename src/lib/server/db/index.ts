@@ -1,6 +1,21 @@
 import { events, participants, items } from "@schema";
 import { generateUniqueShareCode } from "./utils";
 import { db, eq, and, desc } from "void/db";
+import { VALID_DIETARY_TAGS } from "$lib/types/index";
+import type { DietaryTag } from "$lib/types/index";
+
+/** Parse a JSON string of dietary tag keys, dropping any unrecognised values. */
+function parseTagsJson(raw: string | null | undefined): DietaryTag[] {
+  try {
+    const parsed = JSON.parse(raw ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((t): t is DietaryTag =>
+      (VALID_DIETARY_TAGS as readonly string[]).includes(t),
+    );
+  } catch {
+    return [];
+  }
+}
 
 export type Database = NonNullable<typeof db>;
 
@@ -31,7 +46,11 @@ export async function getEventByShareCode(shareCode: string) {
   return {
     ...event,
     participants: eventParticipants,
-    items: itemRows.map((r) => ({ ...r.item, participant: r.participant })),
+    items: itemRows.map((r) => ({
+      ...r.item,
+      dietaryTags: parseTagsJson(r.item.dietaryTags),
+      participant: r.participant,
+    })),
   };
 }
 
@@ -90,7 +109,11 @@ export async function getItemsByEventId(eventId: number) {
     .leftJoin(participants, eq(items.participantId, participants.id))
     .where(eq(items.eventId, eventId));
 
-  return rows.map((r) => ({ ...r.item, participant: r.participant }));
+  return rows.map((r) => ({
+    ...r.item,
+    dietaryTags: parseTagsJson(r.item.dietaryTags),
+    participant: r.participant,
+  }));
 }
 
 export async function findOrCreateParticipant(
@@ -129,6 +152,7 @@ export async function createItemForParticipant(itemData: {
   name: string;
   category: string;
   quantity?: string;
+  dietaryTags?: string[];
 }) {
   const [newItem] = await db
     .insert(items)
@@ -138,6 +162,7 @@ export async function createItemForParticipant(itemData: {
       name: itemData.name,
       category: itemData.category,
       quantity: itemData.quantity || null,
+      dietaryTags: JSON.stringify(itemData.dietaryTags ?? []),
     })
     .returning();
 
@@ -188,7 +213,7 @@ async function authorizeItemMutation(itemId: number, userId: string) {
 export async function updateItem(params: {
   itemId: number;
   userId: string;
-  data: { name: string; category: string; quantity?: string };
+  data: { name: string; category: string; quantity?: string; dietaryTags?: string[] };
 }): Promise<ItemMutationResult> {
   const auth = await authorizeItemMutation(params.itemId, params.userId);
   if (!auth.authorized) {
@@ -201,6 +226,7 @@ export async function updateItem(params: {
       name: params.data.name,
       category: params.data.category,
       quantity: params.data.quantity || null,
+      dietaryTags: JSON.stringify(params.data.dietaryTags ?? []),
     })
     .where(eq(items.id, params.itemId));
 

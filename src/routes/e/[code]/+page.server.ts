@@ -13,6 +13,21 @@ import { rsvpSchema } from "$lib/schemas/rsvp.schema";
 import { updateItem, deleteItem, updateRsvp } from "$lib/server/db";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
+import { VALID_DIETARY_TAGS } from "$lib/types/index";
+import type { DietaryTag } from "$lib/types/index";
+
+/** Parse a JSON dietary tags string from DB, dropping unknown tag keys. */
+function parseDietaryTagsJson(raw: string | null | undefined): DietaryTag[] {
+  try {
+    const parsed = JSON.parse(raw ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((t): t is DietaryTag =>
+      (VALID_DIETARY_TAGS as readonly string[]).includes(t),
+    );
+  } catch {
+    return [];
+  }
+}
 
 import * as m from "$lib/paraglide/messages";
 import { localizeHref } from "$lib/paraglide/runtime";
@@ -80,6 +95,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     name: i.name,
     category: i.category,
     quantity: i.quantity || undefined,
+    dietary_tags: parseDietaryTagsJson(i.dietaryTags),
     created: i.createdAt.toISOString(),
   }));
 
@@ -177,6 +193,7 @@ export const actions: Actions = {
         name: form.data.name,
         category: form.data.category,
         quantity: form.data.quantity || null,
+        dietaryTags: JSON.stringify(form.data.dietaryTags ?? []),
       });
 
       return { form };
@@ -288,6 +305,7 @@ export const actions: Actions = {
           name: form.data.name,
           category: form.data.category,
           quantity: form.data.quantity,
+          dietaryTags: form.data.dietaryTags,
         },
       });
 

@@ -177,5 +177,14 @@
   "validation_email_invalid": "Email invalide",
   "validation_password_too_short": "Mot de passe trop court (8 caractères minimum)",
   "validation_password_required": "Mot de passe requis",
-  "validation_signup_name_required": "Nom requis"
+  "validation_signup_name_required": "Nom requis",
+  "event_field_dietary_tags_label": "Tags alimentaires",
+  "tag_vegetarian": "Végétarien",
+  "tag_vegan": "Vegan",
+  "tag_gluten_free": "Sans gluten",
+  "tag_contains_nuts": "Contient des noix",
+  "tag_lactose_free": "Sans lactose",
+  "tag_halal": "Halal",
+  "tag_kosher": "Casher",
+  "tag_spicy": "Épicé"
 }
