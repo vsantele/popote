@@ -4,7 +4,12 @@ import { events, participants, items } from "$lib/server/db/schema";
 import { and, eq } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms/server";
-import { addItemSchema } from "$lib/schemas/item.schema";
+import {
+  addItemSchema,
+  editItemSchema,
+  deleteItemSchema,
+} from "$lib/schemas/item.schema";
+import { updateItem, deleteItem } from "$lib/server/db";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
 
@@ -80,13 +85,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   );
 
   const form = await superValidate(zod4(addItemSchema()));
+  const editForm = await superValidate(zod4(editItemSchema()));
+  const deleteForm = await superValidate(zod4(deleteItemSchema()));
 
   return {
     event: transformedEvent,
     participants: transformedParticipants,
     items: transformedItems,
     currentParticipant,
+    currentUserId: userId ?? null,
+    isHost: Boolean(isHost),
     form,
+    editForm,
+    deleteForm,
   };
 };
 
@@ -163,6 +174,93 @@ export const actions: Actions = {
       return fail(500, {
         form,
         error: m.error_add_item_failed(),
+      });
+    }
+  },
+
+  editItem: async ({ request, locals }) => {
+    const form = await superValidate(request, zod4(editItemSchema()));
+
+    if (!form.valid) {
+      return fail(400, { editForm: form });
+    }
+
+    if (!locals.user) {
+      return fail(401, {
+        editForm: form,
+        error: m.error_session_invalid_join(),
+      });
+    }
+
+    try {
+      const result = await updateItem({
+        itemId: Number(form.data.id),
+        userId: locals.user.id,
+        data: {
+          name: form.data.name,
+          category: form.data.category,
+          quantity: form.data.quantity,
+        },
+      });
+
+      if (!result.ok) {
+        const status = result.reason === "not_found" ? 404 : 403;
+        return fail(status, {
+          editForm: form,
+          error:
+            result.reason === "not_found"
+              ? m.error_item_not_found()
+              : m.error_item_forbidden(),
+        });
+      }
+
+      return { editForm: form };
+    } catch (err) {
+      log("error", "Failed to edit item", { error: String(err) });
+      return fail(500, {
+        editForm: form,
+        error: m.error_edit_item_failed(),
+      });
+    }
+  },
+
+  deleteItem: async ({ request, locals }) => {
+    const form = await superValidate(request, zod4(deleteItemSchema()));
+
+    if (!form.valid) {
+      return fail(400, { deleteForm: form });
+    }
+
+    if (!locals.user) {
+      return fail(401, {
+        deleteForm: form,
+        error: m.error_session_invalid_join(),
+      });
+    }
+
+    try {
+      const result = await deleteItem({
+        itemId: Number(form.data.id),
+        userId: locals.user.id,
+      });
+
+      if (!result.ok) {
+        const status = result.reason === "not_found" ? 404 : 403;
+        return fail(status, {
+          deleteForm: form,
+          error:
+            result.reason === "not_found"
+              ? m.error_item_not_found()
+              : m.error_item_forbidden(),
+        });
+      }
+
+      return { deleteForm: form };
+    } catch (err) {
+      log("error", "Failed to delete item", { error: String(err) });
+      return fail(500, {
+        deleteForm: form,
+        error: m.error_delete_item_failed(),
       });
     }
   },
