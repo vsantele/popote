@@ -4,7 +4,7 @@ import { fail, redirect, error } from "@sveltejs/kit";
 import { z } from "zod";
 import { db } from "void/db";
 import { events, participants } from "$lib/server/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
 import * as m from "$lib/paraglide/messages";
@@ -20,20 +20,28 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const shareCode = params.code.toUpperCase();
   const userId = locals.user?.id;
 
-  const event = await db.query.events.findFirst({
-    where: eq(events.shareCode, shareCode),
-    with: {
-      participants: {
-        where: (participants, { eq }) => eq(participants.userId, userId ?? ""),
-      },
-    },
-  });
+  const [event] = await db
+    .select()
+    .from(events)
+    .where(eq(events.shareCode, shareCode))
+    .limit(1);
 
   if (!event) {
     throw error(404, m.error_event_not_found());
   }
 
-  if (event.participants.length > 0) {
+  const existingParticipant = await db
+    .select({ id: participants.id })
+    .from(participants)
+    .where(
+      and(
+        eq(participants.eventId, event.id),
+        eq(participants.userId, userId ?? ""),
+      ),
+    )
+    .limit(1);
+
+  if (existingParticipant.length > 0) {
     return redirect(303, localizeHref(`/e/${shareCode}`));
   }
 

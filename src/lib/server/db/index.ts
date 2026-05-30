@@ -5,17 +5,34 @@ import { db, eq, and, desc } from "void/db";
 export type Database = NonNullable<typeof db>;
 
 export async function getEventByShareCode(shareCode: string) {
-  return await db.query.events.findFirst({
-    where: eq(events.shareCode, shareCode.toUpperCase()),
-    with: {
-      participants: true,
-      items: {
-        with: {
-          participant: true,
-        },
-      },
-    },
-  });
+  // Core query builder (db.select) instead of the relational API
+  // (db.query.*): Void only injects the schema into `db` via its Vite
+  // virtual module, which is not applied to server modules in local dev,
+  // so db.query.* is undefined there. db.select works in dev and prod.
+  const [event] = await db
+    .select()
+    .from(events)
+    .where(eq(events.shareCode, shareCode.toUpperCase()))
+    .limit(1);
+
+  if (!event) return undefined;
+
+  const eventParticipants = await db
+    .select()
+    .from(participants)
+    .where(eq(participants.eventId, event.id));
+
+  const itemRows = await db
+    .select({ item: items, participant: participants })
+    .from(items)
+    .leftJoin(participants, eq(items.participantId, participants.id))
+    .where(eq(items.eventId, event.id));
+
+  return {
+    ...event,
+    participants: eventParticipants,
+    items: itemRows.map((r) => ({ ...r.item, participant: r.participant })),
+  };
 }
 
 export async function createEventWithHost(eventData: {
@@ -60,18 +77,20 @@ export async function createEventWithHost(eventData: {
 }
 
 export async function getParticipantsByEventId(eventId: number) {
-  return await db.query.participants.findMany({
-    where: eq(participants.eventId, eventId),
-  });
+  return await db
+    .select()
+    .from(participants)
+    .where(eq(participants.eventId, eventId));
 }
 
 export async function getItemsByEventId(eventId: number) {
-  return await db.query.items.findMany({
-    where: eq(items.eventId, eventId),
-    with: {
-      participant: true,
-    },
-  });
+  const rows = await db
+    .select({ item: items, participant: participants })
+    .from(items)
+    .leftJoin(participants, eq(items.participantId, participants.id))
+    .where(eq(items.eventId, eventId));
+
+  return rows.map((r) => ({ ...r.item, participant: r.participant }));
 }
 
 export async function findOrCreateParticipant(
@@ -79,12 +98,13 @@ export async function findOrCreateParticipant(
   userId: string,
   name: string,
 ) {
-  const existing = await db.query.participants.findFirst({
-    where: and(
-      eq(participants.eventId, eventId),
-      eq(participants.userId, userId),
-    ),
-  });
+  const [existing] = await db
+    .select()
+    .from(participants)
+    .where(
+      and(eq(participants.eventId, eventId), eq(participants.userId, userId)),
+    )
+    .limit(1);
 
   if (existing) {
     return existing;
@@ -169,8 +189,10 @@ export async function getUserEvents(userId: string, upcoming: boolean = true) {
 }
 
 export async function isEventExisting(shareCode: string) {
-  const event = await db.query.events.findFirst({
-    where: eq(events.shareCode, shareCode.toUpperCase()),
-  });
+  const [event] = await db
+    .select({ id: events.id })
+    .from(events)
+    .where(eq(events.shareCode, shareCode.toUpperCase()))
+    .limit(1);
   return !!event;
 }

@@ -1,7 +1,7 @@
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "void/db";
 import { events, participants, items } from "$lib/server/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms/server";
 import { addItemSchema } from "$lib/schemas/item.schema";
@@ -15,22 +15,30 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const shareCode = params.code.toUpperCase();
   const userId = locals.user?.id;
 
-  const event = await db.query.events.findFirst({
-    where: eq(events.shareCode, shareCode),
-    with: {
-      participants: true,
-      items: true,
-    },
-  });
+  // NOTE: the core query builder (db.select) is used instead of the
+  // relational API (db.query.events.findFirst({ with })) because the schema
+  // is only injected into `db` by Void's Vite virtual module — which is not
+  // applied to SvelteKit's server modules in local dev, leaving db.query.*
+  // undefined. db.select works identically in dev and production.
+  const [event] = await db
+    .select()
+    .from(events)
+    .where(eq(events.shareCode, shareCode))
+    .limit(1);
 
   if (!event) {
     throw error(404, m.error_event_not_found());
   }
 
+  const [eventParticipants, eventItems] = await Promise.all([
+    db.select().from(participants).where(eq(participants.eventId, event.id)),
+    db.select().from(items).where(eq(items.eventId, event.id)),
+  ]);
+
   // If the visitor isn't the host and isn't already a participant, send them
   // to /join so they can pick a display name first.
   const isHost = userId && event.hostUserId === userId;
-  const alreadyJoined = event.participants.some((p) => p.userId === userId);
+  const alreadyJoined = eventParticipants.some((p) => p.userId === userId);
 
   if (!isHost && !alreadyJoined) {
     return redirect(303, localizeHref(`/join/${shareCode}`));
@@ -48,7 +56,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     created: event.createdAt.toISOString(),
   };
 
-  const transformedParticipants = event.participants.map((p) => ({
+  const transformedParticipants = eventParticipants.map((p) => ({
     id: String(p.id),
     event: String(event.id),
     name: p.name,
@@ -57,7 +65,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     created: p.createdAt.toISOString(),
   }));
 
-  const transformedItems = event.items.map((i) => ({
+  const transformedItems = eventItems.map((i) => ({
     id: String(i.id),
     event: String(event.id),
     participant: String(i.participantId),
@@ -101,14 +109,11 @@ export const actions: Actions = {
       const shareCode = params.code.toUpperCase();
       const userId = locals.user.id;
 
-      const event = await db.query.events.findFirst({
-        where: eq(events.shareCode, shareCode),
-        with: {
-          participants: {
-            where: (participants, { eq }) => eq(participants.userId, userId),
-          },
-        },
-      });
+      const [event] = await db
+        .select()
+        .from(events)
+        .where(eq(events.shareCode, shareCode))
+        .limit(1);
 
       if (!event) {
         return fail(404, {
@@ -117,7 +122,16 @@ export const actions: Actions = {
         });
       }
 
-      const participant = event.participants[0];
+      const [participant] = await db
+        .select()
+        .from(participants)
+        .where(
+          and(
+            eq(participants.eventId, event.id),
+            eq(participants.userId, userId),
+          ),
+        )
+        .limit(1);
       let participantId: number;
 
       if (!participant) {

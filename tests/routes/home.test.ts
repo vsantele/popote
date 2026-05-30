@@ -12,7 +12,7 @@ describe("Home Page Component", () => {
     it("should render app title", () => {
       render(HomePage);
 
-      const title = screen.getByText("🍽️ Popote");
+      const title = screen.getByRole("heading", { name: "Popote" });
       expect(title).toBeInTheDocument();
     });
 

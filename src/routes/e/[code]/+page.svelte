@@ -95,7 +95,8 @@
   // own — no manual refresh needed.
   $effect(() => {
     const tick = () => {
-      if (typeof document !== "undefined" && !document.hidden) {
+      // Don't refetch while the user is mid-add — it would reset the form.
+      if (typeof document !== "undefined" && !document.hidden && !dialogOpen) {
         invalidateAll()
       }
     }
