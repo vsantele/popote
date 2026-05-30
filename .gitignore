@@ -31,3 +31,7 @@ vite.config.ts.timestamp-*
 *.tsbuildinfo
 
 .claude/worktrees
+
+.playwright-mcp
+
+./*.png
