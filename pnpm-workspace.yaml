@@ -9,8 +9,18 @@ catalog:
   "@types/node": ^24
   typescript: ^6.0.3
   vite: npm:@voidzero-dev/vite-plus-core@latest
-  vite-plus: ^0.1.22
+  vite-plus: ^0.1.23
   vitest: npm:@voidzero-dev/vite-plus-test@latest
+minimumReleaseAgeExclude:
+  - "@better-auth/core@1.6.12"
+  - "@better-auth/drizzle-adapter@1.6.12"
+  - "@better-auth/kysely-adapter@1.6.12"
+  - "@better-auth/memory-adapter@1.6.12"
+  - "@better-auth/mongo-adapter@1.6.12"
+  - "@better-auth/prisma-adapter@1.6.12"
+  - "@better-auth/telemetry@1.6.12"
+  - better-auth@1.6.12
+  - svelte@5.56.0
 overrides:
   vite: "catalog:"
   vitest: "catalog:"
