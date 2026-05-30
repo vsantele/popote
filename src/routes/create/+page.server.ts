@@ -13,7 +13,7 @@ import { localizeHref } from "$lib/paraglide/runtime";
 
 export const load: PageServerLoad = async ({ locals }) => {
   const form = await superValidate(zod4(createEventSchema()));
-  if (locals.user?.name) {
+  if (locals.user?.name && locals.user.name !== "Anonymous") {
     form.data.host_name = locals.user.name;
   }
 

@@ -589,7 +589,7 @@
           type="button"
           variant="ghost"
           size="icon"
-          class="size-8 text-muted-foreground hover:text-foreground"
+          class="size-11 text-muted-foreground hover:text-foreground"
           onclick={() => openEditDialog(item)}
           aria-label={m.event_item_edit()}
         >
@@ -599,7 +599,7 @@
           type="button"
           variant="ghost"
           size="icon"
-          class="size-8 text-muted-foreground hover:text-destructive"
+          class="size-11 text-muted-foreground hover:text-destructive"
           onclick={() => openDeleteDialog(item)}
           aria-label={m.event_item_delete()}
         >
@@ -611,7 +611,8 @@
 {/snippet}
 
 <div
-  class="min-h-screen px-4 pt-4 pb-28"
+  class="min-h-screen px-4 pt-4"
+  style="padding-bottom: calc(5rem + 3rem + env(safe-area-inset-bottom))"
   role="main"
   ontouchstart={handleTouchStart}
   ontouchmove={handleTouchMove}
@@ -880,7 +881,7 @@
                       type="button"
                       variant="ghost"
                       size="icon"
-                      class="size-8 text-muted-foreground hover:text-foreground"
+                      class="size-11 text-muted-foreground hover:text-foreground"
                       onclick={() => openEditSlotDialog(slot)}
                       aria-label={m.event_item_edit()}
                     >
@@ -890,7 +891,7 @@
                       type="button"
                       variant="ghost"
                       size="icon"
-                      class="size-8 text-muted-foreground hover:text-destructive"
+                      class="size-11 text-muted-foreground hover:text-destructive"
                       onclick={() => openDeleteSlotDialog(slot)}
                       aria-label={m.event_item_delete()}
                     >

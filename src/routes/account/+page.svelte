@@ -238,7 +238,6 @@
 
                 <Button
                   type="submit"
-                  variant="outline"
                   class="w-full"
                   disabled={$signInDelayed}
                 >
