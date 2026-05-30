@@ -26,6 +26,8 @@
   import { superForm } from "sveltekit-superforms/client"
   import { invalidateAll, goto } from "$app/navigation"
   import { page } from "$app/state"
+  import { connectFetchEventStream } from "$lib/realtime/fetch-sse"
+  import { LiveStore } from "$lib/realtime/live-store.svelte"
   import {
     RefreshCw,
     Plus,
@@ -155,25 +157,61 @@
   }
 
   // ── Keep the shared list feeling live ──────────────────────────────
-  // Gently re-fetch while the tab is visible, and whenever the user
-  // returns to the page, so contributions from friends appear on their
-  // own — no manual refresh needed.
+  // A single SSE connection to /e/[code]/live tells us when another guest
+  // changed the board; we then re-run the page load so new contributions
+  // appear on their own — no manual refresh. If the live channel can't be
+  // held, LiveStore degrades to periodic polling as a safety net. The pulse
+  // dot below reflects `live.status` (connected / reconnecting / fallback).
+  // svelte-ignore state_referenced_locally
+  const live = new LiveStore({
+    url: `/e/${data.event.share_code}/live`,
+    // A fetch-based SSE reader (see fetch-sse.ts) instead of native
+    // EventSource: it streams in both dev and prod, where the void/Vite dev
+    // proxy otherwise leaves EventSource stuck in CONNECTING.
+    openSource: (url) => connectFetchEventStream(url),
+    onChange: async () => {
+      // Don't refetch while a dialog is open — it would reset in-progress
+      // form input. The store will reconcile again on the next signal/poll.
+      if (dialogOpen || editDialogOpen || deleteDialogOpen) return
+      await invalidateAll()
+    },
+  })
+
   $effect(() => {
-    const tick = () => {
-      // Don't refetch while the user is mid-add — it would reset the form.
-      if (typeof document !== "undefined" && !document.hidden && !dialogOpen) {
+    live.start()
+    return () => live.stop()
+  })
+
+  // Re-fetch when the user returns to the tab, in case we missed a signal
+  // while hidden (mobile browsers throttle background connections).
+  $effect(() => {
+    const onFocus = () => {
+      if (
+        typeof document !== "undefined" &&
+        !document.hidden &&
+        !dialogOpen &&
+        !editDialogOpen &&
+        !deleteDialogOpen
+      ) {
         invalidateAll()
       }
     }
-    const interval = setInterval(tick, 20000)
-    window.addEventListener("focus", tick)
-    document.addEventListener("visibilitychange", tick)
+    window.addEventListener("focus", onFocus)
+    document.addEventListener("visibilitychange", onFocus)
     return () => {
-      clearInterval(interval)
-      window.removeEventListener("focus", tick)
-      document.removeEventListener("visibilitychange", tick)
+      window.removeEventListener("focus", onFocus)
+      document.removeEventListener("visibilitychange", onFocus)
     }
   })
+
+  // Map live status → pulse dot colour + label.
+  const liveLabel = $derived(
+    live.status === "connected"
+      ? m.event_live_connected()
+      : live.status === "fallback"
+        ? m.event_live_fallback()
+        : m.event_live_reconnecting(),
+  )
 
   // Pull-to-refresh support (mobile gesture)
   let touchStartY = 0
@@ -450,13 +488,32 @@
       </ToggleGroup>
 
       <div class="flex items-center gap-2">
-        <span class="relative flex size-2.5" title={m.event_updated_just_now()}>
-          <span
-            class="absolute inline-flex size-full animate-ping rounded-full bg-[var(--cat-entree)] opacity-70"
-          ></span>
-          <span
-            class="relative inline-flex size-2.5 rounded-full bg-[var(--cat-entree)]"
-          ></span>
+        <span
+          class="relative flex size-2.5"
+          title={liveLabel}
+          role="status"
+          aria-label={liveLabel}
+          data-live-status={live.status}
+        >
+          {#if live.status === "connected"}
+            <span
+              class="absolute inline-flex size-full animate-ping rounded-full bg-[var(--cat-entree)] opacity-70"
+            ></span>
+            <span
+              class="relative inline-flex size-2.5 rounded-full bg-[var(--cat-entree)]"
+            ></span>
+          {:else if live.status === "fallback"}
+            <span
+              class="relative inline-flex size-2.5 rounded-full bg-muted-foreground/60"
+            ></span>
+          {:else}
+            <span
+              class="absolute inline-flex size-full animate-ping rounded-full bg-amber-400 opacity-70"
+            ></span>
+            <span
+              class="relative inline-flex size-2.5 rounded-full bg-amber-400"
+            ></span>
+          {/if}
         </span>
         <Button
           variant="outline"
