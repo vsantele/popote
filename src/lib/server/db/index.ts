@@ -144,6 +144,88 @@ export async function createItemForParticipant(itemData: {
   return newItem;
 }
 
+export type ItemMutationResult =
+  | { ok: true }
+  | { ok: false; reason: "not_found" | "forbidden" };
+
+/**
+ * Look up an item joined with its participant and event so we can decide,
+ * server-side, whether `userId` is allowed to mutate it.
+ *
+ * Ownership rule (re-derived here, never trusted from the client):
+ *  - the participant who added the item (participant.userId === userId), OR
+ *  - the event host (event.hostUserId === userId)
+ * may modify it.
+ */
+async function authorizeItemMutation(itemId: number, userId: string) {
+  const [row] = await db
+    .select({ item: items, participant: participants, event: events })
+    .from(items)
+    .leftJoin(participants, eq(items.participantId, participants.id))
+    .leftJoin(events, eq(items.eventId, events.id))
+    .where(eq(items.id, itemId))
+    .limit(1);
+
+  if (!row || !row.item) {
+    return { authorized: false as const, reason: "not_found" as const };
+  }
+
+  const isOwner = row.participant?.userId === userId;
+  const isHost = row.event?.hostUserId === userId;
+
+  if (!isOwner && !isHost) {
+    return { authorized: false as const, reason: "forbidden" as const };
+  }
+
+  return { authorized: true as const };
+}
+
+/**
+ * Update an item's editable fields, but ONLY if `userId` owns it or hosts the
+ * event. Ownership is enforced at this data layer so it cannot be bypassed by
+ * a crafted request.
+ */
+export async function updateItem(params: {
+  itemId: number;
+  userId: string;
+  data: { name: string; category: string; quantity?: string };
+}): Promise<ItemMutationResult> {
+  const auth = await authorizeItemMutation(params.itemId, params.userId);
+  if (!auth.authorized) {
+    return { ok: false, reason: auth.reason };
+  }
+
+  await db
+    .update(items)
+    .set({
+      name: params.data.name,
+      category: params.data.category,
+      quantity: params.data.quantity || null,
+    })
+    .where(eq(items.id, params.itemId));
+
+  return { ok: true };
+}
+
+/**
+ * Delete an item, but ONLY if `userId` owns it or hosts the event. Ownership
+ * is enforced at this data layer so it cannot be bypassed by a crafted
+ * request.
+ */
+export async function deleteItem(params: {
+  itemId: number;
+  userId: string;
+}): Promise<ItemMutationResult> {
+  const auth = await authorizeItemMutation(params.itemId, params.userId);
+  if (!auth.authorized) {
+    return { ok: false, reason: auth.reason };
+  }
+
+  await db.delete(items).where(eq(items.id, params.itemId));
+
+  return { ok: true };
+}
+
 /**
  * Get all events for a user (both hosted and joined)
  */
