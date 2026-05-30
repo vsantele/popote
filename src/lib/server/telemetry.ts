@@ -108,7 +108,7 @@ export async function ensureCloudflareTelemetry(
   bindings: TelemetryBindings,
 ): Promise<import("@opentelemetry/sdk-trace-base").BasicTracerProvider | null> {
   const config = resolveCloudflareTelemetryConfig(bindings);
-  console.log("resolveCloudflareTelemetryConfig", config);
+  console.log("resolveCloudflareTelemetryConfig", JSON.stringify(config));
   if (!config) {
     telemetryState.provider = null;
     telemetryState.initPromise = Promise.resolve(null);

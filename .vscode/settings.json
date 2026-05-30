@@ -20,7 +20,5 @@
   "editor.formatOnSaveMode": "file",
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit"
-  },
-  "oxc.path.oxfmt": "node_modules/oxfmt/dist/cli.js",
-  "oxc.path.oxlint": "node_modules/oxlint/dist/cli.js"
+  }
 }
