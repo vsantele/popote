@@ -46,6 +46,21 @@ async function addItem(
   await expect(page.getByText(name, { exact: true })).toBeVisible();
 }
 
+/** Delete an item via its row delete affordance and confirm the dialog. */
+async function deleteItem(page: Page, name: string): Promise<void> {
+  await page
+    .getByLabel(new RegExp(`Actions pour ${name}`, "i"))
+    .getByRole("button", { name: /Supprimer/i })
+    .click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(new RegExp(name))).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Supprimer", exact: true }).click();
+  await expect(dialog).toBeHidden();
+}
+
 // Tests ──────────────────────────────────────────────────────────────────--
 
 test("home page shows create and join entry points", async ({ page }) => {
@@ -132,4 +147,47 @@ test("a guest can join with the code and the host sees their item on refresh", a
 
   await guestContext.close();
   await hostContext.close();
+});
+
+test("a participant can edit and then delete their own contribution", async ({
+  page,
+}) => {
+  await createEvent(page, "Repas modifiable");
+
+  // Add a main dish; it lands in the "Plat" course and triggers the gap hint
+  // for the still-empty essential courses (e.g. Dessert).
+  await addItem(page, "Poulet rôti", { quantity: "pour 6" });
+  await expect(page.getByText("Poulet rôti")).toBeVisible();
+
+  const gap = page.getByText(/Il manque encore/i).locator("..");
+  await expect(gap.getByText("Plat")).toHaveCount(0);
+
+  // Edit: rename and move it to the Dessert course via the edit dialog.
+  await page
+    .getByLabel(/Actions pour Poulet rôti/i)
+    .getByRole("button", { name: /Modifier/i })
+    .click();
+  const editDialog = page.getByRole("dialog");
+  await expect(editDialog).toBeVisible();
+  await editDialog.locator("#edit-name").fill("Tarte Tatin");
+  await editDialog.locator('[data-slot="select-trigger"]').click();
+  await page.getByRole("option", { name: /Dessert/i }).click();
+  await editDialog
+    .getByRole("button", { name: "Enregistrer", exact: true })
+    .click();
+  await expect(editDialog).toBeHidden();
+
+  // Board reflects the edit in BOTH the name and the course grouping, and the
+  // gap hint updates: Dessert is now filled, Plat is empty again.
+  await expect(page.getByText("Tarte Tatin")).toBeVisible();
+  await expect(page.getByText("Poulet rôti")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Dessert" })).toBeVisible();
+  const gapAfterEdit = page.getByText(/Il manque encore/i).locator("..");
+  await expect(gapAfterEdit.getByText("Dessert")).toHaveCount(0);
+  await expect(gapAfterEdit.getByText("Plat")).toBeVisible();
+
+  // Delete with confirmation; the board returns to the empty state.
+  await deleteItem(page, "Tarte Tatin");
+  await expect(page.getByText("Tarte Tatin")).toHaveCount(0);
+  await expect(page.getByText(/Aucun item pour le moment/i)).toBeVisible();
 });

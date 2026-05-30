@@ -34,6 +34,8 @@
     Copy,
     Check,
     Users,
+    Pencil,
+    Trash2,
   } from "@lucide/svelte"
   import * as m from "$lib/paraglide/messages"
   import { getLocale, localizeHref } from "$lib/paraglide/runtime"
@@ -67,6 +69,7 @@
   // Setup Superform for adding items
   // svelte-ignore state_referenced_locally
   const { form, errors, enhance, delayed, message } = superForm(data.form, {
+    id: "addItem",
     resetForm: true,
     onUpdated: async ({ form }) => {
       if (form.valid) {
@@ -78,6 +81,68 @@
 
   if (!$form.category) {
     $form.category = "plat"
+  }
+
+  // ── Edit item flow ─────────────────────────────────────────────────
+  let editDialogOpen = $state(false)
+  // svelte-ignore state_referenced_locally
+  const {
+    form: editFormData,
+    errors: editErrors,
+    enhance: editEnhance,
+    delayed: editDelayed,
+    message: editMessage,
+  } = superForm(data.editForm, {
+    id: "editItem",
+    onUpdated: async ({ form }) => {
+      if (form.valid) {
+        editDialogOpen = false
+        await invalidateAll()
+      }
+    },
+  })
+
+  function openEditDialog(item: Item) {
+    $editFormData.id = item.id
+    $editFormData.name = item.name
+    $editFormData.category = item.category
+    $editFormData.quantity = item.quantity ?? ""
+    editDialogOpen = true
+  }
+
+  // ── Delete item flow ───────────────────────────────────────────────
+  let deleteDialogOpen = $state(false)
+  let pendingDelete = $state<Item | null>(null)
+  // svelte-ignore state_referenced_locally
+  const {
+    form: deleteFormData,
+    enhance: deleteEnhance,
+    delayed: deleteDelayed,
+    message: deleteMessage,
+  } = superForm(data.deleteForm, {
+    id: "deleteItem",
+    onUpdated: async ({ form }) => {
+      if (form.valid) {
+        deleteDialogOpen = false
+        pendingDelete = null
+        await invalidateAll()
+      }
+    },
+  })
+
+  function openDeleteDialog(item: Item) {
+    pendingDelete = item
+    $deleteFormData.id = item.id
+    deleteDialogOpen = true
+  }
+
+  // Re-derive ownership on the client purely to decide which affordances to
+  // show. The server independently enforces the real ownership rule, so this
+  // is never the source of truth — only a UI convenience.
+  function canModify(item: Item): boolean {
+    if (data.isHost) return true
+    const owner = participants.find((p) => p.id === item.participant)
+    return !!data.currentUserId && owner?.user_id === data.currentUserId
   }
 
   async function handleRefresh() {
@@ -228,7 +293,12 @@
   }
 </script>
 
-{#snippet itemRow(emoji: string, name: string, secondary: string, accent: string)}
+{#snippet itemRow(
+  item: Item,
+  emoji: string,
+  secondary: string,
+  accent: string,
+)}
   <li
     class="animate-pop-in flex items-center gap-3 rounded-xl border-l-[3px] bg-background/55 py-2.5 pr-3 pl-3"
     style="border-color:{accent}"
@@ -237,9 +307,36 @@
       <span class="text-lg leading-none" aria-hidden="true">{emoji}</span>
     {/if}
     <div class="min-w-0 flex-1">
-      <p class="leading-tight font-semibold">{name}</p>
+      <p class="leading-tight font-semibold">{item.name}</p>
       <p class="text-sm text-muted-foreground">{secondary}</p>
     </div>
+    {#if canModify(item)}
+      <div
+        class="flex shrink-0 items-center gap-1"
+        aria-label={m.event_item_actions_label({ name: item.name })}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          class="size-8 text-muted-foreground hover:text-foreground"
+          onclick={() => openEditDialog(item)}
+          aria-label={m.event_item_edit()}
+        >
+          <Pencil size={16} />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          class="size-8 text-muted-foreground hover:text-destructive"
+          onclick={() => openDeleteDialog(item)}
+          aria-label={m.event_item_delete()}
+        >
+          <Trash2 size={16} />
+        </Button>
+      </div>
+    {/if}
   </li>
 {/snippet}
 
@@ -413,8 +510,8 @@
               <ul class="space-y-2 p-3">
                 {#each categoryItems as item (item.id)}
                   {@render itemRow(
+                    item,
                     "",
-                    item.name,
                     `${m.event_item_by_participant({ name: getParticipantName(item.participant) })}${item.quantity ? ` · ${item.quantity}` : ""}`,
                     cat.color,
                   )}
@@ -448,8 +545,8 @@
                 {#each personItems as item (item.id)}
                   {@const cat = CATEGORIES[item.category as ItemCategory]}
                   {@render itemRow(
+                    item,
                     cat.emoji,
-                    item.name,
                     `${cat.label()}${item.quantity ? ` · ${item.quantity}` : ""}`,
                     cat.color,
                   )}
@@ -547,6 +644,145 @@
             {$delayed
               ? m.event_add_item_submitting()
               : m.event_add_item_submit()}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+
+  <!-- Edit item dialog -->
+  <Dialog bind:open={editDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle class="font-display text-xl"
+          >{m.event_edit_item_dialog_title()}</DialogTitle
+        >
+      </DialogHeader>
+      <form
+        method="POST"
+        action="?/editItem"
+        use:editEnhance
+        class="space-y-4"
+      >
+        <input type="hidden" name="id" bind:value={$editFormData.id} />
+        <div class="space-y-2">
+          <Label for="edit-name">{m.event_field_item_name_label()}</Label>
+          <Input
+            id="edit-name"
+            name="name"
+            bind:value={$editFormData.name}
+            placeholder={m.event_field_item_name_placeholder()}
+            required
+            aria-invalid={$editErrors.name ? "true" : undefined}
+          />
+          {#if $editErrors.name}
+            <p class="text-sm text-destructive">{$editErrors.name}</p>
+          {/if}
+        </div>
+
+        <div class="space-y-2">
+          <Label for="edit-category">{m.event_field_category_label()}</Label>
+          <Select
+            name="category"
+            bind:value={$editFormData.category}
+            type="single"
+          >
+            <SelectTrigger>
+              {#if $editFormData.category}
+                {CATEGORIES[$editFormData.category as ItemCategory].emoji}
+                {CATEGORIES[$editFormData.category as ItemCategory].label()}
+              {/if}
+            </SelectTrigger>
+            <SelectContent>
+              {#each CATEGORY_ORDER as cat (cat)}
+                <SelectItem value={cat} label={CATEGORIES[cat].label()}>
+                  {CATEGORIES[cat].emoji}
+                  {CATEGORIES[cat].label()}
+                </SelectItem>
+              {/each}
+            </SelectContent>
+          </Select>
+          {#if $editErrors.category}
+            <p class="text-sm text-destructive">{$editErrors.category}</p>
+          {/if}
+        </div>
+
+        <div class="space-y-2">
+          <Label for="edit-quantity">{m.event_field_quantity_label()}</Label>
+          <Input
+            id="edit-quantity"
+            name="quantity"
+            bind:value={$editFormData.quantity}
+            placeholder={m.event_field_quantity_placeholder()}
+          />
+        </div>
+
+        {#if $editMessage}
+          <p class="text-sm text-destructive">{$editMessage}</p>
+        {/if}
+
+        <div class="flex gap-2 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            onclick={() => (editDialogOpen = false)}
+            class="flex-1"
+          >
+            {m.common_cancel()}
+          </Button>
+          <Button type="submit" class="flex-1" disabled={$editDelayed}>
+            {$editDelayed
+              ? m.event_edit_item_submitting()
+              : m.event_edit_item_submit()}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+
+  <!-- Delete confirmation dialog -->
+  <Dialog bind:open={deleteDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle class="font-display text-xl"
+          >{m.event_delete_item_dialog_title()}</DialogTitle
+        >
+      </DialogHeader>
+      <p class="text-sm text-muted-foreground">
+        {m.event_delete_item_dialog_description({
+          name: pendingDelete?.name ?? "",
+        })}
+      </p>
+      <form
+        method="POST"
+        action="?/deleteItem"
+        use:deleteEnhance
+        class="space-y-4"
+      >
+        <input type="hidden" name="id" bind:value={$deleteFormData.id} />
+
+        {#if $deleteMessage}
+          <p class="text-sm text-destructive">{$deleteMessage}</p>
+        {/if}
+
+        <div class="flex gap-2 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            onclick={() => (deleteDialogOpen = false)}
+            class="flex-1"
+          >
+            {m.common_cancel()}
+          </Button>
+          <Button
+            type="submit"
+            variant="destructive"
+            class="flex-1"
+            disabled={$deleteDelayed}
+          >
+            {$deleteDelayed
+              ? m.event_delete_item_submitting()
+              : m.event_delete_item_confirm()}
           </Button>
         </div>
       </form>
