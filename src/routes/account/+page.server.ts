@@ -29,7 +29,9 @@ export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user && !locals.user.isAnonymous) {
     signUpForm.data.name = locals.user.name;
     signUpForm.data.email = locals.user.email ?? "";
-  } else if (locals.user?.name) {
+  } else if (locals.user?.name && locals.user.name !== "Anonymous") {
+    // "Anonymous" is the default identity for anonymous accounts, not a real
+    // name — don't prefill it, so the field shows its placeholder instead.
     signUpForm.data.name = locals.user.name;
   }
 
