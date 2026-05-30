@@ -61,6 +61,7 @@
   "event_share_text": "Rejoignez \"{name}\" sur Popote !\n{url}",
   "event_view_by_category": "Par catégorie",
   "event_view_by_person": "Par personne",
+  "event_location_maps_label": "Ouvrir le lieu dans les cartes",
   "event_refresh": "Actualiser",
   "event_updated_just_now": "Mis à jour à l'instant",
   "event_live_connected": "En direct",
