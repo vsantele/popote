@@ -177,5 +177,14 @@
   "validation_email_invalid": "Invalid email",
   "validation_password_too_short": "Password too short (8 characters minimum)",
   "validation_password_required": "Password required",
-  "validation_signup_name_required": "Name required"
+  "validation_signup_name_required": "Name required",
+  "event_field_dietary_tags_label": "Dietary tags",
+  "tag_vegetarian": "Vegetarian",
+  "tag_vegan": "Vegan",
+  "tag_gluten_free": "Gluten-free",
+  "tag_contains_nuts": "Contains nuts",
+  "tag_lactose_free": "Lactose-free",
+  "tag_halal": "Halal",
+  "tag_kosher": "Kosher",
+  "tag_spicy": "Spicy"
 }
