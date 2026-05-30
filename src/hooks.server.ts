@@ -1,16 +1,32 @@
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
-// import { SpanStatusCode, trace } from "@opentelemetry/api";
+import { SpanStatusCode, trace } from "@opentelemetry/api";
 import { building } from "$app/environment";
 import { createAuth } from "$lib/server/auth";
-// import {
-//   ensureCloudflareTelemetry,
-//   flushCloudflareTelemetry,
-//   type TelemetryBindings,
-// } from "$lib/server/telemetry";
+import {
+  ensureCloudflareTelemetry,
+  flushCloudflareTelemetry,
+  type TelemetryBindings,
+} from "$lib/server/telemetry";
 import { paraglideMiddleware } from "$lib/paraglide/server";
-import { getTextDirection } from "$lib/paraglide/runtime";
+import {
+  getTextDirection,
+  overwriteServerAsyncLocalStorage,
+} from "$lib/paraglide/runtime";
+import { AsyncLocalStorage } from "node:async_hooks";
+
+// Paraglide's generated middleware does `await import("async_hooks")` (a bare
+// specifier). On the Cloudflare/Void Workers runtime that does not resolve to
+// the real module, so `AsyncLocalStorage` is undefined -> "is not a
+// constructor". Pre-seed paraglide's storage here using the `node:`-prefixed
+// import (which IS provided by the runtime under nodejs_compat/nodejs_als) so
+// the middleware's guard is already satisfied and it never runs that import.
+overwriteServerAsyncLocalStorage(
+  new AsyncLocalStorage() as Parameters<
+    typeof overwriteServerAsyncLocalStorage
+  >[0],
+);
 
 const paraglideHandle: Handle = ({ event, resolve }) =>
   paraglideMiddleware(
@@ -86,35 +102,34 @@ function getWaitUntil(
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-  // const telemetryBindings = event.platform?.env ?? {};
-  // const provider = await ensureCloudflareTelemetry(
-  //   telemetryBindings as TelemetryBindings,
-  // );
-  // const tracer = trace.getTracer("popote.server");
+  const telemetryBindings = event.platform?.env ?? {};
+  const provider = await ensureCloudflareTelemetry(
+    telemetryBindings as TelemetryBindings,
+  );
+  const tracer = trace.getTracer("popote.server");
 
-  // return tracer.startActiveSpan(
-  //   "sveltekit.request",
-  //   {
-  //     attributes: getRequestAttributes(event),
-  // },
-  // async (span) => {
-  try {
-    const response = await appHandle({ event, resolve });
-    // span.setAttribute("http.response.status_code", response.status);
-    return response;
-  } catch (error) {
-    // span.recordException(
-    //   error instanceof Error ? error : new Error(String(error)),
-    // );
-    // span.setStatus({ code: SpanStatusCode.ERROR });
-    throw error;
-  } finally {
-    // span.end();
-    // if (provider) {
-    //   flushCloudflareTelemetry(getWaitUntil(event.platform));
-    // }
-  }
+  return tracer.startActiveSpan(
+    "sveltekit.request",
+    {
+      attributes: getRequestAttributes(event),
+    },
+    async (span) => {
+      try {
+        const response = await appHandle({ event, resolve });
+        span.setAttribute("http.response.status_code", response.status);
+        return response;
+      } catch (error) {
+        span.recordException(
+          error instanceof Error ? error : new Error(String(error)),
+        );
+        span.setStatus({ code: SpanStatusCode.ERROR });
+        throw error;
+      } finally {
+        span.end();
+        if (provider) {
+          flushCloudflareTelemetry(getWaitUntil(event.platform));
+        }
+      }
+    },
+  );
 };
-//     },
-//   );
-// };
