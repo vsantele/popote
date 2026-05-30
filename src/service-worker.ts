@@ -32,6 +32,58 @@ sw.addEventListener("activate", (event) => {
   );
 });
 
+// Push - show the notification delivered by the server (web push, issue #7).
+// The payload is the JSON produced by buildReminderPayload on the server.
+sw.addEventListener("push", (event) => {
+  let data: {
+    title?: string;
+    body?: string;
+    url?: string;
+    tag?: string;
+  } = {};
+  try {
+    if (event.data) data = event.data.json();
+  } catch {
+    data = { body: event.data?.text() };
+  }
+
+  const title = data.title ?? "🍽️ La Popote";
+  const options: NotificationOptions = {
+    body: data.body ?? "",
+    icon: "/favicon.png",
+    badge: "/favicon.png",
+    // Coalesce repeated reminders for the same event into one notification.
+    tag: data.tag,
+    data: { url: data.url ?? "/" },
+  };
+
+  event.waitUntil(sw.registration.showNotification(title, options));
+});
+
+// Notification click - focus an existing tab for the target URL or open one.
+sw.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl =
+    (event.notification.data && event.notification.data.url) || "/";
+
+  event.waitUntil(
+    sw.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          // If a tab is already on the target path, just focus it.
+          if (client.url.includes(targetUrl) && "focus" in client) {
+            return client.focus();
+          }
+        }
+        if (sw.clients.openWindow) {
+          return sw.clients.openWindow(targetUrl);
+        }
+        return undefined;
+      }),
+  );
+});
+
 // Fetch strategy:
 // - Network first for API calls (real-time data)
 // - Cache first for static assets

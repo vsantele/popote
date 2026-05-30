@@ -1,4 +1,10 @@
-import { sqliteTable, text, integer, index } from "void/schema-d1";
+import {
+  sqliteTable,
+  text,
+  integer,
+  index,
+  uniqueIndex,
+} from "void/schema-d1";
 import { relations } from "drizzle-orm";
 import { sql } from "void/db";
 
@@ -185,6 +191,73 @@ export const items = sqliteTable(
     index("items_event_id_idx").on(table.eventId),
     index("items_participant_id_idx").on(table.participantId),
     index("items_category_idx").on(table.category),
+  ],
+);
+
+export const pushSubscriptions = sqliteTable(
+  "push_subscriptions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    // The browser PushSubscription endpoint URL. Globally unique: a device's
+    // subscription is identified by its endpoint, so we upsert on it to keep
+    // storage idempotent (re-subscribing the same device never duplicates).
+    endpoint: text("endpoint").notNull().unique(),
+    // Encryption material from the PushSubscription (RFC 8291). `p256dh` is the
+    // client's public key (b64url), `auth` is the shared auth secret (b64url).
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    // Who owns this subscription. Tied to the auth user so we can target
+    // reminders per participant/device and clean up on opt-out.
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // Optional: scope a subscription to a specific event. When null the
+    // subscription is account-wide. When set, reminders fire for that event.
+    eventId: integer("event_id").references(() => events.id, {
+      onDelete: "cascade",
+    }),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`)
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("push_subscriptions_user_id_idx").on(table.userId),
+    index("push_subscriptions_event_id_idx").on(table.eventId),
+  ],
+);
+
+// Tracks which (event, subscription) reminders have already been sent so the
+// T-24h cron is idempotent and never double-notifies the same device.
+export const sentReminders = sqliteTable(
+  "sent_reminders",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    eventId: integer("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    subscriptionId: integer("subscription_id")
+      .notNull()
+      .references(() => pushSubscriptions.id, { onDelete: "cascade" }),
+    // Reminder kind, e.g. "t24h". Lets us add other reminder types later
+    // without colliding on the uniqueness guard.
+    kind: text("kind").notNull().default("t24h"),
+    sentAt: integer("sent_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
+  },
+  (table) => [
+    // One reminder of a given kind per (event, subscription): the cron uses
+    // this to skip devices it already notified, and the UNIQUE constraint is
+    // the last line of defence against a double-send under a race.
+    uniqueIndex("sent_reminders_unique_idx").on(
+      table.eventId,
+      table.subscriptionId,
+      table.kind,
+    ),
   ],
 );
 

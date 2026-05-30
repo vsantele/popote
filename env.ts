@@ -12,4 +12,12 @@ export default defineEnv({
   OTEL_EXPORTER_OTLP_HEADERS: string().optional().secret(),
   OTEL_SERVICE_NAME: string().optional(),
   OTEL_SERVICE_VERSION: string().optional(),
+  // Web Push (VAPID). The public key is NOT secret — it is shipped to every
+  // client to subscribe — so it lives in `void.json` worker.vars (tracked).
+  // The private key + subject ARE secrets: keep them in `.env.local` locally
+  // and set them with `void secret put` in production. Web push is disabled
+  // gracefully (the opt-in control hides itself) when these are unset.
+  VAPID_PUBLIC_KEY: string().optional(),
+  VAPID_PRIVATE_KEY: string().optional().secret(),
+  VAPID_SUBJECT: string().optional(),
 });

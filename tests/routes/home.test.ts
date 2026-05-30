@@ -54,6 +54,9 @@ function renderHome() {
         joined: [],
         joinForm,
         user: null,
+        // Provided by the root layout load; the component ignores them.
+        vapidPublicKey: null,
+        pushEnabled: false,
       },
     },
   });
