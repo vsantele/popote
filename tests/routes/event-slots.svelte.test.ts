@@ -19,7 +19,10 @@ import EventPage from "../../src/routes/e/[code]/+page.svelte";
 import type { ComponentProps } from "svelte";
 
 vi.mock("$app/stores", () => ({
-  page: readable({ url: new URL("http://localhost/e/ABC123"), form: undefined }),
+  page: readable({
+    url: new URL("http://localhost/e/ABC123"),
+    form: undefined,
+  }),
   navigating: readable(null),
 }));
 
@@ -57,18 +60,27 @@ beforeAll(async () => {
   claimSlotForm = await superValidate(zod4(claimSlotSchema()));
 });
 
+type Slot = {
+  id: string;
+  label: string;
+  category?: string;
+  needed_count: number;
+  claimed_count: number;
+  open_count: number;
+};
+
 type RenderOpts = {
   currentUserId: string | null;
   isHost: boolean;
-  viewerRsvp?: "going" | "maybe" | "not";
-  viewerExtra?: number;
+  slots?: Slot[];
+  items?: unknown[];
 };
 
 function renderEvent({
   currentUserId,
   isHost,
-  viewerRsvp = "going",
-  viewerExtra = 0,
+  slots = [],
+  items = [],
 }: RenderOpts) {
   const event = {
     id: "1",
@@ -90,7 +102,7 @@ function renderEvent({
       user_id: HOST,
       is_host: true,
       rsvp: "going" as const,
-      extra_guests: 2,
+      extra_guests: 0,
       created: "",
     },
     {
@@ -99,18 +111,8 @@ function renderEvent({
       name: "Moi",
       user_id: VIEWER,
       is_host: false,
-      rsvp: viewerRsvp,
-      extra_guests: viewerExtra,
-      created: "",
-    },
-    {
-      id: "p3",
-      event: "1",
-      name: "Autre",
-      user_id: "user-other",
-      is_host: false,
-      rsvp: "maybe" as const,
-      extra_guests: 1,
+      rsvp: "going" as const,
+      extra_guests: 0,
       created: "",
     },
   ];
@@ -125,7 +127,8 @@ function renderEvent({
     data: {
       event,
       participants,
-      items: [],
+      items,
+      slots,
       currentParticipant,
       currentUserId,
       isHost,
@@ -143,40 +146,99 @@ function renderEvent({
   return render(EventPage, { props });
 }
 
-describe("Event RSVP control + headcount header", () => {
-  it("shows the confirmed headcount summing going participants + their +1s", () => {
-    // Host: going +2 -> 3 ; viewer: going +0 -> 1 ; other: maybe +1 (not confirmed)
-    renderEvent({ currentUserId: VIEWER, isHost: false });
-    // 3 + 1 = 4 confirmed, 2 maybe
-    expect(screen.getByText(/4 confirmés/)).toBeInTheDocument();
-    expect(screen.getByText(/2 peut-être/)).toBeInTheDocument();
+describe("Host wishlist / needed slots", () => {
+  it("shows the host an 'add a need' affordance even with no slots", () => {
+    renderEvent({ currentUserId: HOST, isHost: true });
+    // The wishlist section renders for the host with an add trigger.
+    expect(screen.getByText("Ajouter un besoin")).toBeInTheDocument();
   });
 
-  it("renders an RSVP button reflecting the viewer's own state (going)", () => {
+  it("hides the wishlist section for a guest when there are no slots", () => {
+    renderEvent({ currentUserId: VIEWER, isHost: false, slots: [] });
+    // No add trigger, and no wishlist heading.
+    expect(screen.queryByText("Ajouter un besoin")).toBeNull();
+    expect(screen.queryByText("Liste de souhaits de l'hôte")).toBeNull();
+  });
+
+  it("renders a claim button on an open slot for a guest", () => {
     renderEvent({
       currentUserId: VIEWER,
       isHost: false,
-      viewerRsvp: "going",
-      viewerExtra: 0,
+      slots: [
+        {
+          id: "s1",
+          label: "Tiramisu",
+          category: "dessert",
+          needed_count: 2,
+          claimed_count: 0,
+          open_count: 2,
+        },
+      ],
     });
-    const btn = document.querySelector('[data-rsvp="going"]');
-    expect(btn).not.toBeNull();
-    expect(btn?.textContent).toContain("Je viens");
+    const claim = document.querySelector('[data-claim-slot="s1"]');
+    expect(claim).not.toBeNull();
+    expect(claim?.textContent).toContain("Je m'en occupe");
   });
 
-  it("reflects a 'maybe' RSVP state on the button", () => {
+  it("does NOT render a claim button on a fully-claimed slot", () => {
     renderEvent({
       currentUserId: VIEWER,
       isHost: false,
-      viewerRsvp: "maybe",
+      slots: [
+        {
+          id: "s2",
+          label: "Glaçons",
+          category: undefined,
+          needed_count: 1,
+          claimed_count: 1,
+          open_count: 0,
+        },
+      ],
     });
-    const btn = document.querySelector('[data-rsvp="maybe"]');
-    expect(btn).not.toBeNull();
-    expect(btn?.textContent).toContain("Peut-être");
+    // The slot row still shows, marked as filled, but no claim affordance.
+    expect(document.querySelector('[data-slot="s2"]')).not.toBeNull();
+    expect(document.querySelector('[data-claim-slot="s2"]')).toBeNull();
+    expect(screen.getByText(/Complet/)).toBeInTheDocument();
   });
 
-  it("does NOT render an RSVP button for a non-participant viewer", () => {
-    renderEvent({ currentUserId: null, isHost: false });
-    expect(document.querySelector("[data-rsvp]")).toBeNull();
+  it("reflects unclaimed slots in the gap hint", () => {
+    renderEvent({
+      currentUserId: VIEWER,
+      isHost: false,
+      slots: [
+        {
+          id: "s1",
+          label: "Glaçons",
+          category: undefined,
+          needed_count: 1,
+          claimed_count: 0,
+          open_count: 1,
+        },
+      ],
+    });
+    // The open slot surfaces as a "still needed" chip in the gap hint.
+    const chip = document.querySelector('[data-open-slot="s1"]');
+    expect(chip).not.toBeNull();
+    expect(chip?.textContent).toContain("Glaçons");
+    expect(screen.getByText(/Il manque encore/)).toBeInTheDocument();
+  });
+
+  it("drops a slot out of the gap hint once it is fully claimed", () => {
+    renderEvent({
+      currentUserId: VIEWER,
+      isHost: false,
+      slots: [
+        {
+          id: "s2",
+          label: "Glaçons",
+          category: undefined,
+          needed_count: 1,
+          claimed_count: 1,
+          open_count: 0,
+        },
+      ],
+    });
+    // Fully claimed: it no longer appears as an open-slot gap chip.
+    expect(document.querySelector('[data-open-slot="s2"]')).toBeNull();
   });
 });

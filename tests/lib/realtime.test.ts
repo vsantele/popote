@@ -20,12 +20,14 @@ vi.mock("@schema", () => ({
   events: { id: {}, updatedAt: {}, shareCode: {} },
   participants: { eventId: {}, createdAt: {}, updatedAt: {} },
   items: { eventId: {}, createdAt: {}, updatedAt: {} },
+  eventSlots: { eventId: {}, createdAt: {}, updatedAt: {} },
 }));
 
 vi.mock("$lib/server/db/schema", () => ({
   events: { id: {}, updatedAt: {}, shareCode: {} },
   participants: { eventId: {}, createdAt: {}, updatedAt: {} },
   items: { eventId: {}, createdAt: {}, updatedAt: {} },
+  eventSlots: { eventId: {}, createdAt: {}, updatedAt: {} },
 }));
 
 import { eventVersion } from "../../src/lib/server/realtime";
@@ -44,17 +46,21 @@ function makeSelect(rows: unknown[]) {
 
 type Agg = { count: number; maxCreated: number; maxUpdated: number };
 
+const NO_SLOTS: Agg = { count: 0, maxCreated: 0, maxUpdated: 0 };
+
 function seed(opts: {
   event?: { id: number; updatedAt: Date } | null;
   participants: Agg;
   items: Agg;
+  slots?: Agg;
 }) {
   const event =
     opts.event === undefined ? { id: 1, updatedAt: new Date(0) } : opts.event;
   selectMock
     .mockReturnValueOnce(makeSelect(event ? [event] : []))
     .mockReturnValueOnce(makeSelect([opts.participants]))
-    .mockReturnValueOnce(makeSelect([opts.items]));
+    .mockReturnValueOnce(makeSelect([opts.items]))
+    .mockReturnValueOnce(makeSelect([opts.slots ?? NO_SLOTS]));
 }
 
 beforeEach(() => {
@@ -139,6 +145,44 @@ describe("eventVersion change probe", () => {
     seed({
       participants: { count: 3, maxCreated: 500, maxUpdated: 500 },
       items: { count: 3, maxCreated: 200, maxUpdated: 250 },
+    });
+    const after = await eventVersion("abc");
+
+    expect(after.token).not.toBe(before.token);
+  });
+
+  it("changes the token when the host adds a slot (slots count up)", async () => {
+    seed({
+      participants: { count: 2, maxCreated: 100, maxUpdated: 100 },
+      items: { count: 3, maxCreated: 200, maxUpdated: 250 },
+      slots: { count: 0, maxCreated: 0, maxUpdated: 0 },
+    });
+    const before = await eventVersion("abc");
+
+    // A host adds a needed slot: participants + items are unchanged, only the
+    // slots aggregate moves — the token must still change so it propagates.
+    seed({
+      participants: { count: 2, maxCreated: 100, maxUpdated: 100 },
+      items: { count: 3, maxCreated: 200, maxUpdated: 250 },
+      slots: { count: 1, maxCreated: 700, maxUpdated: 700 },
+    });
+    const after = await eventVersion("abc");
+
+    expect(after.token).not.toBe(before.token);
+  });
+
+  it("changes the token when a slot is edited (slots maxUpdated up)", async () => {
+    seed({
+      participants: { count: 2, maxCreated: 100, maxUpdated: 100 },
+      items: { count: 3, maxCreated: 200, maxUpdated: 250 },
+      slots: { count: 1, maxCreated: 700, maxUpdated: 700 },
+    });
+    const before = await eventVersion("abc");
+
+    seed({
+      participants: { count: 2, maxCreated: 100, maxUpdated: 100 },
+      items: { count: 3, maxCreated: 200, maxUpdated: 250 },
+      slots: { count: 1, maxCreated: 700, maxUpdated: 999 },
     });
     const after = await eventVersion("abc");
 

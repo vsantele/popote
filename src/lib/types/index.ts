@@ -51,6 +51,20 @@ export type ItemCategory =
   | "jeux"
   | "autre";
 
+/**
+ * A host-defined "needed slot" (issue #5) as surfaced to the page: a label,
+ * an optional category, how many contributions are needed, and how many are
+ * already claimed / still open (derived server-side).
+ */
+export interface EventSlot {
+  id: string;
+  label: string;
+  category?: ItemCategory;
+  needed_count: number;
+  claimed_count: number;
+  open_count: number;
+}
+
 import * as m from "$lib/paraglide/messages";
 
 export const CATEGORIES: Record<

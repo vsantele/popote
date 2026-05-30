@@ -165,6 +165,35 @@ export const participants = sqliteTable(
   ],
 );
 
+// Host-defined "needed slots" (issue #5): the host pre-seeds what's needed for
+// the event ("1 main, 2 desserts, ice, plates"). Each slot has a label, an
+// optional category (reusing the item categories) and a needed count. Guests
+// claim open slots, which creates an item linked back to the slot (items.slotId
+// below). A slot's open count = neededCount − (items linked to that slot).
+export const eventSlots = sqliteTable(
+  "event_slots",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).primaryKey(),
+    eventId: integer("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    label: text("label", { length: 100 }).notNull(),
+    // Optional: one of the item categories, or null for a generic need
+    // (e.g. "ice", "plates"). Stored loosely as text like items.category.
+    category: text("category", { length: 32 }),
+    // How many contributions this slot needs. Always >= 1.
+    neededCount: integer("needed_count").notNull().default(1),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`)
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [index("event_slots_event_id_idx").on(table.eventId)],
+);
+
 export const items = sqliteTable(
   "items",
   {
@@ -175,6 +204,12 @@ export const items = sqliteTable(
     participantId: integer("participant_id")
       .notNull()
       .references(() => participants.id, { onDelete: "cascade" }),
+    // When set, this item was created by claiming the given host slot. The
+    // slot's open count is derived as neededCount − count(items with this
+    // slotId). On slot delete we null this out so the contribution survives.
+    slotId: integer("slot_id").references(() => eventSlots.id, {
+      onDelete: "set null",
+    }),
     name: text("name", { length: 100 }).notNull(),
     category: text("category", { length: 32 }).notNull(),
     quantity: text("quantity", { length: 32 }),
@@ -191,6 +226,7 @@ export const items = sqliteTable(
     index("items_event_id_idx").on(table.eventId),
     index("items_participant_id_idx").on(table.participantId),
     index("items_category_idx").on(table.category),
+    index("items_slot_id_idx").on(table.slotId),
   ],
 );
 
@@ -264,10 +300,19 @@ export const sentReminders = sqliteTable(
 export const eventsRelations = relations(events, ({ one, many }) => ({
   participants: many(participants),
   items: many(items),
+  slots: many(eventSlots),
   hostUser: one(user, {
     fields: [events.hostUserId],
     references: [user.id],
   }),
+}));
+
+export const eventSlotsRelations = relations(eventSlots, ({ one, many }) => ({
+  event: one(events, {
+    fields: [eventSlots.eventId],
+    references: [events.id],
+  }),
+  items: many(items),
 }));
 
 export const participantsRelations = relations(
@@ -293,6 +338,10 @@ export const itemsRelations = relations(items, ({ one }) => ({
   participant: one(participants, {
     fields: [items.participantId],
     references: [participants.id],
+  }),
+  slot: one(eventSlots, {
+    fields: [items.slotId],
+    references: [eventSlots.id],
   }),
 }));
 
