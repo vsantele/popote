@@ -468,6 +468,15 @@
         <div class="flex items-center gap-2">
           <Calendar class="size-4 shrink-0 text-primary" />
           <span class="capitalize">{formatDate(data.event.date)}</span>
+          <a
+            href="/e/{data.event.share_code}/event.ics"
+            download
+            class="ml-1 inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            aria-label={m.event_add_to_calendar()}
+          >
+            <Calendar class="size-3" aria-hidden="true" />
+            {m.event_add_to_calendar()}
+          </a>
         </div>
         {#if data.event.location}
           <div class="flex items-center gap-2">

@@ -56,6 +56,7 @@
   "join_rsvp_extra_label": "Accompagnants (+1)",
   "join_submit": "Rejoindre",
   "join_submitting": "Connexion...",
+  "event_add_to_calendar": "Ajouter au calendrier",
   "event_share_button": "Partager",
   "event_share_clipboard": "Lien copié dans le presse-papiers !",
   "event_share_text": "Rejoignez \"{name}\" sur Popote !\n{url}",

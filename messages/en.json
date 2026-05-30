@@ -56,6 +56,7 @@
   "join_rsvp_extra_label": "Plus-ones (+1)",
   "join_submit": "Join",
   "join_submitting": "Connecting...",
+  "event_add_to_calendar": "Add to calendar",
   "event_share_button": "Share",
   "event_share_clipboard": "Link copied to clipboard!",
   "event_share_text": "Join \"{name}\" on Popote!\n{url}",
