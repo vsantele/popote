@@ -2,11 +2,13 @@
   import { getErrorPageVariant } from "$lib/error-page";
   import * as m from "$lib/paraglide/messages";
   import { localizeHref } from "$lib/paraglide/runtime";
+  import { page } from "$app/state";
 
-  let { status, error } = $props<{
-    status: number;
-    error: App.Error & { message?: string };
-  }>();
+  // SvelteKit does NOT pass status/error as props to +error.svelte — they live
+  // on the page store. Reading from $props() always gives undefined, which made
+  // every error (including 404s) render the server-error variant.
+  const status = $derived(page.status);
+  const error = $derived(page.error as App.Error & { message?: string });
 
   const variant = $derived(getErrorPageVariant(status));
 </script>

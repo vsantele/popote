@@ -21,7 +21,7 @@
   <div class="max-w-md mx-auto space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold">{m.past_title()}</h1>
+        <h1 class="font-display text-2xl font-semibold tracking-tight">{m.past_title()}</h1>
         <p class="text-sm text-muted-foreground">{m.past_description()}</p>
       </div>
       <Button href={localizeHref("/")} variant="outline" size="sm"
@@ -31,8 +31,13 @@
 
     {#if data.hosted.length === 0 && data.joined.length === 0}
       <Card>
-        <CardContent class="py-12 text-center">
-          <p class="text-muted-foreground">{m.past_empty()}</p>
+        <CardContent class="card-pop flex flex-col items-center gap-3 py-14 text-center">
+          <span class="text-5xl" aria-hidden="true">{m.past_empty_emoji()}</span>
+          <p class="font-display text-lg font-semibold">{m.past_empty_heading()}</p>
+          <p class="text-sm text-muted-foreground">{m.past_empty_subtext()}</p>
+          <Button href={localizeHref("/create")} variant="default" size="sm" class="mt-1">
+            {m.past_empty_cta()}
+          </Button>
         </CardContent>
       </Card>
     {:else}

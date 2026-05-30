@@ -63,7 +63,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   };
 
   const form = await superValidate(zod4(joinEventSchema()));
-  if (locals.user?.name) {
+  if (locals.user?.name && locals.user.name !== "Anonymous") {
     form.data.name = locals.user.name;
   }
 
