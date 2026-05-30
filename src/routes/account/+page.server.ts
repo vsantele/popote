@@ -2,7 +2,7 @@ import type { PageServerLoad, Actions } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { z } from "zod";
 import { zod4 } from "sveltekit-superforms/adapters";
-import { superValidate } from "sveltekit-superforms/server";
+import { superValidate, message } from "sveltekit-superforms/server";
 import { APIError } from "better-auth/api";
 import * as m from "$lib/paraglide/messages";
 import { localizeHref } from "$lib/paraglide/runtime";
@@ -52,7 +52,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
   signUp: async ({ request, locals }) => {
     const form = await superValidate(request, zod4(signUpSchema()));
-    if (!form.valid) return fail(400, { form, error: null });
+    if (!form.valid) return fail(400, { form });
 
     try {
       // The anonymous plugin's onLinkAccount callback will migrate the
@@ -67,13 +67,10 @@ export const actions: Actions = {
       });
     } catch (err) {
       if (err instanceof APIError) {
-        return fail(400, { form, error: err.message });
+        return message(form, err.message, { status: 400 });
       }
       console.error("Sign-up failed:", err);
-      return fail(500, {
-        form,
-        error: m.error_signup_failed(),
-      });
+      return message(form, m.error_signup_failed(), { status: 500 });
     }
 
     throw redirect(303, localizeHref("/"));
@@ -81,7 +78,7 @@ export const actions: Actions = {
 
   signIn: async ({ request, locals }) => {
     const form = await superValidate(request, zod4(signInSchema()));
-    if (!form.valid) return fail(400, { form, error: null });
+    if (!form.valid) return fail(400, { form });
 
     try {
       await locals.auth.api.signInEmail({
@@ -93,10 +90,10 @@ export const actions: Actions = {
       });
     } catch (err) {
       if (err instanceof APIError) {
-        return fail(400, { form, error: err.message });
+        return message(form, err.message, { status: 400 });
       }
       console.error("Sign-in failed:", err);
-      return fail(500, { form, error: m.error_signin_failed() });
+      return message(form, m.error_signin_failed(), { status: 500 });
     }
 
     throw redirect(303, localizeHref("/"));

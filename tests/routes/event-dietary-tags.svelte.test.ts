@@ -252,3 +252,123 @@ describe("Edit item dialog tag picker", () => {
     expect(pressedLabels.some((l) => l?.includes("Contient des noix"))).toBe(true);
   });
 });
+
+describe("Dietary tag picker hidden for non-food categories", () => {
+  it("hides the dietary-tag picker when add dialog opens with 'jeux' category", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+
+    // Pre-populate the form with category "jeux"
+    const jeuxForm = await superValidate(zod4(addItemSchema()));
+    jeuxForm.data.category = "jeux";
+
+    const event = {
+      id: "1",
+      name: "Soirée test",
+      date: new Date("2026-07-18T19:30:00Z").toISOString(),
+      location: undefined,
+      description: undefined,
+      host_name: "Nico",
+      host_user_id: HOST,
+      share_code: "ABC123",
+      created: new Date().toISOString(),
+    };
+    const participants = [
+      { id: "p1", event: "1", name: "Nico", user_id: HOST, is_host: true, rsvp: "going", extra_guests: 0, created: "" },
+      { id: "p2", event: "1", name: "Moi", user_id: VIEWER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
+    ];
+    const currentParticipant = participants.find((p) => p.user_id === VIEWER);
+    const props = {
+      params: { code: "ABC123" },
+      form: null,
+      data: {
+        event,
+        participants,
+        items: [],
+        currentParticipant,
+        currentUserId: VIEWER,
+        isHost: false,
+        form: jeuxForm,
+        editForm,
+        deleteForm,
+        rsvpForm,
+        createSlotForm,
+        editSlotForm,
+        deleteSlotForm,
+        claimSlotForm,
+      },
+    } as unknown as ComponentProps<typeof EventPage>;
+
+    render(EventPage, { props });
+
+    const addBtn = screen.getByText("Ajouter un item");
+    await user.click(addBtn);
+
+    // Dietary tag label must NOT be present for jeux category
+    expect(screen.queryByText("Tags alimentaires")).not.toBeInTheDocument();
+    // None of the tag buttons should appear
+    expect(screen.queryByRole("button", { name: /Végétarien/i })).not.toBeInTheDocument();
+  });
+
+  it("hides the dietary-tag picker when add dialog opens with 'autre' category", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+
+    const autreForm = await superValidate(zod4(addItemSchema()));
+    autreForm.data.category = "autre";
+
+    const event = {
+      id: "1",
+      name: "Soirée test",
+      date: new Date("2026-07-18T19:30:00Z").toISOString(),
+      location: undefined,
+      description: undefined,
+      host_name: "Nico",
+      host_user_id: HOST,
+      share_code: "ABC123",
+      created: new Date().toISOString(),
+    };
+    const participants = [
+      { id: "p1", event: "1", name: "Nico", user_id: HOST, is_host: true, rsvp: "going", extra_guests: 0, created: "" },
+      { id: "p2", event: "1", name: "Moi", user_id: VIEWER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
+    ];
+    const currentParticipant = participants.find((p) => p.user_id === VIEWER);
+    const props = {
+      params: { code: "ABC123" },
+      form: null,
+      data: {
+        event,
+        participants,
+        items: [],
+        currentParticipant,
+        currentUserId: VIEWER,
+        isHost: false,
+        form: autreForm,
+        editForm,
+        deleteForm,
+        rsvpForm,
+        createSlotForm,
+        editSlotForm,
+        deleteSlotForm,
+        claimSlotForm,
+      },
+    } as unknown as ComponentProps<typeof EventPage>;
+
+    render(EventPage, { props });
+
+    const addBtn = screen.getByText("Ajouter un item");
+    await user.click(addBtn);
+
+    expect(screen.queryByText("Tags alimentaires")).not.toBeInTheDocument();
+  });
+
+  it("shows the dietary-tag picker for a food category (plat)", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderEvent(); // Default category is 'plat' (food)
+
+    const addBtn = screen.getByText("Ajouter un item");
+    await user.click(addBtn);
+
+    // Dietary tags section should be visible for food categories
+    expect(screen.getByText("Tags alimentaires")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Végétarien/i })).toBeInTheDocument();
+  });
+});
