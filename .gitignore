@@ -18,8 +18,8 @@ node_modules
 Thumbs.db
 
 # Env
-.env
-.env.*
+.env.*.local
+.env.local
 !.env.example
 !.env.test
 
@@ -29,3 +29,5 @@ vite.config.ts.timestamp-*
 
 .void
 *.tsbuildinfo
+
+.claude/worktrees
