@@ -29,6 +29,7 @@
   import { computeHeadcount } from "$lib/utils/headcount"
   import { log } from "$lib/utils/logger"
   import { superForm } from "sveltekit-superforms/client"
+  import { untrack } from "svelte"
   import { invalidateAll, goto } from "$app/navigation"
   import { page } from "$app/state"
   import { connectFetchEventStream } from "$lib/realtime/fetch-sse"
@@ -122,6 +123,41 @@
     editDialogOpen = true
   }
 
+  // ── Categories where dietary tags are irrelevant (non-food) ────────
+  const NON_FOOD_CATEGORIES: ItemCategory[] = ["jeux", "autre"]
+
+  // Derived booleans: should the dietary-tag picker be shown?
+  const showAddDietaryTags = $derived(
+    !NON_FOOD_CATEGORIES.includes($form.category as ItemCategory),
+  )
+  const showEditDietaryTags = $derived(
+    !NON_FOOD_CATEGORIES.includes($editFormData.category as ItemCategory),
+  )
+
+  // Clear dietary tags when category switches to a non-food one (add dialog).
+  $effect(() => {
+    const cat = $form.category as ItemCategory
+    if (NON_FOOD_CATEGORIES.includes(cat)) {
+      untrack(() => {
+        if ($form.dietaryTags && $form.dietaryTags.length > 0) {
+          $form.dietaryTags = []
+        }
+      })
+    }
+  })
+
+  // Clear dietary tags when category switches to a non-food one (edit dialog).
+  $effect(() => {
+    const cat = $editFormData.category as ItemCategory
+    if (NON_FOOD_CATEGORIES.includes(cat)) {
+      untrack(() => {
+        if ($editFormData.dietaryTags && $editFormData.dietaryTags.length > 0) {
+          $editFormData.dietaryTags = []
+        }
+      })
+    }
+  })
+
   // ── Delete item flow ───────────────────────────────────────────────
   let deleteDialogOpen = $state(false)
   let pendingDelete = $state<Item | null>(null)
@@ -168,7 +204,8 @@
 
   function openRsvpDialog() {
     if (data.currentParticipant) {
-      $rsvpFormData.rsvp = data.currentParticipant.rsvp
+      // Hosts are always "going"; no need to set going/maybe/not for them.
+      $rsvpFormData.rsvp = data.isHost ? "going" : data.currentParticipant.rsvp
       $rsvpFormData.extraGuests = data.currentParticipant.extra_guests
     }
     rsvpDialogOpen = true
@@ -1037,10 +1074,13 @@
       </DialogHeader>
       <form method="POST" action="?/addItem" use:enhance class="space-y-4">
         <div class="space-y-2">
-          <Label for="name">{m.event_field_item_name_label()}</Label>
+          <Label for="item-name">{m.event_field_item_name_label()}</Label>
           <Input
-            id="name"
+            id="item-name"
             name="name"
+            autocomplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             bind:value={$form.name}
             placeholder={m.event_field_item_name_placeholder()}
             required
@@ -1084,34 +1124,36 @@
           />
         </div>
 
-        <div class="space-y-2">
-          <Label>{m.event_field_dietary_tags_label()}</Label>
-          <div class="flex flex-wrap gap-1.5" role="group" aria-label={m.event_field_dietary_tags_label()}>
-            {#each VALID_DIETARY_TAGS as tag (tag)}
-              {@const isSelected = $form.dietaryTags?.includes(tag)}
-              <button
-                type="button"
-                class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors {isSelected
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-secondary/50 text-secondary-foreground hover:bg-secondary'}"
-                aria-pressed={isSelected}
-                data-tag={tag}
-                onclick={() => {
-                  const current = $form.dietaryTags ?? []
-                  $form.dietaryTags = isSelected
-                    ? current.filter((t) => t !== tag)
-                    : [...current, tag]
-                }}
-              >
-                <span aria-hidden="true">{DIETARY_TAGS[tag].emoji}</span>
-                {DIETARY_TAGS[tag].label()}
-              </button>
+        {#if showAddDietaryTags}
+          <div class="space-y-2">
+            <Label>{m.event_field_dietary_tags_label()}</Label>
+            <div class="flex flex-wrap gap-1.5" role="group" aria-label={m.event_field_dietary_tags_label()}>
+              {#each VALID_DIETARY_TAGS as tag (tag)}
+                {@const isSelected = $form.dietaryTags?.includes(tag)}
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors {isSelected
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-secondary/50 text-secondary-foreground hover:bg-secondary'}"
+                  aria-pressed={isSelected}
+                  data-tag={tag}
+                  onclick={() => {
+                    const current = $form.dietaryTags ?? []
+                    $form.dietaryTags = isSelected
+                      ? current.filter((t) => t !== tag)
+                      : [...current, tag]
+                  }}
+                >
+                  <span aria-hidden="true">{DIETARY_TAGS[tag].emoji}</span>
+                  {DIETARY_TAGS[tag].label()}
+                </button>
+              {/each}
+            </div>
+            {#each $form.dietaryTags ?? [] as tag (tag)}
+              <input type="hidden" name="dietaryTags" value={tag} />
             {/each}
           </div>
-          {#each $form.dietaryTags ?? [] as tag (tag)}
-            <input type="hidden" name="dietaryTags" value={tag} />
-          {/each}
-        </div>
+        {/if}
 
         {#if $message}
           <p class="text-sm text-destructive">{$message}</p>
@@ -1152,10 +1194,13 @@
       >
         <input type="hidden" name="id" bind:value={$editFormData.id} />
         <div class="space-y-2">
-          <Label for="edit-name">{m.event_field_item_name_label()}</Label>
+          <Label for="edit-item-name">{m.event_field_item_name_label()}</Label>
           <Input
-            id="edit-name"
+            id="edit-item-name"
             name="name"
+            autocomplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             bind:value={$editFormData.name}
             placeholder={m.event_field_item_name_placeholder()}
             required
@@ -1203,34 +1248,36 @@
           />
         </div>
 
-        <div class="space-y-2">
-          <Label>{m.event_field_dietary_tags_label()}</Label>
-          <div class="flex flex-wrap gap-1.5" role="group" aria-label={m.event_field_dietary_tags_label()}>
-            {#each VALID_DIETARY_TAGS as tag (tag)}
-              {@const isSelected = $editFormData.dietaryTags?.includes(tag)}
-              <button
-                type="button"
-                class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors {isSelected
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-secondary/50 text-secondary-foreground hover:bg-secondary'}"
-                aria-pressed={isSelected}
-                data-tag={tag}
-                onclick={() => {
-                  const current = $editFormData.dietaryTags ?? []
-                  $editFormData.dietaryTags = isSelected
-                    ? current.filter((t) => t !== tag)
-                    : [...current, tag]
-                }}
-              >
-                <span aria-hidden="true">{DIETARY_TAGS[tag].emoji}</span>
-                {DIETARY_TAGS[tag].label()}
-              </button>
+        {#if showEditDietaryTags}
+          <div class="space-y-2">
+            <Label>{m.event_field_dietary_tags_label()}</Label>
+            <div class="flex flex-wrap gap-1.5" role="group" aria-label={m.event_field_dietary_tags_label()}>
+              {#each VALID_DIETARY_TAGS as tag (tag)}
+                {@const isSelected = $editFormData.dietaryTags?.includes(tag)}
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors {isSelected
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-secondary/50 text-secondary-foreground hover:bg-secondary'}"
+                  aria-pressed={isSelected}
+                  data-tag={tag}
+                  onclick={() => {
+                    const current = $editFormData.dietaryTags ?? []
+                    $editFormData.dietaryTags = isSelected
+                      ? current.filter((t) => t !== tag)
+                      : [...current, tag]
+                  }}
+                >
+                  <span aria-hidden="true">{DIETARY_TAGS[tag].emoji}</span>
+                  {DIETARY_TAGS[tag].label()}
+                </button>
+              {/each}
+            </div>
+            {#each $editFormData.dietaryTags ?? [] as tag (tag)}
+              <input type="hidden" name="dietaryTags" value={tag} />
             {/each}
           </div>
-          {#each $editFormData.dietaryTags ?? [] as tag (tag)}
-            <input type="hidden" name="dietaryTags" value={tag} />
-          {/each}
-        </div>
+        {/if}
 
         {#if $editMessage}
           <p class="text-sm text-destructive">{$editMessage}</p>
@@ -1313,25 +1360,31 @@
         </DialogTitle>
       </DialogHeader>
       <form method="POST" action="?/setRsvp" use:rsvpEnhance class="space-y-4">
-        <input type="hidden" name="rsvp" value={$rsvpFormData.rsvp} />
-        <ToggleGroup
-          value={$rsvpFormData.rsvp}
-          onValueChange={(value) => {
-            if (value) $rsvpFormData.rsvp = value as "going" | "maybe" | "not"
-          }}
-          type="single"
-          class="w-full"
-        >
-          <ToggleGroupItem value="going" class="flex-1">
-            {m.event_rsvp_going()}
-          </ToggleGroupItem>
-          <ToggleGroupItem value="maybe" class="flex-1">
-            {m.event_rsvp_maybe()}
-          </ToggleGroupItem>
-          <ToggleGroupItem value="not" class="flex-1">
-            {m.event_rsvp_not()}
-          </ToggleGroupItem>
-        </ToggleGroup>
+        {#if data.isHost}
+          <!-- Host is always "going" — only let them set their +1s. -->
+          <input type="hidden" name="rsvp" value="going" />
+        {:else}
+          <input type="hidden" name="rsvp" value={$rsvpFormData.rsvp} />
+          <ToggleGroup
+            value={$rsvpFormData.rsvp}
+            onValueChange={(value) => {
+              if (value) $rsvpFormData.rsvp = value as "going" | "maybe" | "not"
+            }}
+            type="single"
+            class="w-full"
+            data-rsvp-toggle
+          >
+            <ToggleGroupItem value="going" class="flex-1">
+              {m.event_rsvp_going()}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="maybe" class="flex-1">
+              {m.event_rsvp_maybe()}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="not" class="flex-1">
+              {m.event_rsvp_not()}
+            </ToggleGroupItem>
+          </ToggleGroup>
+        {/if}
 
         <div class="space-y-2">
           <Label for="extraGuests">{m.event_rsvp_extra_label()}</Label>
@@ -1342,10 +1395,14 @@
             min="0"
             max="50"
             bind:value={$rsvpFormData.extraGuests}
-            disabled={$rsvpFormData.rsvp === "not"}
+            disabled={!data.isHost && $rsvpFormData.rsvp === "not"}
           />
           <p class="text-sm text-muted-foreground">
-            {m.event_rsvp_extra_hint()}
+            {#if data.isHost}
+              {m.event_rsvp_host_extra_hint()}
+            {:else}
+              {m.event_rsvp_extra_hint()}
+            {/if}
           </p>
         </div>
 

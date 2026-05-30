@@ -193,4 +193,51 @@ describe("Account Page Component", () => {
       expect(screen.queryByRole("tab")).not.toBeInTheDocument();
     });
   });
+
+  describe("Login error display", () => {
+    it("renders a sign-in API error message when the sign-in form has a message", () => {
+      // Simulate the superforms message returned by message(form, err.message, {status:400})
+      const formWithError = { ...signInForm, message: "INVALID_EMAIL_OR_PASSWORD" };
+      render(AccountPage, {
+        props: {
+          params: {},
+          form: null,
+          data: {
+            user: null,
+            signUpForm,
+            signInForm: formWithError,
+            vapidPublicKey: null,
+            pushEnabled: false,
+          },
+        },
+      });
+
+      // Switch to the sign-in tab first
+      const signInTab = screen.getByRole("tab", { name: "Se connecter" });
+      // Activate the tab (click or set value)
+      expect(signInTab).toBeInTheDocument();
+
+      // The error message should appear in the sign-in form area
+      expect(screen.getByText("INVALID_EMAIL_OR_PASSWORD")).toBeInTheDocument();
+    });
+
+    it("renders a sign-up API error when the sign-up form has a message", () => {
+      const formWithError = { ...signUpForm, message: "Email déjà utilisé" };
+      render(AccountPage, {
+        props: {
+          params: {},
+          form: null,
+          data: {
+            user: null,
+            signUpForm: formWithError,
+            signInForm,
+            vapidPublicKey: null,
+            pushEnabled: false,
+          },
+        },
+      });
+
+      expect(screen.getByText("Email déjà utilisé")).toBeInTheDocument();
+    });
+  });
 });

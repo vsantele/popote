@@ -83,6 +83,7 @@
   "event_rsvp_not": "Pas dispo",
   "event_rsvp_extra_label": "Accompagnants (+1)",
   "event_rsvp_extra_hint": "Combien de personnes amenez-vous en plus de vous ?",
+  "event_rsvp_host_extra_hint": "En tant qu'hôte, vous êtes automatiquement confirmé. Indiquez combien de personnes vous accompagnent.",
   "event_rsvp_save": "Enregistrer ma réponse",
   "event_rsvp_saving": "Enregistrement...",
   "event_rsvp_saved": "Réponse enregistrée !",

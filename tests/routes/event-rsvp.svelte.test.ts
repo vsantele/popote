@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll } from "vite-plus/test";
 import { render, screen } from "@testing-library/svelte";
+import userEvent from "@testing-library/user-event";
 import { readable } from "svelte/store";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms";
@@ -178,5 +179,41 @@ describe("Event RSVP control + headcount header", () => {
   it("does NOT render an RSVP button for a non-participant viewer", () => {
     renderEvent({ currentUserId: null, isHost: false });
     expect(document.querySelector("[data-rsvp]")).toBeNull();
+  });
+});
+
+describe("Host RSVP — +1s-only control", () => {
+  it("host sees no going/maybe/not toggle group in the RSVP dialog", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderEvent({ currentUserId: HOST, isHost: true });
+
+    // Open the RSVP dialog by clicking the host's RSVP button
+    const rsvpBtn = document.querySelector("[data-rsvp]");
+    expect(rsvpBtn).not.toBeNull();
+    await user.click(rsvpBtn as Element);
+
+    // The going/maybe/not toggle group should NOT be present for the host
+    expect(document.querySelector("[data-rsvp-toggle]")).toBeNull();
+
+    // But the extraGuests input should be present
+    expect(screen.getByLabelText("Accompagnants (+1)")).toBeInTheDocument();
+  });
+
+  it("non-host sees the full going/maybe/not toggle group in the RSVP dialog", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderEvent({ currentUserId: VIEWER, isHost: false });
+
+    const rsvpBtn = document.querySelector("[data-rsvp]");
+    expect(rsvpBtn).not.toBeNull();
+    await user.click(rsvpBtn as Element);
+
+    // Non-host should see the toggle group with going/maybe/not
+    expect(document.querySelector("[data-rsvp-toggle]")).not.toBeNull();
+
+    // All three options should be present (French labels).
+    // bits-ui ToggleGroup with type="single" renders items as role="radio".
+    expect(screen.getByRole("radio", { name: /Je viens/i })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Peut-être/i })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Pas dispo/i })).toBeInTheDocument();
   });
 });
