@@ -8,7 +8,7 @@
       "nodejs_compat"
     ],
     "vars": {
-      "VAPID_PUBLIC_KEY": "BH6Tmwx1kk8oxBPRwk-TRzYjqNjeIPqKJcyTE4w-moDSrm1enr5acJcA8weap7CbDbsdmsi2eABKBNAGssgst1Q",
+      "VAPID_PUBLIC_KEY": "BB1tnxU58COeKyFCGubAVzmykjZItFzQKFfi-XUOL3RpZuFajz3bqjnF-CjG5lyfsPFD9t57Lf-5XFWOQobkj7Q",
       "VAPID_SUBJECT": "mailto:popote@vsantele.dev"
     }
   }
