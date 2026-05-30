@@ -22,6 +22,7 @@
     type Item,
     type ItemCategory,
   } from "$lib/types/index"
+  import { computeHeadcount } from "$lib/utils/headcount"
   import { log } from "$lib/utils/logger"
   import { superForm } from "sveltekit-superforms/client"
   import { invalidateAll, goto } from "$app/navigation"
@@ -136,6 +137,32 @@
     pendingDelete = item
     $deleteFormData.id = item.id
     deleteDialogOpen = true
+  }
+
+  // ── RSVP flow ──────────────────────────────────────────────────────
+  let rsvpDialogOpen = $state(false)
+  // svelte-ignore state_referenced_locally
+  const {
+    form: rsvpFormData,
+    enhance: rsvpEnhance,
+    delayed: rsvpDelayed,
+    message: rsvpMessage,
+  } = superForm(data.rsvpForm, {
+    id: "setRsvp",
+    onUpdated: async ({ form }) => {
+      if (form.valid) {
+        rsvpDialogOpen = false
+        await invalidateAll()
+      }
+    },
+  })
+
+  function openRsvpDialog() {
+    if (data.currentParticipant) {
+      $rsvpFormData.rsvp = data.currentParticipant.rsvp
+      $rsvpFormData.extraGuests = data.currentParticipant.extra_guests
+    }
+    rsvpDialogOpen = true
   }
 
   // Re-derive ownership on the client purely to decide which affordances to
@@ -265,6 +292,14 @@
     return groups
   })
 
+  // Confirmed headcount = sum over "going" participants of (1 + extra_guests).
+  // "maybe" heads are tallied separately; "not" simply doesn't count.
+  const headcount = $derived(
+    computeHeadcount(
+      participants.map((p) => ({ rsvp: p.rsvp, extraGuests: p.extra_guests })),
+    ),
+  )
+
   // Which essential courses are still empty? (only flag once things start)
   const ESSENTIALS: ItemCategory[] = [
     "apero",
@@ -277,6 +312,25 @@
     items.length > 0
       ? ESSENTIALS.filter((c) => (itemsByCategory.get(c) || []).length === 0)
       : [],
+  )
+
+  // Rough "light catering" signal: once a real crowd is confirmed (4+ heads),
+  // warn if the number of food/drink contributions is well below the headcount
+  // (fewer than one edible per two confirmed heads). Purely a nudge — never a
+  // hard rule.
+  const FOOD_CATEGORIES: ItemCategory[] = [
+    "apero",
+    "entree",
+    "plat",
+    "dessert",
+    "boissons",
+  ]
+  const foodItemCount = $derived(
+    items.filter((i) => FOOD_CATEGORIES.includes(i.category as ItemCategory))
+      .length,
+  )
+  const cateringLooksLight = $derived(
+    headcount.confirmed >= 4 && foodItemCount * 2 < headcount.confirmed,
   )
 
   function getParticipantName(participantId: string): string {
@@ -423,9 +477,38 @@
         {/if}
         <div class="flex items-center gap-2">
           <Users class="size-4 shrink-0 text-primary" />
-          <span>{m.event_guests_count({ count: participants.length })}</span>
+          <span>
+            {#if headcount.confirmed > 0}
+              {m.event_headcount_confirmed({ count: headcount.confirmed })}{#if headcount.maybe > 0}
+                · {m.event_headcount_maybe({ count: headcount.maybe })}{/if}
+            {:else if headcount.maybe > 0}
+              {m.event_headcount_maybe({ count: headcount.maybe })}
+            {:else}
+              {m.event_headcount_none()}
+            {/if}
+          </span>
         </div>
       </div>
+
+      {#if data.currentParticipant}
+        <div class="mt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onclick={openRsvpDialog}
+            data-rsvp={data.currentParticipant.rsvp}
+          >
+            {#if data.currentParticipant.rsvp === "going"}
+              {m.event_rsvp_going()}{#if data.currentParticipant.extra_guests > 0}
+                · +{data.currentParticipant.extra_guests}{/if}
+            {:else if data.currentParticipant.rsvp === "maybe"}
+              {m.event_rsvp_maybe()}
+            {:else}
+              {m.event_rsvp_not()}
+            {/if}
+          </Button>
+        </div>
+      {/if}
 
       {#if data.event.description}
         <p class="mt-3 text-sm">{data.event.description}</p>
@@ -468,6 +551,17 @@
             {CATEGORIES[cat].label()}
           </span>
         {/each}
+      </div>
+    {/if}
+
+    <!-- Headcount gap hint: catering looks light vs. the confirmed crowd. -->
+    {#if cateringLooksLight}
+      <div
+        class="animate-pop-in flex items-center gap-2 rounded-2xl border-[1.5px] border-dashed border-amber-500/50 bg-amber-500/10 px-4 py-3"
+      >
+        <span class="text-sm font-medium text-amber-700 dark:text-amber-400">
+          🍽️ {m.event_headcount_gap({ count: headcount.confirmed })}
+        </span>
       </div>
     {/if}
 
@@ -840,6 +934,72 @@
             {$deleteDelayed
               ? m.event_delete_item_submitting()
               : m.event_delete_item_confirm()}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+
+  <!-- RSVP dialog -->
+  <Dialog bind:open={rsvpDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle class="font-display text-xl">
+          {m.event_rsvp_title()}
+        </DialogTitle>
+      </DialogHeader>
+      <form method="POST" action="?/setRsvp" use:rsvpEnhance class="space-y-4">
+        <input type="hidden" name="rsvp" value={$rsvpFormData.rsvp} />
+        <ToggleGroup
+          value={$rsvpFormData.rsvp}
+          onValueChange={(value) => {
+            if (value) $rsvpFormData.rsvp = value as "going" | "maybe" | "not"
+          }}
+          type="single"
+          class="w-full"
+        >
+          <ToggleGroupItem value="going" class="flex-1">
+            {m.event_rsvp_going()}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="maybe" class="flex-1">
+            {m.event_rsvp_maybe()}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="not" class="flex-1">
+            {m.event_rsvp_not()}
+          </ToggleGroupItem>
+        </ToggleGroup>
+
+        <div class="space-y-2">
+          <Label for="extraGuests">{m.event_rsvp_extra_label()}</Label>
+          <Input
+            id="extraGuests"
+            name="extraGuests"
+            type="number"
+            min="0"
+            max="50"
+            bind:value={$rsvpFormData.extraGuests}
+            disabled={$rsvpFormData.rsvp === "not"}
+          />
+          <p class="text-sm text-muted-foreground">
+            {m.event_rsvp_extra_hint()}
+          </p>
+        </div>
+
+        {#if $rsvpMessage}
+          <p class="text-sm text-destructive">{$rsvpMessage}</p>
+        {/if}
+
+        <div class="flex gap-2 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            onclick={() => (rsvpDialogOpen = false)}
+            class="flex-1"
+          >
+            {m.common_cancel()}
+          </Button>
+          <Button type="submit" class="flex-1" disabled={$rsvpDelayed}>
+            {$rsvpDelayed ? m.event_rsvp_saving() : m.event_rsvp_save()}
           </Button>
         </div>
       </form>

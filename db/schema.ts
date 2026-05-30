@@ -137,6 +137,14 @@ export const participants = sqliteTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     isHost: integer("is_host", { mode: "boolean" }).notNull().default(false),
+    // RSVP status: "going" (confirmed), "maybe" (tentative), "not" (declined).
+    // Defaults to "going" so existing participants — who joined by adding
+    // something — keep counting toward the headcount after the migration.
+    rsvp: text("rsvp", { enum: ["going", "maybe", "not"] })
+      .notNull()
+      .default("going"),
+    // The participant's +1s: how many extra guests they bring (never negative).
+    extraGuests: integer("extra_guests").notNull().default(0),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
@@ -234,6 +242,9 @@ export const accountRelations = relations(account, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const RSVP_STATUSES = ["going", "maybe", "not"] as const;
+export type RsvpStatus = (typeof RSVP_STATUSES)[number];
 
 export const VALID_CATEGORIES = [
   "apero",

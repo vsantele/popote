@@ -226,6 +226,59 @@ export async function deleteItem(params: {
   return { ok: true };
 }
 
+export type RsvpMutationResult =
+  | { ok: true }
+  | { ok: false; reason: "not_found" | "forbidden" };
+
+/**
+ * Update a participant's OWN RSVP status and +1 count.
+ *
+ * Ownership rule (re-derived here, never trusted from the client): a user may
+ * only change the participant row whose `userId` matches their own. Unlike
+ * item edits, the host has NO override here — an RSVP is personal, so even the
+ * host can only set their own attendance (they manage their own participant
+ * row, which is exactly this path). This is enforced at the data layer so it
+ * cannot be bypassed by a crafted request targeting another participant's id.
+ */
+export async function updateRsvp(params: {
+  participantId: number;
+  userId: string;
+  data: { rsvp: "going" | "maybe" | "not"; extraGuests: number };
+}): Promise<RsvpMutationResult> {
+  const [row] = await db
+    .select({ id: participants.id, userId: participants.userId })
+    .from(participants)
+    .where(eq(participants.id, params.participantId))
+    .limit(1);
+
+  if (!row) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  // Only the participant themselves may change their RSVP.
+  if (row.userId !== params.userId) {
+    return { ok: false, reason: "forbidden" };
+  }
+
+  const extraGuests = Math.max(
+    0,
+    Math.trunc(Number(params.data.extraGuests) || 0),
+  );
+
+  await db
+    .update(participants)
+    .set({
+      rsvp: params.data.rsvp,
+      extraGuests,
+      // Bump updatedAt so the realtime version probe (which hashes
+      // participants.updatedAt) sees the change and pushes it live.
+      updatedAt: new Date(),
+    })
+    .where(eq(participants.id, params.participantId));
+
+  return { ok: true };
+}
+
 /**
  * Get all events for a user (both hosted and joined)
  */

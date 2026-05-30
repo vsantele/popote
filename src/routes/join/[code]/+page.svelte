@@ -9,6 +9,10 @@
   } from "$lib/components/ui/card"
   import { Input } from "$lib/components/ui/input"
   import { Label } from "$lib/components/ui/label"
+  import {
+    ToggleGroup,
+    ToggleGroupItem,
+  } from "$lib/components/ui/toggle-group"
   import { superForm } from "sveltekit-superforms/client"
   import * as m from "$lib/paraglide/messages"
   import type { PageProps } from "./$types"
@@ -50,6 +54,42 @@
             {#if $errors.name}
               <p class="text-sm text-destructive">{$errors.name}</p>
             {/if}
+          </div>
+
+          <div class="space-y-2">
+            <Label>{m.join_rsvp_label()}</Label>
+            <input type="hidden" name="rsvp" value={$form.rsvp} />
+            <ToggleGroup
+              value={$form.rsvp}
+              onValueChange={(value) => {
+                if (value) $form.rsvp = value as "going" | "maybe" | "not"
+              }}
+              type="single"
+              class="w-full"
+            >
+              <ToggleGroupItem value="going" class="flex-1">
+                {m.join_rsvp_going()}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="maybe" class="flex-1">
+                {m.join_rsvp_maybe()}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="not" class="flex-1">
+                {m.join_rsvp_not()}
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          <div class="space-y-2">
+            <Label for="extraGuests">{m.join_rsvp_extra_label()}</Label>
+            <Input
+              id="extraGuests"
+              name="extraGuests"
+              type="number"
+              min="0"
+              max="50"
+              bind:value={$form.extraGuests}
+              disabled={$form.rsvp === "not"}
+            />
           </div>
 
           <div class="flex gap-2">

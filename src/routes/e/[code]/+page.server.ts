@@ -9,7 +9,8 @@ import {
   editItemSchema,
   deleteItemSchema,
 } from "$lib/schemas/item.schema";
-import { updateItem, deleteItem } from "$lib/server/db";
+import { rsvpSchema } from "$lib/schemas/rsvp.schema";
+import { updateItem, deleteItem, updateRsvp } from "$lib/server/db";
 import { log } from "$lib/utils/logger";
 import { zod4 } from "sveltekit-superforms/adapters";
 
@@ -67,6 +68,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     name: p.name,
     user_id: p.userId,
     is_host: p.isHost,
+    rsvp: p.rsvp,
+    extra_guests: p.extraGuests,
     created: p.createdAt.toISOString(),
   }));
 
@@ -87,6 +90,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const form = await superValidate(zod4(addItemSchema()));
   const editForm = await superValidate(zod4(editItemSchema()));
   const deleteForm = await superValidate(zod4(deleteItemSchema()));
+  const rsvpForm = await superValidate(zod4(rsvpSchema()));
+  // Seed the RSVP form with the current participant's saved choice so the
+  // control reflects their actual state on load.
+  if (currentParticipant) {
+    rsvpForm.data.rsvp = currentParticipant.rsvp;
+    rsvpForm.data.extraGuests = currentParticipant.extra_guests;
+  }
 
   return {
     event: transformedEvent,
@@ -98,6 +108,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     form,
     editForm,
     deleteForm,
+    rsvpForm,
   };
 };
 
@@ -174,6 +185,83 @@ export const actions: Actions = {
       return fail(500, {
         form,
         error: m.error_add_item_failed(),
+      });
+    }
+  },
+
+  setRsvp: async ({ request, params, locals }) => {
+    const form = await superValidate(request, zod4(rsvpSchema()));
+
+    if (!form.valid) {
+      return fail(400, { rsvpForm: form });
+    }
+
+    if (!locals.user) {
+      return fail(401, {
+        rsvpForm: form,
+        error: m.error_session_invalid_join(),
+      });
+    }
+
+    try {
+      const shareCode = params.code.toUpperCase();
+      const userId = locals.user.id;
+
+      const [event] = await db
+        .select()
+        .from(events)
+        .where(eq(events.shareCode, shareCode))
+        .limit(1);
+
+      if (!event) {
+        return fail(404, { rsvpForm: form, error: m.error_event_not_found() });
+      }
+
+      // Resolve the caller's OWN participant row for this event. We never trust
+      // a participant id from the client — we look it up from (event, user) so
+      // a user can only ever target their own RSVP.
+      const [participant] = await db
+        .select({ id: participants.id })
+        .from(participants)
+        .where(
+          and(
+            eq(participants.eventId, event.id),
+            eq(participants.userId, userId),
+          ),
+        )
+        .limit(1);
+
+      if (!participant) {
+        return fail(404, {
+          rsvpForm: form,
+          error: m.error_rsvp_not_participant(),
+        });
+      }
+
+      // updateRsvp re-checks ownership at the data layer as defence in depth.
+      const result = await updateRsvp({
+        participantId: participant.id,
+        userId,
+        data: { rsvp: form.data.rsvp, extraGuests: form.data.extraGuests },
+      });
+
+      if (!result.ok) {
+        const status = result.reason === "not_found" ? 404 : 403;
+        return fail(status, {
+          rsvpForm: form,
+          error:
+            result.reason === "not_found"
+              ? m.error_rsvp_not_participant()
+              : m.error_rsvp_forbidden(),
+        });
+      }
+
+      return { rsvpForm: form };
+    } catch (err) {
+      log("error", "Failed to update RSVP", { error: String(err) });
+      return fail(500, {
+        rsvpForm: form,
+        error: m.error_rsvp_failed(),
       });
     }
   },
