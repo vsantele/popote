@@ -3,10 +3,13 @@
   "target": "cloudflare",
   "worker": {
     "compatibility_date": "2026-02-24",
-    "compatibility_flags": ["nodejs_als", "nodejs_compat"],
+    "compatibility_flags": [
+      "nodejs_als",
+      "nodejs_compat"
+    ],
     "vars": {
       "VAPID_PUBLIC_KEY": "BH6Tmwx1kk8oxBPRwk-TRzYjqNjeIPqKJcyTE4w-moDSrm1enr5acJcA8weap7CbDbsdmsi2eABKBNAGssgst1Q",
-      "VAPID_SUBJECT": "mailto:victor@sparkle.tech"
+      "VAPID_SUBJECT": "mailto:popote@vsantele.dev"
     }
   }
 }
