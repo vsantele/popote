@@ -42,6 +42,7 @@
   } from "@lucide/svelte"
   import * as m from "$lib/paraglide/messages"
   import { getLocale, localizeHref } from "$lib/paraglide/runtime"
+  import QrDialog from "$lib/components/qr-dialog.svelte"
   import type { PageProps } from "./$types"
 
   let { data }: PageProps = $props()
@@ -543,6 +544,10 @@
             <Copy class="size-4 text-muted-foreground group-hover:text-foreground" />
           {/if}
         </button>
+        <QrDialog
+          url="{page.url.origin}{localizeHref(`/e/${data.event.share_code}`)}"
+          eventName={data.event.name}
+        />
         <Button variant="default" size="default" onclick={shareEvent} class="flex-1">
           {m.event_share_button()}
         </Button>
