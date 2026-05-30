@@ -45,6 +45,7 @@
   } from "@lucide/svelte"
   import * as m from "$lib/paraglide/messages"
   import { getLocale, localizeHref } from "$lib/paraglide/runtime"
+  import PushOptIn from "$lib/components/push-opt-in.svelte"
   import QrDialog from "$lib/components/qr-dialog.svelte"
   import type { PageProps } from "./$types"
 
@@ -572,6 +573,12 @@
         </Button>
       </div>
     </header>
+
+    <!-- Push reminders opt-in (issue #7). Scoped to this event. -->
+    <PushOptIn
+      vapidPublicKey={data.vapidPublicKey ?? null}
+      eventId={Number(data.event.id)}
+    />
 
     <!-- Gap hint -->
     {#if gaps.length > 0}
