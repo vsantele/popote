@@ -55,7 +55,18 @@ export const GET: RequestHandler = ({ params, request }) => {
         } catch (err) {
           // A transient D1 hiccup shouldn't kill the stream; log and retry on
           // the next tick. A closed stream surfaces via stream.closed below.
-          log("error", "Live version probe failed", { error: String(err) });
+          // Surface the underlying D1/SQLite error (DrizzleQueryError wraps the
+          // real cause in `err.cause` — `String(err)` only shows the query text).
+          const cause =
+            err instanceof Error && err.cause instanceof Error
+              ? err.cause.message
+              : err instanceof Error && err.cause != null
+                ? String(err.cause)
+                : undefined;
+          log("error", "Live version probe failed", {
+            error: String(err),
+            ...(cause !== undefined && { cause }),
+          });
         }
       };
 
