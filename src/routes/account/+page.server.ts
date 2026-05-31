@@ -6,6 +6,7 @@ import { superValidate, message } from "sveltekit-superforms/server";
 import { APIError } from "better-auth/api";
 import * as m from "$lib/paraglide/messages";
 import { localizeHref } from "$lib/paraglide/runtime";
+import { signInErrorKey, signUpErrorKey } from "$lib/server/auth-error";
 
 function signUpSchema() {
   return z.object({
@@ -49,6 +50,30 @@ export const load: PageServerLoad = async ({ locals }) => {
   };
 };
 
+/**
+ * Maps a better-auth APIError body code to a localized message string.
+ * Uses stable `err.body?.code` values, never `err.message` (raw English).
+ */
+function localizeSignInError(code: string | undefined): string {
+  const key = signInErrorKey(code);
+  switch (key) {
+    case "invalid_credentials":
+      return m.error_auth_invalid_credentials();
+    default:
+      return m.error_signin_failed();
+  }
+}
+
+function localizeSignUpError(code: string | undefined): string {
+  const key = signUpErrorKey(code);
+  switch (key) {
+    case "email_taken":
+      return m.error_auth_email_taken();
+    default:
+      return m.error_signup_failed();
+  }
+}
+
 export const actions: Actions = {
   signUp: async ({ request, locals }) => {
     const form = await superValidate(request, zod4(signUpSchema()));
@@ -67,7 +92,8 @@ export const actions: Actions = {
       });
     } catch (err) {
       if (err instanceof APIError) {
-        return message(form, err.message, { status: 400 });
+        const msg = localizeSignUpError((err.body as { code?: string } | undefined)?.code);
+        return message(form, msg, { status: 400 });
       }
       console.error("Sign-up failed:", err);
       return message(form, m.error_signup_failed(), { status: 500 });
@@ -90,7 +116,8 @@ export const actions: Actions = {
       });
     } catch (err) {
       if (err instanceof APIError) {
-        return message(form, err.message, { status: 400 });
+        const msg = localizeSignInError((err.body as { code?: string } | undefined)?.code);
+        return message(form, msg, { status: 400 });
       }
       console.error("Sign-in failed:", err);
       return message(form, m.error_signin_failed(), { status: 500 });
