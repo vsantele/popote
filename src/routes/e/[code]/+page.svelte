@@ -673,10 +673,16 @@
           <Users class="size-4 shrink-0 text-primary" />
           <span>
             {#if headcount.confirmed > 0}
-              {m.event_headcount_confirmed({ count: headcount.confirmed })}{#if headcount.maybe > 0}
-                · {m.event_headcount_maybe({ count: headcount.maybe })}{/if}
+              {headcount.confirmed === 1
+                ? m.event_headcount_confirmed_one()
+                : m.event_headcount_confirmed({ count: headcount.confirmed })}{#if headcount.maybe > 0}
+                · {headcount.maybe === 1
+                  ? m.event_headcount_maybe_one()
+                  : m.event_headcount_maybe({ count: headcount.maybe })}{/if}
             {:else if headcount.maybe > 0}
-              {m.event_headcount_maybe({ count: headcount.maybe })}
+              {headcount.maybe === 1
+                ? m.event_headcount_maybe_one()
+                : m.event_headcount_maybe({ count: headcount.maybe })}
             {:else}
               {m.event_headcount_none()}
             {/if}

@@ -153,4 +153,28 @@ describe("updateRsvp ownership enforcement", () => {
 
     expect(mutation.set?.updatedAt).toBeInstanceOf(Date);
   });
+
+  it("persists the host's extraGuests correctly (Bug #33)", async () => {
+    // The host's +1s must be written to the DB as-is, so the headcount
+    // correctly shows 1 + N rather than just 1 (issue #33 regression guard).
+    seedParticipantRow();
+    const mutation = { ran: false } as {
+      ran: boolean;
+      set?: { extraGuests?: number; rsvp?: string };
+    };
+    updateMock.mockReturnValue(makeUpdate(mutation));
+
+    const result = await updateRsvp({
+      participantId: 7,
+      userId: OWNER,
+      data: { rsvp: "going", extraGuests: 3 },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(mutation.ran).toBe(true);
+    // The DB write must carry the exact extraGuests value, not a zeroed-out
+    // or coerced fallback, so the headcount picks it up after invalidateAll.
+    expect(mutation.set?.extraGuests).toBe(3);
+    expect(mutation.set?.rsvp).toBe("going");
+  });
 });
