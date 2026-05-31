@@ -16,14 +16,11 @@ vi.mock("void/db", async () => {
   };
 });
 
+// `realtime.ts` imports schemas from `@schema` (the canonical Void alias that
+// the Vite plugin wires to `db/schema.ts`). The `$lib/server/db/schema` barrel
+// re-export is NOT used by the probe — keeping a single, authoritative mock
+// here avoids confusion and matches the import exactly.
 vi.mock("@schema", () => ({
-  events: { id: {}, updatedAt: {}, shareCode: {} },
-  participants: { eventId: {}, createdAt: {}, updatedAt: {} },
-  items: { eventId: {}, createdAt: {}, updatedAt: {} },
-  eventSlots: { eventId: {}, createdAt: {}, updatedAt: {} },
-}));
-
-vi.mock("$lib/server/db/schema", () => ({
   events: { id: {}, updatedAt: {}, shareCode: {} },
   participants: { eventId: {}, createdAt: {}, updatedAt: {} },
   items: { eventId: {}, createdAt: {}, updatedAt: {} },

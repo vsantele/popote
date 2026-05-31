@@ -16,10 +16,21 @@
  * changes it. This is two indexed `SELECT`s against D1 — far cheaper than
  * re-sending the whole board, and it only runs while at least one viewer holds
  * a live connection.
+ *
+ * ## Import pattern
+ *
+ * `db`, `eq`, and `sql` are imported from `void/db` (not `drizzle-orm`
+ * directly) so that the Void Vite plugin's virtual module — which wires the
+ * D1 binding and the user schema into the Drizzle instance — is used in both
+ * dev and production. Schemas come from `@schema` (the canonical Void alias)
+ * rather than the re-export barrel at `$lib/server/db/schema`, following the
+ * same pattern as the rest of the data layer (`db/index.ts`, `auth.ts`, …).
+ * Mixing import sources can result in `db` receiving column references from a
+ * different module instance than it was initialised with, which causes silent
+ * query mismatches or runtime errors in the Workers build.
  */
-import { db } from "void/db";
-import { events, participants, items, eventSlots } from "$lib/server/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { db, eq, sql } from "void/db";
+import { events, participants, items, eventSlots } from "@schema";
 
 export interface EventVersion {
   /** Resolved internal event id, or null when the event does not exist. */
