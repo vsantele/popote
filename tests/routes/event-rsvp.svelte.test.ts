@@ -63,6 +63,10 @@ type RenderOpts = {
   isHost: boolean;
   viewerRsvp?: "going" | "maybe" | "not";
   viewerExtra?: number;
+  /** Override the host's extra_guests (default: 2). */
+  hostExtra?: number;
+  /** If true, only include the host participant (no viewer/other). */
+  hostOnly?: boolean;
 };
 
 function renderEvent({
@@ -70,6 +74,8 @@ function renderEvent({
   isHost,
   viewerRsvp = "going",
   viewerExtra = 0,
+  hostExtra = 2,
+  hostOnly = false,
 }: RenderOpts) {
   const event = {
     id: "1",
@@ -83,7 +89,7 @@ function renderEvent({
     created: new Date().toISOString(),
   };
 
-  const participants = [
+  const allParticipants = [
     {
       id: "p1",
       event: "1",
@@ -91,30 +97,36 @@ function renderEvent({
       user_id: HOST,
       is_host: true,
       rsvp: "going" as const,
-      extra_guests: 2,
+      extra_guests: hostExtra,
       created: "",
     },
-    {
-      id: "p2",
-      event: "1",
-      name: "Moi",
-      user_id: VIEWER,
-      is_host: false,
-      rsvp: viewerRsvp,
-      extra_guests: viewerExtra,
-      created: "",
-    },
-    {
-      id: "p3",
-      event: "1",
-      name: "Autre",
-      user_id: "user-other",
-      is_host: false,
-      rsvp: "maybe" as const,
-      extra_guests: 1,
-      created: "",
-    },
+    ...(hostOnly
+      ? []
+      : [
+          {
+            id: "p2",
+            event: "1",
+            name: "Moi",
+            user_id: VIEWER,
+            is_host: false,
+            rsvp: viewerRsvp,
+            extra_guests: viewerExtra,
+            created: "",
+          },
+          {
+            id: "p3",
+            event: "1",
+            name: "Autre",
+            user_id: "user-other",
+            is_host: false,
+            rsvp: "maybe" as const,
+            extra_guests: 1,
+            created: "",
+          },
+        ]),
   ];
+
+  const participants = allParticipants;
 
   const currentParticipant = participants.find(
     (p) => p.user_id === currentUserId,
@@ -151,6 +163,22 @@ describe("Event RSVP control + headcount header", () => {
     // 3 + 1 = 4 confirmed, 2 maybe
     expect(screen.getByText(/4 confirmés/)).toBeInTheDocument();
     expect(screen.getByText(/2 peut-être/)).toBeInTheDocument();
+  });
+
+  it("uses singular 'confirmé' (no s) when count=1 (Bug #33 plural fix)", () => {
+    // Only the host, no extra guests → exactly 1 confirmed head.
+    // Should display "1 confirmé", NOT "1 confirmés" (wrong plural in FR).
+    renderEvent({ currentUserId: HOST, isHost: true, hostExtra: 0, hostOnly: true });
+    expect(screen.getByText(/1 confirmé/)).toBeInTheDocument();
+    // Make sure the plural form is NOT shown
+    expect(screen.queryByText(/1 confirmés/)).toBeNull();
+  });
+
+  it("host with +2 extra guests shows 3 in the confirmed count (Bug #33)", () => {
+    // Host is going with 2 extra guests → 1 + 2 = 3 confirmed.
+    // This is the core regression guard: host's extra_guests must be counted.
+    renderEvent({ currentUserId: HOST, isHost: true, hostExtra: 2, hostOnly: true });
+    expect(screen.getByText(/3 confirmés/)).toBeInTheDocument();
   });
 
   it("renders an RSVP button reflecting the viewer's own state (going)", () => {

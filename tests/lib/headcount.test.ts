@@ -54,4 +54,21 @@ describe("computeHeadcount", () => {
     expect(hc.declined).toBe(1);
     expect(hc.goingParticipants).toBe(0);
   });
+
+  it("host with extraGuests=N contributes 1+N to confirmed (Bug #33)", () => {
+    // The host is always "going"; adding N extra guests should count as 1+N
+    // confirmed heads, not just 1. This is the regression guard for issue #33.
+    const hc = computeHeadcount([{ rsvp: "going", extraGuests: 2 }]);
+    expect(hc.confirmed).toBe(3); // 1 (host) + 2 (extra guests)
+    expect(hc.goingParticipants).toBe(1);
+  });
+
+  it("host +1s are added to the total even with other going participants", () => {
+    // Host with +2, plus one regular guest also going (no +1s) = 3 + 1 = 4
+    const hc = computeHeadcount([
+      { rsvp: "going", extraGuests: 2 }, // host
+      { rsvp: "going", extraGuests: 0 }, // guest
+    ]);
+    expect(hc.confirmed).toBe(4);
+  });
 });
