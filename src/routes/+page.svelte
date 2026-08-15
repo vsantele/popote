@@ -3,7 +3,7 @@
   import { Card, CardContent } from "$lib/components/ui/card"
   import { Input } from "$lib/components/ui/input"
   import { Label } from "$lib/components/ui/label"
-  import { superForm } from "sveltekit-superforms"
+  import { superForm } from "sveltekit-superforms/client"
   import * as m from "$lib/paraglide/messages"
   import { getLocale, localizeHref } from "$lib/paraglide/runtime"
   import LocaleSwitcher from "$lib/components/locale-switcher.svelte"
