@@ -1,12 +1,17 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import { render, screen } from "@testing-library/svelte";
+import { page } from "$app/state";
 import { getErrorPageVariant } from "../../src/lib/error-page";
 import ErrorPage from "../../src/routes/+error.svelte";
 
 // +error.svelte reads page.status from $app/state (not from $props).
 // We mock the module so tests can control the status value per describe block.
 vi.mock("$app/state", () => ({
-  page: { status: 404, error: null, url: new URL("http://localhost/missing") },
+  page: {
+    status: 404,
+    error: null as unknown,
+    url: new URL("http://localhost/missing"),
+  },
 }));
 
 vi.mock("$app/navigation", () => ({
@@ -28,7 +33,8 @@ describe("getErrorPageVariant", () => {
 
 describe("+error.svelte component", () => {
   it("shows the not-found variant when page.status is 404", () => {
-    // $app/state mock returns status 404 (see vi.mock above).
+    (page as any).status = 404;
+    (page as any).error = null;
     render(ErrorPage, { props: {} });
 
     // The not-found badge text is unique to the 404 variant.
@@ -38,5 +44,19 @@ describe("+error.svelte component", () => {
     expect(
       screen.queryByText("Quelque chose s'est mal passé"),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows the server-error variant when page.status is 500", () => {
+    (page as any).status = 500;
+    (page as any).error = { message: "Internal Error" };
+    render(ErrorPage, { props: {} });
+
+    expect(
+      screen.getByText("Quelque chose s'est mal passé"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Erreur du serveur")).toBeInTheDocument();
+    expect(screen.getByText("500")).toBeInTheDocument();
+    expect(screen.getByText("Internal Error")).toBeInTheDocument();
+    expect(screen.queryByText("Vous êtes perdu ?")).not.toBeInTheDocument();
   });
 });
