@@ -6,6 +6,12 @@ export type TelemetryBindings = Record<string, string | undefined> & {
   OTEL_EXPORTER_OTLP_HEADERS?: string;
   OTEL_SERVICE_NAME?: string;
   OTEL_SERVICE_VERSION?: string;
+  SIGNOZ_ENDPOINT?: string;
+  SIGNOZ_TRACES_ENDPOINT?: string;
+  SIGNOZ_ACCESS_TOKEN?: string;
+  SIGNOZ_INGESTION_KEY?: string;
+  SIGNOZ_SERVICE_NAME?: string;
+  SIGNOZ_SERVICE_VERSION?: string;
 };
 
 type TelemetryConfig = {
@@ -81,21 +87,38 @@ export function resolveCloudflareTelemetryConfig(
   bindings: TelemetryBindings,
 ): TelemetryConfig | null {
   const tracesEndpoint =
+    bindings.SIGNOZ_TRACES_ENDPOINT?.trim() ||
     bindings.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
+    bindings.SIGNOZ_ENDPOINT?.trim() ||
     bindings.OTEL_EXPORTER_OTLP_ENDPOINT?.trim();
 
   if (!tracesEndpoint) {
     return null;
   }
 
+  const headers = parseOtelHeaders(bindings.OTEL_EXPORTER_OTLP_HEADERS);
+  const signozToken =
+    bindings.SIGNOZ_ACCESS_TOKEN?.trim() ||
+    bindings.SIGNOZ_INGESTION_KEY?.trim();
+
+  if (signozToken && !headers["signoz-access-token"]) {
+    headers["signoz-access-token"] = signozToken;
+  }
+
   return {
     exporter: {
       url: normalizeTracesEndpoint(tracesEndpoint),
-      headers: parseOtelHeaders(bindings.OTEL_EXPORTER_OTLP_HEADERS),
+      headers,
     },
     service: {
-      name: bindings.OTEL_SERVICE_NAME?.trim() || DEFAULT_SERVICE_NAME,
-      version: bindings.OTEL_SERVICE_VERSION?.trim() || undefined,
+      name:
+        bindings.SIGNOZ_SERVICE_NAME?.trim() ||
+        bindings.OTEL_SERVICE_NAME?.trim() ||
+        DEFAULT_SERVICE_NAME,
+      version:
+        bindings.SIGNOZ_SERVICE_VERSION?.trim() ||
+        bindings.OTEL_SERVICE_VERSION?.trim() ||
+        undefined,
     },
   };
 }
@@ -108,7 +131,6 @@ export async function ensureCloudflareTelemetry(
   bindings: TelemetryBindings,
 ): Promise<import("@opentelemetry/sdk-trace-base").BasicTracerProvider | null> {
   const config = resolveCloudflareTelemetryConfig(bindings);
-  console.log("resolveCloudflareTelemetryConfig", JSON.stringify(config));
   if (!config) {
     telemetryState.provider = null;
     telemetryState.initPromise = Promise.resolve(null);
@@ -125,18 +147,18 @@ export async function ensureCloudflareTelemetry(
   telemetryState.configKey = configKey;
   telemetryState.initPromise = (async () => {
     const [
-      { OTLPExporter, BatchTraceSpanProcessor },
-      { BasicTracerProvider },
+      { OTLPTraceExporter },
+      { BasicTracerProvider, BatchSpanProcessor },
       { resourceFromAttributes },
       { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION },
     ] = await Promise.all([
-      import("@microlabs/otel-cf-workers"),
+      import("@opentelemetry/exporter-trace-otlp-http"),
       import("@opentelemetry/sdk-trace-base"),
       import("@opentelemetry/resources"),
       import("@opentelemetry/semantic-conventions"),
     ]);
 
-    const exporter = new OTLPExporter({
+    const exporter = new OTLPTraceExporter({
       url: config.exporter.url,
       headers: config.exporter.headers,
     });
@@ -150,7 +172,7 @@ export async function ensureCloudflareTelemetry(
 
     const provider = new BasicTracerProvider({
       resource,
-      spanProcessors: [new BatchTraceSpanProcessor(exporter)],
+      spanProcessors: [new BatchSpanProcessor(exporter)],
     });
 
     trace.setGlobalTracerProvider(provider);

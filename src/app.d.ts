@@ -12,6 +12,12 @@ declare global {
     OTEL_EXPORTER_OTLP_HEADERS?: string;
     OTEL_SERVICE_NAME?: string;
     OTEL_SERVICE_VERSION?: string;
+    SIGNOZ_ENDPOINT?: string;
+    SIGNOZ_TRACES_ENDPOINT?: string;
+    SIGNOZ_ACCESS_TOKEN?: string;
+    SIGNOZ_INGESTION_KEY?: string;
+    SIGNOZ_SERVICE_NAME?: string;
+    SIGNOZ_SERVICE_VERSION?: string;
   }
 
   namespace App {

@@ -12,6 +12,12 @@ export default defineEnv({
   OTEL_EXPORTER_OTLP_HEADERS: string().optional().secret(),
   OTEL_SERVICE_NAME: string().optional(),
   OTEL_SERVICE_VERSION: string().optional(),
+  SIGNOZ_ENDPOINT: url().optional(),
+  SIGNOZ_TRACES_ENDPOINT: url().optional(),
+  SIGNOZ_ACCESS_TOKEN: string().optional().secret(),
+  SIGNOZ_INGESTION_KEY: string().optional().secret(),
+  SIGNOZ_SERVICE_NAME: string().optional(),
+  SIGNOZ_SERVICE_VERSION: string().optional(),
   // Web Push (VAPID). The public key is NOT secret — it is shipped to every
   // client to subscribe — so it lives in `void.json` worker.vars (tracked).
   // The private key + subject ARE secrets: keep them in `.env.local` locally
