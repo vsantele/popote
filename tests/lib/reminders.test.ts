@@ -8,7 +8,7 @@ vi.mock("void/db", async () => {
     await vi.importActual<typeof import("drizzle-orm")>("drizzle-orm");
   return { db: {}, eq: actual.eq, and: actual.and, gte: actual.gte, lte: actual.lte, isNull: actual.isNull, or: actual.or };
 });
-vi.mock("@schema", () => ({
+vi.mock("../../db/schema", () => ({
   events: {},
   participants: {},
   pushSubscriptions: {},

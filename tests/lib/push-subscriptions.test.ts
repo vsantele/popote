@@ -25,7 +25,7 @@ vi.mock("void/db", async () => {
   };
 });
 
-vi.mock("@schema", () => ({
+vi.mock("../../db/schema", () => ({
   pushSubscriptions: {
     id: "id",
     endpoint: "endpoint",

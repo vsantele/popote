@@ -5,7 +5,7 @@
  * deletes the row entirely so the cron never targets it again.
  */
 import { db, eq, and } from "void/db";
-import { pushSubscriptions } from "@schema";
+import { pushSubscriptions } from "../../../../db/schema";
 
 export interface BrowserSubscription {
   endpoint: string;

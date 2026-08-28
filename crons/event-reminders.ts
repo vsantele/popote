@@ -11,9 +11,9 @@
  * table makes repeated runs idempotent, so the exact firing minute is not
  * load-bearing.
  */
-import { defineScheduled } from "void";
-import { runDueReminders } from "$lib/server/push/reminders";
-import type { VapidKeys } from "$lib/server/push/web-push";
+import { defineScheduled } from "void/handler";
+import { runDueReminders } from "../src/lib/server/push/reminders";
+import type { VapidKeys } from "../src/lib/server/push/web-push";
 
 export const cron = "0 * * * *"; // every hour, on the hour
 
