@@ -7,7 +7,7 @@ import { builtinModules } from "node:module";
 
 export default defineConfig({
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       external: [
         /^node:/,
         "async_hooks",
@@ -47,6 +47,9 @@ export default defineConfig({
   // affects `vp dev` / `vp build`. Recommended by the official Svelte testing
   // docs and `sv add vitest`.
   resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
+  server: {
+    forwardConsole: true,
+  },
   // `vp test` (Vitest) reads this `test` block. Per the Vite+ docs we keep all
   // test config here in `vite.config.ts` rather than a separate
   // `vitest.config.ts`. A client/server-aware split mirrors `sv add vitest`:
