@@ -1,6 +1,6 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "app_name": "🍽️ Popote",
+  "app_name": "Popote",
   "app_tagline": "Organisation de repas collaboratifs",
   "nav_account": "👤 Mon Compte",
   "nav_back": "Retour",

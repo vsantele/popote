@@ -57,7 +57,7 @@ export function buildReminderPayload(event: {
   dateMs: number;
 }): string {
   return JSON.stringify({
-    title: "🍽️ La Popote",
+    title: "La Popote",
     body: `« ${event.name} » c'est bientôt — vérifie ce que tu apportes !`,
     url: `/e/${event.shareCode}`,
     tag: `event-reminder-${event.shareCode}`,

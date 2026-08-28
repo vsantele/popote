@@ -47,7 +47,7 @@ sw.addEventListener("push", (event) => {
     data = { body: event.data?.text() };
   }
 
-  const title = data.title ?? "🍽️ La Popote";
+  const title = data.title ?? "La Popote";
   const options: NotificationOptions = {
     body: data.body ?? "",
     icon: "/favicon.png",
