@@ -151,7 +151,7 @@
   "account_field_name_label": "Votre nom *",
   "account_field_name_placeholder": "Votre prénom",
   "account_field_email_label": "Email *",
-  "account_field_email_placeholder": "vous@exemple.fr",
+  "account_field_email_placeholder": "vous@exemple.be",
   "account_field_password_label": "Mot de passe *",
   "account_field_password_placeholder": "8 caractères minimum",
   "account_signup_submit": "Créer mon compte",
