@@ -1,53 +1,30 @@
-# PWA Icons
+# Favicon & PWA Icons
 
-## Current Status
+## Status
 
-SVG placeholder icons are currently in place:
+Popote icons have been generated based on the main cooking pot brand mark (`BrandMark` component) and adhere to the PWA and modern favicon standards.
 
-- `icon-192.svg` - 192x192 SVG icon
-- `icon-512.svg` - 512x512 SVG icon
+### Assets
 
-## TODO: Generate PNG Icons
+- `favicon.svg` (and `src/lib/assets/favicon.svg`): Scalable SVG vector favicon supporting light/dark themes.
+- `favicon.ico`: Multi-size ICO file containing 16x16, 32x32, and 48x48 icons for browser compatibility.
+- `favicon-16x16.png` & `favicon-32x32.png`: Standard PNG favicons.
+- `favicon.png`: 192x192 PNG for service worker notifications and general use.
+- `apple-touch-icon.png` (180x180): High-resolution icon with solid background for iOS home screen bookmarks.
+- `icon-192.png` & `icon-512.png`: Standard PWA icons (`purpose: "any"`).
+- `icon-maskable-192.png` & `icon-maskable-512.png`: Adaptive PWA icons with safe-zone margins (`purpose: "maskable"`).
+- `icon-192.svg` & `icon-512.svg`: Scalable vector PWA icons.
 
-For better compatibility with iOS and older browsers, convert SVGs to PNGs:
+## Regenerating Icons
+
+Run the generation script:
 
 ```bash
-# Using ImageMagick or similar tool
-magick icon-192.svg icon-192.png
-magick icon-512.svg icon-512.png
+node scripts/generate-icons.mjs
 ```
-
-Or use online tools:
-
-- https://cloudconvert.com/svg-to-png
-- https://svgtopng.com/
 
 ## Design Notes
 
-- **Theme Color**: #FF6B35 (warm orange)
-- **Icon**: 🍽️ (plate with cutlery emoji)
-- **Background**: Solid theme color with rounded corners
-- **Purpose**: Represents collaborative meal planning
-
-## Manifest Configuration
-
-Update `manifest.json` to reference PNGs instead of SVGs once generated:
-
-```json
-{
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
-}
-```
+- **Brand Icon**: Popote cooking pot (`BrandMark`) with steam, handles, lid, and shine.
+- **Theme Color**: #FF6B35 (terracotta / warm orange)
+- **Background Color**: #ffffff (or #fdf5e9 cream)

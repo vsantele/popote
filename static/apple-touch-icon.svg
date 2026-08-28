@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="100%" height="100%">
+  <rect width="80" height="80" rx="0" fill="#fdf5e9" />
+  
+  <g transform="translate(10, 12) scale(0.75)">
+    <!-- steam -->
+    <g class="steam" stroke="#f3967c" stroke-linecap="round" fill="none" stroke-width="3">
+      <path d="M30 24 q-4 -5 0 -10 q4 -5 0 -10" />
+      <path d="M40 24 q-4 -6 0 -12 q4 -6 0 -13" />
+      <path d="M50 24 q-4 -5 0 -10 q4 -5 0 -10" />
+    </g>
+
+    <!-- ear handles -->
+    <path class="rim" d="M16 40 q-8 0 -8 6 q0 6 8 6" fill="none" stroke="#9d391d" stroke-width="5" />
+    <path class="rim" d="M64 40 q8 0 8 6 q0 6 -8 6" fill="none" stroke="#9d391d" stroke-width="5" />
+
+    <!-- pot body -->
+    <path class="body" d="M15 36 H65 L62 58 Q61 65 53 65 H27 Q19 65 18 58 Z" fill="#e3562f" />
+
+    <!-- glossy highlight -->
+    <path class="shine" d="M24 41 Q26 53 30 60" fill="none" stroke="#fdcfc2" stroke-width="3.5" stroke-linecap="round" opacity="0.75" />
+
+    <!-- lid -->
+    <ellipse class="lid" cx="40" cy="34" rx="27" ry="7.5" fill="#b44223" />
+    <rect class="rim-rect" x="38.5" y="25" width="3" height="6" rx="1.5" fill="#9d391d" />
+    <circle class="knob" cx="40" cy="24" r="4.5" fill="#9d391d" />
+  </g>
+</svg>
