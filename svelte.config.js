@@ -21,7 +21,14 @@ const config = {
       remoteFunctions: true,
     },
     typescript: {
-      config: withVoidTSConfig(),
+      config: (tsconfig) => {
+        const voidConfig = withVoidTSConfig()(tsconfig);
+        voidConfig.exclude = [
+          ...(voidConfig.exclude || []),
+          "../src/lib/paraglide/**",
+        ];
+        return voidConfig;
+      },
     },
   },
   compilerOptions: {
