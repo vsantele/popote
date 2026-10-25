@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeAll } from "vite-plus/test";
 import { render, screen } from "@testing-library/svelte";
-import { readable } from "svelte/store";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms";
 import {
@@ -18,20 +17,17 @@ import {
 import EventPage from "../../src/routes/e/[code]/+page.svelte";
 import type { ComponentProps } from "svelte";
 
-// superForm and the page read SvelteKit's navigation/page stores; provide
+// superForm and the page read SvelteKit's navigation/page state; provide
 // minimal stand-ins like the existing home component test does.
-vi.mock("$app/stores", () => ({
-  page: readable({ url: new URL("http://localhost/e/ABC123"), form: undefined }),
-  navigating: readable(null),
-}));
-
 vi.mock("$app/state", () => ({
-  page: { url: new URL("http://localhost/e/ABC123") },
+  page: { url: new URL("http://localhost/e/ABC123"), form: undefined },
+  navigating: null,
 }));
 
 vi.mock("$app/navigation", () => ({
   goto: vi.fn(),
   invalidateAll: vi.fn(),
+  refreshAll: vi.fn(),
   beforeNavigate: vi.fn(),
   afterNavigate: vi.fn(),
 }));
@@ -79,16 +75,59 @@ function renderEvent({ currentUserId, isHost }: RenderOpts) {
   };
 
   const participants = [
-    { id: "p1", event: "1", name: "Nico", user_id: HOST, is_host: true, rsvp: "going", extra_guests: 0, created: "" },
-    { id: "p2", event: "1", name: "Moi", user_id: VIEWER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
-    { id: "p3", event: "1", name: "Autre", user_id: OTHER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
+    {
+      id: "p1",
+      event: "1",
+      name: "Nico",
+      user_id: HOST,
+      is_host: true,
+      rsvp: "going",
+      extra_guests: 0,
+      created: "",
+    },
+    {
+      id: "p2",
+      event: "1",
+      name: "Moi",
+      user_id: VIEWER,
+      is_host: false,
+      rsvp: "going",
+      extra_guests: 0,
+      created: "",
+    },
+    {
+      id: "p3",
+      event: "1",
+      name: "Autre",
+      user_id: OTHER,
+      is_host: false,
+      rsvp: "going",
+      extra_guests: 0,
+      created: "",
+    },
   ];
 
   const items = [
     // Belongs to the viewer (participant p2)
-    { id: "10", event: "1", participant: "p2", name: "Mon plat", category: "plat", quantity: undefined, created: "" },
+    {
+      id: "10",
+      event: "1",
+      participant: "p2",
+      name: "Mon plat",
+      category: "plat",
+      quantity: undefined,
+      created: "",
+    },
     // Belongs to someone else (participant p3)
-    { id: "11", event: "1", participant: "p3", name: "Plat des autres", category: "plat", quantity: undefined, created: "" },
+    {
+      id: "11",
+      event: "1",
+      participant: "p3",
+      name: "Plat des autres",
+      category: "plat",
+      quantity: undefined,
+      created: "",
+    },
   ];
 
   const props = {
@@ -119,9 +158,7 @@ describe("Event item edit/delete affordances", () => {
   it("shows edit/delete controls for the viewer's OWN item", () => {
     renderEvent({ currentUserId: VIEWER, isHost: false });
 
-    expect(
-      screen.getByLabelText("Actions pour Mon plat"),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Actions pour Mon plat")).toBeInTheDocument();
   });
 
   it("does NOT show controls for an item the viewer does not own", () => {

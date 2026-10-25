@@ -1,11 +1,8 @@
 import { z } from "zod";
-import * as m from "$lib/paraglide/messages";
-import { VALID_DIETARY_TAGS } from "$lib/types/index";
+import * as m from "#lib/paraglide/messages.js";
+import { VALID_DIETARY_TAGS } from "#lib/types/index.js";
 
-const DIETARY_TAG_ENUM = VALID_DIETARY_TAGS as unknown as [
-  string,
-  ...string[],
-];
+const DIETARY_TAG_ENUM = VALID_DIETARY_TAGS as unknown as [string, ...string[]];
 
 export function addItemSchema() {
   return z.object({

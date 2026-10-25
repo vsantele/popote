@@ -1,19 +1,18 @@
-import type { Handle } from "@sveltejs/kit";
-import { sequence } from "@sveltejs/kit/hooks";
+import { sequence, type Handle } from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { SpanStatusCode, trace } from "@opentelemetry/api";
-import { building } from "$app/environment";
-import { createAuth } from "$lib/server/auth";
+import { building } from "$app/env";
+import { createAuth } from "#lib/server/auth.js";
 import {
   ensureCloudflareTelemetry,
   flushCloudflareTelemetry,
   type TelemetryBindings,
-} from "$lib/server/telemetry";
-import { paraglideMiddleware } from "$lib/paraglide/server";
+} from "#lib/server/telemetry.js";
+import { paraglideMiddleware } from "#lib/paraglide/server.js";
 import {
   getTextDirection,
   overwriteServerAsyncLocalStorage,
-} from "$lib/paraglide/runtime";
+} from "#lib/paraglide/runtime.js";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 // Paraglide's generated middleware does `await import("async_hooks")` (a bare
@@ -32,14 +31,16 @@ const paraglideHandle: Handle = ({ event, resolve }) =>
   paraglideMiddleware(
     event.request,
     ({ request: localizedRequest, locale }) => {
-      event.request = localizedRequest;
-      return resolve(event, {
-        transformPageChunk: ({ html }) => {
-          return html
-            .replace("%lang%", locale)
-            .replace("%dir%", getTextDirection(locale));
+      return resolve(
+        { ...event, request: localizedRequest },
+        {
+          transformPageChunk: ({ html }) => {
+            return html
+              .replace("%lang%", locale)
+              .replace("%dir%", getTextDirection(locale));
+          },
         },
-      });
+      );
     },
   );
 
@@ -88,10 +89,6 @@ function getWaitUntil(
 ): { waitUntil(promise: Promise<unknown>): void } | null {
   if (!platform) {
     return null;
-  }
-
-  if ("context" in platform && platform.context) {
-    return platform.context;
   }
 
   if ("ctx" in platform && platform.ctx) {

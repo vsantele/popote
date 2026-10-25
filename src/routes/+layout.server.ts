@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from "./$types";
-import { env } from "$env/dynamic/private";
+import { VAPID_PUBLIC_KEY } from "$app/env/private";
 
 /**
  * Expose the PUBLIC VAPID key to the client. It is not a secret — the browser
@@ -14,7 +14,7 @@ export const load: LayoutServerLoad = async () => {
   // `$env/dynamic/private` types values as `string`, but at runtime the key may
   // be absent — normalise an empty/undefined value to null so the client can
   // hide the opt-in control when push isn't configured.
-  const raw = env.VAPID_PUBLIC_KEY;
+  const raw = VAPID_PUBLIC_KEY;
   const publicKey: string | null = raw && raw.length > 0 ? raw : null;
   return {
     vapidPublicKey: publicKey,

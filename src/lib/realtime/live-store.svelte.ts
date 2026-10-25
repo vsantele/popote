@@ -28,7 +28,11 @@
  * without a real `EventSource` or a deployed server.
  */
 
-export type LiveStatus = "connecting" | "connected" | "reconnecting" | "fallback";
+export type LiveStatus =
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "fallback";
 
 /**
  * The subset of void's `SseClient` (from `void/sse/client`) this store relies
@@ -102,10 +106,9 @@ export class LiveStore {
   }
 
   #setTimer(cb: () => void, ms: number): number {
-    return (this.#opts.setTimer ?? ((c, m) => setTimeout(c, m) as unknown as number))(
-      cb,
-      ms,
-    );
+    return (
+      this.#opts.setTimer ?? ((c, m) => setTimeout(c, m) as unknown as number)
+    )(cb, ms);
   }
 
   #clearTimer(handle: number): void {

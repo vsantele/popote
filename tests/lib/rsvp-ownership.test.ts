@@ -65,9 +65,7 @@ const STRANGER = "user-stranger";
 
 /** Participant row #7, owned by OWNER. */
 function seedParticipantRow() {
-  selectMock.mockReturnValue(
-    makeSelect([{ id: 7, userId: OWNER }]),
-  );
+  selectMock.mockReturnValue(makeSelect([{ id: 7, userId: OWNER }]));
 }
 
 beforeEach(() => {
@@ -128,7 +126,10 @@ describe("updateRsvp ownership enforcement", () => {
 
   it("clamps a negative extraGuests to 0 before writing", async () => {
     seedParticipantRow();
-    const mutation = { ran: false } as { ran: boolean; set?: { extraGuests?: number } };
+    const mutation = { ran: false } as {
+      ran: boolean;
+      set?: { extraGuests?: number };
+    };
     updateMock.mockReturnValue(makeUpdate(mutation));
 
     const result = await updateRsvp({

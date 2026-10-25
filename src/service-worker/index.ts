@@ -1,24 +1,23 @@
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-
-import { build, files, version } from "$service-worker";
-
-const sw = self as unknown as ServiceWorkerGlobalScope;
+import { self } from "$app/service-worker";
+import { version } from "$app/env";
+import { immutable, assets } from "$app/manifest";
+import { resolve } from "$app/paths";
 
 const CACHE_NAME = `popote-cache-${version}`;
-const ASSETS = [...build, ...files];
+const ASSETS = [
+  ...immutable.map((asset) => resolve(asset.path)),
+  ...assets.map((asset) => resolve(asset.path)),
+];
 
 // Install - cache static assets
-sw.addEventListener("install", (event) => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)),
   );
 });
 
 // Activate - cleanup old caches
-sw.addEventListener("activate", (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
@@ -34,7 +33,7 @@ sw.addEventListener("activate", (event) => {
 
 // Push - show the notification delivered by the server (web push, issue #7).
 // The payload is the JSON produced by buildReminderPayload on the server.
-sw.addEventListener("push", (event) => {
+self.addEventListener("push", (event) => {
   let data: {
     title?: string;
     body?: string;
@@ -57,17 +56,17 @@ sw.addEventListener("push", (event) => {
     data: { url: data.url ?? "/" },
   };
 
-  event.waitUntil(sw.registration.showNotification(title, options));
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 // Notification click - focus an existing tab for the target URL or open one.
-sw.addEventListener("notificationclick", (event) => {
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const targetUrl =
     (event.notification.data && event.notification.data.url) || "/";
 
   event.waitUntil(
-    sw.clients
+    self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
         for (const client of clientList) {
@@ -76,8 +75,8 @@ sw.addEventListener("notificationclick", (event) => {
             return client.focus();
           }
         }
-        if (sw.clients.openWindow) {
-          return sw.clients.openWindow(targetUrl);
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(targetUrl);
         }
         return undefined;
       }),
@@ -87,12 +86,12 @@ sw.addEventListener("notificationclick", (event) => {
 // Fetch strategy:
 // - Network first for API calls (real-time data)
 // - Cache first for static assets
-sw.addEventListener("fetch", (event) => {
+self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
   // Network first for API calls
-  if (url.pathname.startsWith("/api/") || url.host !== sw.location.host) {
+  if (url.pathname.startsWith("/api/") || url.host !== self.location.host) {
     event.respondWith(
       fetch(request)
         .then((response) => {

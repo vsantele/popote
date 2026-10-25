@@ -1,10 +1,4 @@
-import {
-  sqliteTable,
-  text,
-  integer,
-  index,
-  uniqueIndex,
-} from "void/schema-d1";
+import { sqliteTable, text, integer, index, uniqueIndex } from "void/schema-d1";
 import { relations } from "drizzle-orm";
 import { sql } from "void/db";
 

@@ -1,4 +1,4 @@
-import { createAuth } from "$lib/server/auth";
+import { createAuth } from "#lib/server/auth.js";
 
 type Auth = ReturnType<typeof createAuth>;
 type AuthSession = Auth["$Infer"]["Session"];
@@ -31,9 +31,6 @@ declare global {
     // interface PageState {}
     interface Platform {
       env?: CloudflareTelemetryEnv & Record<string, unknown>;
-      context?: {
-        waitUntil(promise: Promise<unknown>): void;
-      };
       ctx?: {
         waitUntil(promise: Promise<unknown>): void;
       };

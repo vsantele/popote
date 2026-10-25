@@ -4,9 +4,9 @@ import { z } from "zod";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate, message } from "sveltekit-superforms/server";
 import { APIError } from "better-auth/api";
-import * as m from "$lib/paraglide/messages";
-import { localizeHref } from "$lib/paraglide/runtime";
-import { signInErrorKey, signUpErrorKey } from "$lib/server/auth-error";
+import * as m from "#lib/paraglide/messages.js";
+import { localizeHref } from "#lib/paraglide/runtime.js";
+import { signInErrorKey, signUpErrorKey } from "#lib/server/auth-error.js";
 
 function signUpSchema() {
   return z.object({
@@ -92,7 +92,9 @@ export const actions: Actions = {
       });
     } catch (err) {
       if (err instanceof APIError) {
-        const msg = localizeSignUpError((err.body as { code?: string } | undefined)?.code);
+        const msg = localizeSignUpError(
+          (err.body as { code?: string } | undefined)?.code,
+        );
         return message(form, msg, { status: 400 });
       }
       console.error("Sign-up failed:", err);
@@ -116,7 +118,9 @@ export const actions: Actions = {
       });
     } catch (err) {
       if (err instanceof APIError) {
-        const msg = localizeSignInError((err.body as { code?: string } | undefined)?.code);
+        const msg = localizeSignInError(
+          (err.body as { code?: string } | undefined)?.code,
+        );
         return message(form, msg, { status: 400 });
       }
       console.error("Sign-in failed:", err);

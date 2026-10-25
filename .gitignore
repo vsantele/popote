@@ -18,16 +18,14 @@ node_modules
 Thumbs.db
 
 # Env
-.env.*.local
-.env.local
-!.env.example
-!.env.test
+.env
 
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 .void
+.void-wrangler.jsonc
 *.tsbuildinfo
 
 .claude/worktrees

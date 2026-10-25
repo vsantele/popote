@@ -1,7 +1,7 @@
 import type { RequestHandler } from "./$types";
-import { json, error } from "@sveltejs/kit";
-import { deleteSubscription } from "$lib/server/push/subscriptions";
-import { log } from "$lib/utils/logger";
+import { error } from "@sveltejs/kit";
+import { deleteSubscription } from "#lib/server/push/subscriptions.js";
+import { log } from "#lib/utils/logger.js";
 
 /**
  * Opt-out: remove the caller's subscription by endpoint. Idempotent — removing
@@ -24,8 +24,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(400, "Missing endpoint");
   }
 
-  await deleteSubscription({ userId: locals.user.id, endpoint: payload.endpoint });
+  await deleteSubscription({
+    userId: locals.user.id,
+    endpoint: payload.endpoint,
+  });
   log("info", "Removed push subscription", { userId: locals.user.id });
 
-  return json({ ok: true });
+  return Response.json({ ok: true });
 };

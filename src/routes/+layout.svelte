@@ -1,10 +1,9 @@
 <script lang="ts">
   import "./layout.css";
-  import favicon from "$lib/assets/favicon.svg";
-  import { measurePageLoad } from "$lib/utils/logger";
+  import favicon from "#lib/assets/favicon.svg";
+  import { measurePageLoad } from "#lib/utils/logger.js";
   import { onMount } from "svelte";
-  import * as m from "$lib/paraglide/messages";
-  import { dev } from "$app/environment";
+  import * as m from "#lib/paraglide/messages.js";
 
   let { children } = $props();
 
@@ -12,10 +11,9 @@
     measurePageLoad();
 
     // Register service worker (if available)
-    // In dev, SvelteKit serves the SW as an ES module; in prod it is bundled as classic.
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/service-worker.js", { type: dev ? "module" : "classic" })
+        .register("/service-worker.js", { type: "module" })
         .then(() => console.log("Service worker registered"))
         .catch((err) =>
           console.error("Service worker registration failed:", err),

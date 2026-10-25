@@ -1,9 +1,9 @@
 import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { db } from "void/db";
-import { events } from "$lib/server/db/schema";
+import { events } from "#lib/server/db/schema.js";
 import { eq } from "drizzle-orm";
-import { buildIcs } from "$lib/server/ics";
+import { buildIcs } from "#lib/server/ics.js";
 
 export const GET: RequestHandler = async ({ params }) => {
   const shareCode = params.code.toUpperCase();

@@ -1,7 +1,7 @@
 import type { RequestHandler } from "./$types";
 import { eventStream } from "void/sse";
-import { eventVersion } from "$lib/server/realtime";
-import { log } from "$lib/utils/logger";
+import { eventVersion } from "#lib/server/realtime.js";
+import { log } from "#lib/utils/logger.js";
 
 /**
  * Live event stream for one event board (Server-Sent Events).

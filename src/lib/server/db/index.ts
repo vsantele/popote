@@ -1,8 +1,8 @@
 import { events, participants, items, eventSlots } from "@schema";
 import { generateUniqueShareCode } from "./utils";
 import { db, eq, and, desc, sql } from "void/db";
-import { VALID_DIETARY_TAGS } from "$lib/types/index";
-import type { DietaryTag } from "$lib/types/index";
+import { VALID_DIETARY_TAGS } from "#lib/types/index.js";
+import type { DietaryTag } from "#lib/types/index.js";
 
 /** Parse a JSON string of dietary tag keys, dropping any unrecognised values. */
 function parseTagsJson(raw: string | null | undefined): DietaryTag[] {
@@ -213,7 +213,12 @@ async function authorizeItemMutation(itemId: number, userId: string) {
 export async function updateItem(params: {
   itemId: number;
   userId: string;
-  data: { name: string; category: string; quantity?: string; dietaryTags?: string[] };
+  data: {
+    name: string;
+    category: string;
+    quantity?: string;
+    dietaryTags?: string[];
+  };
 }): Promise<ItemMutationResult> {
   const auth = await authorizeItemMutation(params.itemId, params.userId);
   if (!auth.authorized) {

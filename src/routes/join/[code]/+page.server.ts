@@ -3,12 +3,12 @@ import { superValidate } from "sveltekit-superforms/server";
 import { fail, redirect, error } from "@sveltejs/kit";
 import { z } from "zod";
 import { db } from "void/db";
-import { events, participants } from "$lib/server/db/schema";
+import { events, participants } from "#lib/server/db/schema.js";
 import { and, eq } from "drizzle-orm";
-import { log } from "$lib/utils/logger";
+import { log } from "#lib/utils/logger.js";
 import { zod4 } from "sveltekit-superforms/adapters";
-import * as m from "$lib/paraglide/messages";
-import { localizeHref } from "$lib/paraglide/runtime";
+import * as m from "#lib/paraglide/messages.js";
+import { localizeHref } from "#lib/paraglide/runtime.js";
 
 function joinEventSchema() {
   return z.object({

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeAll } from "vite-plus/test";
 import { render, screen } from "@testing-library/svelte";
 import userEvent from "@testing-library/user-event";
-import { readable } from "svelte/store";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms";
 import {
@@ -19,18 +18,15 @@ import {
 import EventPage from "../../src/routes/e/[code]/+page.svelte";
 import type { ComponentProps } from "svelte";
 
-vi.mock("$app/stores", () => ({
-  page: readable({ url: new URL("http://localhost/e/ABC123"), form: undefined }),
-  navigating: readable(null),
-}));
-
 vi.mock("$app/state", () => ({
-  page: { url: new URL("http://localhost/e/ABC123") },
+  page: { url: new URL("http://localhost/e/ABC123"), form: undefined },
+  navigating: null,
 }));
 
 vi.mock("$app/navigation", () => ({
   goto: vi.fn(),
   invalidateAll: vi.fn(),
+  refreshAll: vi.fn(),
   beforeNavigate: vi.fn(),
   afterNavigate: vi.fn(),
 }));
@@ -168,7 +164,12 @@ describe("Event RSVP control + headcount header", () => {
   it("uses singular 'confirmé' (no s) when count=1 (Bug #33 plural fix)", () => {
     // Only the host, no extra guests → exactly 1 confirmed head.
     // Should display "1 confirmé", NOT "1 confirmés" (wrong plural in FR).
-    renderEvent({ currentUserId: HOST, isHost: true, hostExtra: 0, hostOnly: true });
+    renderEvent({
+      currentUserId: HOST,
+      isHost: true,
+      hostExtra: 0,
+      hostOnly: true,
+    });
     expect(screen.getByText(/1 confirmé/)).toBeInTheDocument();
     // Make sure the plural form is NOT shown
     expect(screen.queryByText(/1 confirmés/)).toBeNull();
@@ -177,7 +178,12 @@ describe("Event RSVP control + headcount header", () => {
   it("host with +2 extra guests shows 3 in the confirmed count (Bug #33)", () => {
     // Host is going with 2 extra guests → 1 + 2 = 3 confirmed.
     // This is the core regression guard: host's extra_guests must be counted.
-    renderEvent({ currentUserId: HOST, isHost: true, hostExtra: 2, hostOnly: true });
+    renderEvent({
+      currentUserId: HOST,
+      isHost: true,
+      hostExtra: 2,
+      hostOnly: true,
+    });
     expect(screen.getByText(/3 confirmés/)).toBeInTheDocument();
   });
 
@@ -240,8 +246,14 @@ describe("Host RSVP — +1s-only control", () => {
 
     // All three options should be present (French labels).
     // bits-ui ToggleGroup with type="single" renders items as role="radio".
-    expect(screen.getByRole("radio", { name: /Je viens/i })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /Peut-être/i })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /Pas dispo/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: /Je viens/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: /Peut-être/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: /Pas dispo/i }),
+    ).toBeInTheDocument();
   });
 });

@@ -103,9 +103,7 @@
       "indexes": {
         "account_userId_idx": {
           "name": "account_userId_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -114,12 +112,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -207,30 +201,22 @@
       "indexes": {
         "events_share_code_unique": {
           "name": "events_share_code_unique",
-          "columns": [
-            "share_code"
-          ],
+          "columns": ["share_code"],
           "isUnique": true
         },
         "events_share_code_idx": {
           "name": "events_share_code_idx",
-          "columns": [
-            "share_code"
-          ],
+          "columns": ["share_code"],
           "isUnique": false
         },
         "events_host_user_id_idx": {
           "name": "events_host_user_id_idx",
-          "columns": [
-            "host_user_id"
-          ],
+          "columns": ["host_user_id"],
           "isUnique": false
         },
         "events_date_idx": {
           "name": "events_date_idx",
-          "columns": [
-            "date"
-          ],
+          "columns": ["date"],
           "isUnique": false
         }
       },
@@ -239,12 +225,8 @@
           "name": "events_host_user_id_user_id_fk",
           "tableFrom": "events",
           "tableTo": "user",
-          "columnsFrom": [
-            "host_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["host_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -326,23 +308,17 @@
       "indexes": {
         "items_event_id_idx": {
           "name": "items_event_id_idx",
-          "columns": [
-            "event_id"
-          ],
+          "columns": ["event_id"],
           "isUnique": false
         },
         "items_participant_id_idx": {
           "name": "items_participant_id_idx",
-          "columns": [
-            "participant_id"
-          ],
+          "columns": ["participant_id"],
           "isUnique": false
         },
         "items_category_idx": {
           "name": "items_category_idx",
-          "columns": [
-            "category"
-          ],
+          "columns": ["category"],
           "isUnique": false
         }
       },
@@ -351,12 +327,8 @@
           "name": "items_event_id_events_id_fk",
           "tableFrom": "items",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -364,12 +336,8 @@
           "name": "items_participant_id_participants_id_fk",
           "tableFrom": "items",
           "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -453,17 +421,12 @@
       "indexes": {
         "participants_event_user_idx": {
           "name": "participants_event_user_idx",
-          "columns": [
-            "event_id",
-            "user_id"
-          ],
+          "columns": ["event_id", "user_id"],
           "isUnique": false
         },
         "participants_user_id_idx": {
           "name": "participants_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -472,12 +435,8 @@
           "name": "participants_event_id_events_id_fk",
           "tableFrom": "participants",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -485,12 +444,8 @@
           "name": "participants_user_id_user_id_fk",
           "tableFrom": "participants",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -564,23 +519,17 @@
       "indexes": {
         "push_subscriptions_endpoint_unique": {
           "name": "push_subscriptions_endpoint_unique",
-          "columns": [
-            "endpoint"
-          ],
+          "columns": ["endpoint"],
           "isUnique": true
         },
         "push_subscriptions_user_id_idx": {
           "name": "push_subscriptions_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "push_subscriptions_event_id_idx": {
           "name": "push_subscriptions_event_id_idx",
-          "columns": [
-            "event_id"
-          ],
+          "columns": ["event_id"],
           "isUnique": false
         }
       },
@@ -589,12 +538,8 @@
           "name": "push_subscriptions_user_id_user_id_fk",
           "tableFrom": "push_subscriptions",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -602,12 +547,8 @@
           "name": "push_subscriptions_event_id_events_id_fk",
           "tableFrom": "push_subscriptions",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -660,11 +601,7 @@
       "indexes": {
         "sent_reminders_unique_idx": {
           "name": "sent_reminders_unique_idx",
-          "columns": [
-            "event_id",
-            "subscription_id",
-            "kind"
-          ],
+          "columns": ["event_id", "subscription_id", "kind"],
           "isUnique": true
         }
       },
@@ -673,12 +610,8 @@
           "name": "sent_reminders_event_id_events_id_fk",
           "tableFrom": "sent_reminders",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -686,12 +619,8 @@
           "name": "sent_reminders_subscription_id_push_subscriptions_id_fk",
           "tableFrom": "sent_reminders",
           "tableTo": "push_subscriptions",
-          "columnsFrom": [
-            "subscription_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["subscription_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -764,16 +693,12 @@
       "indexes": {
         "session_token_unique": {
           "name": "session_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "isUnique": true
         },
         "session_userId_idx": {
           "name": "session_userId_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -782,12 +707,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -905,16 +826,12 @@
       "indexes": {
         "user_username_unique": {
           "name": "user_username_unique",
-          "columns": [
-            "username"
-          ],
+          "columns": ["username"],
           "isUnique": true
         },
         "user_email_unique": {
           "name": "user_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
@@ -974,9 +891,7 @@
       "indexes": {
         "verification_identifier_idx": {
           "name": "verification_identifier_idx",
-          "columns": [
-            "identifier"
-          ],
+          "columns": ["identifier"],
           "isUnique": false
         }
       },

@@ -14,7 +14,9 @@ function parseTagsJson(raw: string | null | undefined): string[] {
   try {
     const parsed = JSON.parse(raw ?? "[]");
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((t) => (VALID_DIETARY_TAGS as readonly string[]).includes(t));
+    return parsed.filter((t) =>
+      (VALID_DIETARY_TAGS as readonly string[]).includes(t),
+    );
   } catch {
     return [];
   }

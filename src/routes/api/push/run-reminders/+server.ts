@@ -1,9 +1,16 @@
 import type { RequestHandler } from "./$types";
-import { json, error } from "@sveltejs/kit";
-import { env } from "$env/dynamic/private";
-import { runDueReminders } from "$lib/server/push/reminders";
-import type { VapidKeys } from "$lib/server/push/web-push";
-import { log } from "$lib/utils/logger";
+import { error } from "@sveltejs/kit";
+
+import {
+  PUSH_CRON_SECRET,
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY,
+  VAPID_SUBJECT,
+} from "$app/env/private";
+
+import { runDueReminders } from "#lib/server/push/reminders.js";
+import type { VapidKeys } from "#lib/server/push/web-push.js";
+import { log } from "#lib/utils/logger.js";
 
 /**
  * Manually trigger the T-24h reminder run. This is the same logic the cron
@@ -15,7 +22,7 @@ import { log } from "$lib/utils/logger";
  * local testing.
  */
 export const POST: RequestHandler = async ({ request }) => {
-  const secret = env.PUSH_CRON_SECRET;
+  const secret = PUSH_CRON_SECRET;
   if (secret) {
     const auth = request.headers.get("authorization");
     if (auth !== `Bearer ${secret}`) {
@@ -24,9 +31,9 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   const vapid: Partial<VapidKeys> = {
-    publicKey: env.VAPID_PUBLIC_KEY,
-    privateKey: env.VAPID_PRIVATE_KEY,
-    subject: env.VAPID_SUBJECT,
+    publicKey: VAPID_PUBLIC_KEY,
+    privateKey: VAPID_PRIVATE_KEY,
+    subject: VAPID_SUBJECT,
   };
 
   if (!vapid.publicKey || !vapid.privateKey || !vapid.subject) {
@@ -44,5 +51,5 @@ export const POST: RequestHandler = async ({ request }) => {
 
   const result = await runDueReminders(vapid as VapidKeys, nowMs);
   log("info", "Manual reminder run", { ...result });
-  return json(result);
+  return Response.json(result);
 };

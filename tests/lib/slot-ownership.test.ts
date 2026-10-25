@@ -98,9 +98,7 @@ beforeEach(() => {
 describe("createSlot host-only enforcement", () => {
   it("lets the host create a slot", async () => {
     // createSlot first SELECTs the event to read hostUserId.
-    selectMock.mockReturnValueOnce(
-      makeSelect([{ id: 1, hostUserId: HOST }]),
-    );
+    selectMock.mockReturnValueOnce(makeSelect([{ id: 1, hostUserId: HOST }]));
     const ins = { ran: false };
     insertMock.mockReturnValue(makeInsert(ins));
 
@@ -115,9 +113,7 @@ describe("createSlot host-only enforcement", () => {
   });
 
   it("REFUSES a non-host before any write", async () => {
-    selectMock.mockReturnValueOnce(
-      makeSelect([{ id: 1, hostUserId: HOST }]),
-    );
+    selectMock.mockReturnValueOnce(makeSelect([{ id: 1, hostUserId: HOST }]));
     insertMock.mockReturnValue(makeInsert({ ran: false }));
 
     const result = await createSlot({
@@ -133,9 +129,7 @@ describe("createSlot host-only enforcement", () => {
   });
 
   it("rejects a blank label as invalid", async () => {
-    selectMock.mockReturnValueOnce(
-      makeSelect([{ id: 1, hostUserId: HOST }]),
-    );
+    selectMock.mockReturnValueOnce(makeSelect([{ id: 1, hostUserId: HOST }]));
     insertMock.mockReturnValue(makeInsert({ ran: false }));
 
     const result = await createSlot({
@@ -237,7 +231,15 @@ describe("claimSlot — creates an item and prevents over-claiming", () => {
     // 1) SELECT the slot, 2) SELECT count(items) for the slot.
     selectMock
       .mockReturnValueOnce(
-        makeSelect([{ id: 9, eventId: 1, label: "Glaçons", category: null, neededCount: 2 }]),
+        makeSelect([
+          {
+            id: 9,
+            eventId: 1,
+            label: "Glaçons",
+            category: null,
+            neededCount: 2,
+          },
+        ]),
       )
       .mockReturnValueOnce(makeSelect([{ claimed: 0 }]));
     const ins = { ran: false };
@@ -254,7 +256,15 @@ describe("claimSlot — creates an item and prevents over-claiming", () => {
   it("PREVENTS over-claiming: a full slot is refused before any insert", async () => {
     selectMock
       .mockReturnValueOnce(
-        makeSelect([{ id: 9, eventId: 1, label: "Dessert", category: "dessert", neededCount: 2 }]),
+        makeSelect([
+          {
+            id: 9,
+            eventId: 1,
+            label: "Dessert",
+            category: "dessert",
+            neededCount: 2,
+          },
+        ]),
       )
       // Already 2 claims against a needed count of 2 → full.
       .mockReturnValueOnce(makeSelect([{ claimed: 2 }]));

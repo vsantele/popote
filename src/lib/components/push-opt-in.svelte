@@ -1,15 +1,15 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import { Button } from "$lib/components/ui/button"
+  import { Button } from "#lib/components/ui/button/index.js"
   import { Bell, BellOff, BellRing } from "@lucide/svelte"
   import {
     isPushSupported,
     getExistingSubscription,
     subscribeToPush,
     unsubscribeFromPush,
-  } from "$lib/push/client"
-  import { log } from "$lib/utils/logger"
-  import * as m from "$lib/paraglide/messages"
+  } from "#lib/push/client.js"
+  import { log } from "#lib/utils/logger.js"
+  import * as m from "#lib/paraglide/messages.js"
 
   // The public VAPID key (from the layout server load) and an optional event id
   // to scope the subscription. When `vapidPublicKey` is null, push is disabled

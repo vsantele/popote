@@ -1,21 +1,21 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button"
-  import { Badge } from "$lib/components/ui/badge"
-  import { ToggleGroup, ToggleGroupItem } from "$lib/components/ui/toggle-group"
+  import { Button } from "#lib/components/ui/button/index.js"
+  import { Badge } from "#lib/components/ui/badge/index.js"
+  import { ToggleGroup, ToggleGroupItem } from "#lib/components/ui/toggle-group/index.js"
   import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-  } from "$lib/components/ui/dialog"
-  import { Input } from "$lib/components/ui/input"
-  import { Label } from "$lib/components/ui/label"
+  } from "#lib/components/ui/dialog/index.js"
+  import { Input } from "#lib/components/ui/input/index.js"
+  import { Label } from "#lib/components/ui/label/index.js"
   import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-  } from "$lib/components/ui/select"
+  } from "#lib/components/ui/select/index.js"
   import {
     CATEGORIES,
     CATEGORY_ORDER,
@@ -25,15 +25,15 @@
     type ItemCategory,
     type DietaryTag,
     type EventSlot,
-  } from "$lib/types/index"
-  import { computeHeadcount } from "$lib/utils/headcount"
-  import { log } from "$lib/utils/logger"
+  } from "#lib/types/index.js"
+  import { computeHeadcount } from "#lib/utils/headcount.js"
+  import { log } from "#lib/utils/logger.js"
   import { superForm } from "sveltekit-superforms/client"
   import { untrack } from "svelte"
-  import { invalidateAll, goto } from "$app/navigation"
+  import { refreshAll, goto } from "$app/navigation"
   import { page } from "$app/state"
-  import { connectFetchEventStream } from "$lib/realtime/fetch-sse"
-  import { LiveStore } from "$lib/realtime/live-store.svelte"
+  import { connectFetchEventStream } from "#lib/realtime/fetch-sse.js"
+  import { LiveStore } from "#lib/realtime/live-store.svelte.js"
   import {
     RefreshCw,
     Plus,
@@ -47,10 +47,10 @@
     Gift,
     HandHeart,
   } from "@lucide/svelte"
-  import * as m from "$lib/paraglide/messages"
-  import { getLocale, localizeHref } from "$lib/paraglide/runtime"
-  import PushOptIn from "$lib/components/push-opt-in.svelte"
-  import QrDialog from "$lib/components/qr-dialog.svelte"
+  import * as m from "#lib/paraglide/messages.js"
+  import { getLocale, localizeHref } from "#lib/paraglide/runtime.js"
+  import PushOptIn from "#lib/components/push-opt-in.svelte"
+  import QrDialog from "#lib/components/qr-dialog.svelte"
   import type { PageProps } from "./$types"
 
   let { data }: PageProps = $props()
@@ -61,13 +61,13 @@
   )
 
   function setViewMode(newMode: "category" | "person") {
-    const url = new URL(page.url)
+    const url = new URL(page.url.href)
     if (newMode === "category") {
       url.searchParams.delete("view")
     } else {
       url.searchParams.set("view", newMode)
     }
-    goto(url, { replaceState: true, noScroll: true, keepFocus: true })
+    goto(url, { replaceState: true, reset: false })
   }
 
   let dialogOpen = $state(false)
@@ -86,7 +86,7 @@
     onUpdated: async ({ form }) => {
       if (form.valid) {
         dialogOpen = false
-        await invalidateAll()
+        await refreshAll()
       }
     },
   })
@@ -109,7 +109,7 @@
     onUpdated: async ({ form }) => {
       if (form.valid) {
         editDialogOpen = false
-        await invalidateAll()
+        await refreshAll()
       }
     },
   })
@@ -173,7 +173,7 @@
       if (form.valid) {
         deleteDialogOpen = false
         pendingDelete = null
-        await invalidateAll()
+        await refreshAll()
       }
     },
   })
@@ -197,7 +197,7 @@
     onUpdated: async ({ form }) => {
       if (form.valid) {
         rsvpDialogOpen = false
-        await invalidateAll()
+        await refreshAll()
       }
     },
   })
@@ -229,7 +229,7 @@
     onUpdated: async ({ form }) => {
       if (form.valid) {
         createSlotDialogOpen = false
-        await invalidateAll()
+        await refreshAll()
       }
     },
   })
@@ -248,7 +248,7 @@
     onUpdated: async ({ form }) => {
       if (form.valid) {
         editSlotDialogOpen = false
-        await invalidateAll()
+        await refreshAll()
       }
     },
   })
@@ -283,7 +283,7 @@
       if (form.valid) {
         deleteSlotDialogOpen = false
         pendingSlotDelete = null
-        await invalidateAll()
+        await refreshAll()
       }
     },
   })
@@ -305,7 +305,7 @@
     id: "claimSlot",
     onUpdated: async ({ form }) => {
       if (form.valid) {
-        await invalidateAll()
+        await refreshAll()
       }
     },
   })
@@ -322,7 +322,7 @@
   async function handleRefresh() {
     isRefreshing = true
     try {
-      await invalidateAll()
+      await refreshAll()
     } finally {
       isRefreshing = false
     }
@@ -359,7 +359,7 @@
       // Don't refetch while a dialog is open — it would reset in-progress
       // form input. The store will reconcile again on the next signal/poll.
       if (anyDialogOpen()) return
-      await invalidateAll()
+      await refreshAll()
     },
   })
 
@@ -377,7 +377,7 @@
         !document.hidden &&
         !anyDialogOpen()
       ) {
-        invalidateAll()
+        refreshAll()
       }
     }
     window.addEventListener("focus", onFocus)

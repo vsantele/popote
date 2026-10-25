@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types";
-import { getUserEvents } from "$lib/server/db";
+import { getUserEvents } from "#lib/server/db/index.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) {

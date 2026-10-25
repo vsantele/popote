@@ -37,11 +37,11 @@ pnpm db:studio         # void db studio
 
 The npm scripts map directly to the void CLI:
 
-| Script           | Command           | Purpose                                |
-| ---------------- | ----------------- | -------------------------------------- |
-| `pnpm db:migrate`| `void db migrate` | Apply pending migrations to D1         |
-| `pnpm db:push`   | `void db push`    | Push the current schema to D1          |
-| `pnpm db:studio` | `void db studio`  | Open the Drizzle Studio GUI            |
+| Script            | Command           | Purpose                        |
+| ----------------- | ----------------- | ------------------------------ |
+| `pnpm db:migrate` | `void db migrate` | Apply pending migrations to D1 |
+| `pnpm db:push`    | `void db push`    | Push the current schema to D1  |
+| `pnpm db:studio`  | `void db studio`  | Open the Drizzle Studio GUI    |
 
 ## Deployment
 

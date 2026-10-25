@@ -7,7 +7,6 @@
  */
 import { describe, it, expect, vi, beforeAll } from "vite-plus/test";
 import { render, screen } from "@testing-library/svelte";
-import { readable } from "svelte/store";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms";
 import type { SuperValidated } from "sveltekit-superforms";
@@ -16,16 +15,14 @@ import CreatePage from "../../src/routes/create/+page.svelte";
 import JoinPage from "../../src/routes/join/[code]/+page.svelte";
 import { createEventSchema } from "../../src/lib/schemas/event.schema";
 
-vi.mock("$app/stores", () => ({
-  page: readable({ url: new URL("http://localhost/create"), form: undefined }),
-  navigating: readable(null),
-}));
 vi.mock("$app/state", () => ({
-  page: { url: new URL("http://localhost/create") },
+  page: { url: new URL("http://localhost/create"), form: undefined },
+  navigating: null,
 }));
 vi.mock("$app/navigation", () => ({
   goto: vi.fn(),
   invalidateAll: vi.fn(),
+  refreshAll: vi.fn(),
   beforeNavigate: vi.fn(),
   afterNavigate: vi.fn(),
 }));

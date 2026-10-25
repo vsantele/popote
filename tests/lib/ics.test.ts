@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vite-plus/test";
-import { buildIcs, escapeIcsText, formatIcsDate } from "../../src/lib/server/ics";
+import {
+  buildIcs,
+  escapeIcsText,
+  formatIcsDate,
+} from "../../src/lib/server/ics";
 
 const CRLF = "\r\n";
 

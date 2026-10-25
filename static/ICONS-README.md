@@ -27,4 +27,4 @@ node scripts/generate-icons.mjs
 
 - **Brand Icon**: Popote cooking pot (`BrandMark`) with steam, handles, lid, and shine.
 - **Theme Color**: #FF6B35 (terracotta / warm orange)
-- **Background Color**: #ffffff (or #fdf5e9 cream)
+- **Background Color**: #ffffff

@@ -11,7 +11,6 @@
 import { describe, it, expect, vi, beforeAll } from "vite-plus/test";
 import { render, screen } from "@testing-library/svelte";
 import userEvent from "@testing-library/user-event";
-import { readable } from "svelte/store";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms";
 import {
@@ -29,18 +28,15 @@ import {
 import EventPage from "../../src/routes/e/[code]/+page.svelte";
 import type { ComponentProps } from "svelte";
 
-vi.mock("$app/stores", () => ({
-  page: readable({ url: new URL("http://localhost/e/ABC123"), form: undefined }),
-  navigating: readable(null),
-}));
-
 vi.mock("$app/state", () => ({
-  page: { url: new URL("http://localhost/e/ABC123") },
+  page: { url: new URL("http://localhost/e/ABC123"), form: undefined },
+  navigating: null,
 }));
 
 vi.mock("$app/navigation", () => ({
   goto: vi.fn(),
   invalidateAll: vi.fn(),
+  refreshAll: vi.fn(),
   beforeNavigate: vi.fn(),
   afterNavigate: vi.fn(),
 }));
@@ -68,12 +64,14 @@ beforeAll(async () => {
   claimSlotForm = await superValidate(zod4(claimSlotSchema()));
 });
 
-function makeItem(overrides: Partial<{
-  id: string;
-  name: string;
-  participant: string;
-  dietary_tags: string[];
-}> = {}) {
+function makeItem(
+  overrides: Partial<{
+    id: string;
+    name: string;
+    participant: string;
+    dietary_tags: string[];
+  }> = {},
+) {
   return {
     id: "10",
     event: "1",
@@ -101,8 +99,26 @@ function renderEvent(items: ReturnType<typeof makeItem>[] = []) {
   };
 
   const participants = [
-    { id: "p1", event: "1", name: "Nico", user_id: HOST, is_host: true, rsvp: "going", extra_guests: 0, created: "" },
-    { id: "p2", event: "1", name: "Moi", user_id: VIEWER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
+    {
+      id: "p1",
+      event: "1",
+      name: "Nico",
+      user_id: HOST,
+      is_host: true,
+      rsvp: "going",
+      extra_guests: 0,
+      created: "",
+    },
+    {
+      id: "p2",
+      event: "1",
+      name: "Moi",
+      user_id: VIEWER,
+      is_host: false,
+      rsvp: "going",
+      extra_guests: 0,
+      created: "",
+    },
   ];
 
   const currentParticipant = participants.find((p) => p.user_id === VIEWER);
@@ -138,9 +154,7 @@ function renderEvent(items: ReturnType<typeof makeItem>[] = []) {
 
 describe("Dietary tag chips on the board", () => {
   it("renders tag chips for an item that has dietary tags", () => {
-    renderEvent([
-      makeItem({ dietary_tags: ["vegetarian", "gluten-free"] }),
-    ]);
+    renderEvent([makeItem({ dietary_tags: ["vegetarian", "gluten-free"] })]);
 
     // Both tags should appear as chip elements (French labels, base locale)
     expect(screen.getByText("Végétarien")).toBeInTheDocument();
@@ -155,9 +169,7 @@ describe("Dietary tag chips on the board", () => {
   });
 
   it("renders chip elements with data-dietary-tag attribute", () => {
-    renderEvent([
-      makeItem({ dietary_tags: ["vegan", "halal"] }),
-    ]);
+    renderEvent([makeItem({ dietary_tags: ["vegan", "halal"] })]);
 
     const veganChip = document.querySelector('[data-dietary-tag="vegan"]');
     const halalChip = document.querySelector('[data-dietary-tag="halal"]');
@@ -168,7 +180,12 @@ describe("Dietary tag chips on the board", () => {
   it("renders items with no tags alongside items with tags", () => {
     renderEvent([
       makeItem({ id: "10", name: "Plat végé", dietary_tags: ["vegetarian"] }),
-      makeItem({ id: "11", name: "Plat normal", participant: "p1", dietary_tags: [] }),
+      makeItem({
+        id: "11",
+        name: "Plat normal",
+        participant: "p1",
+        dietary_tags: [],
+      }),
     ]);
 
     expect(screen.getByText("Plat végé")).toBeInTheDocument();
@@ -233,9 +250,7 @@ describe("Add item dialog tag picker", () => {
 describe("Edit item dialog tag picker", () => {
   it("pre-fills the edit dialog with the item's existing dietary tags", async () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
-    renderEvent([
-      makeItem({ dietary_tags: ["vegan", "contains-nuts"] }),
-    ]);
+    renderEvent([makeItem({ dietary_tags: ["vegan", "contains-nuts"] })]);
 
     // Click the edit button for the item (the viewer owns item p2)
     const editBtn = screen.getByLabelText("Modifier");
@@ -249,7 +264,9 @@ describe("Edit item dialog tag picker", () => {
 
     const pressedLabels = pressedBtns.map((b) => b.textContent?.trim());
     expect(pressedLabels.some((l) => l?.includes("Vegan"))).toBe(true);
-    expect(pressedLabels.some((l) => l?.includes("Contient des noix"))).toBe(true);
+    expect(pressedLabels.some((l) => l?.includes("Contient des noix"))).toBe(
+      true,
+    );
   });
 });
 
@@ -273,8 +290,26 @@ describe("Dietary tag picker hidden for non-food categories", () => {
       created: new Date().toISOString(),
     };
     const participants = [
-      { id: "p1", event: "1", name: "Nico", user_id: HOST, is_host: true, rsvp: "going", extra_guests: 0, created: "" },
-      { id: "p2", event: "1", name: "Moi", user_id: VIEWER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
+      {
+        id: "p1",
+        event: "1",
+        name: "Nico",
+        user_id: HOST,
+        is_host: true,
+        rsvp: "going",
+        extra_guests: 0,
+        created: "",
+      },
+      {
+        id: "p2",
+        event: "1",
+        name: "Moi",
+        user_id: VIEWER,
+        is_host: false,
+        rsvp: "going",
+        extra_guests: 0,
+        created: "",
+      },
     ];
     const currentParticipant = participants.find((p) => p.user_id === VIEWER);
     const props = {
@@ -306,7 +341,9 @@ describe("Dietary tag picker hidden for non-food categories", () => {
     // Dietary tag label must NOT be present for jeux category
     expect(screen.queryByText("Tags alimentaires")).not.toBeInTheDocument();
     // None of the tag buttons should appear
-    expect(screen.queryByRole("button", { name: /Végétarien/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Végétarien/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("hides the dietary-tag picker when add dialog opens with 'autre' category", async () => {
@@ -327,8 +364,26 @@ describe("Dietary tag picker hidden for non-food categories", () => {
       created: new Date().toISOString(),
     };
     const participants = [
-      { id: "p1", event: "1", name: "Nico", user_id: HOST, is_host: true, rsvp: "going", extra_guests: 0, created: "" },
-      { id: "p2", event: "1", name: "Moi", user_id: VIEWER, is_host: false, rsvp: "going", extra_guests: 0, created: "" },
+      {
+        id: "p1",
+        event: "1",
+        name: "Nico",
+        user_id: HOST,
+        is_host: true,
+        rsvp: "going",
+        extra_guests: 0,
+        created: "",
+      },
+      {
+        id: "p2",
+        event: "1",
+        name: "Moi",
+        user_id: VIEWER,
+        is_host: false,
+        rsvp: "going",
+        extra_guests: 0,
+        created: "",
+      },
     ];
     const currentParticipant = participants.find((p) => p.user_id === VIEWER);
     const props = {
@@ -369,6 +424,8 @@ describe("Dietary tag picker hidden for non-food categories", () => {
 
     // Dietary tags section should be visible for food categories
     expect(screen.getByText("Tags alimentaires")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Végétarien/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Végétarien/i }),
+    ).toBeInTheDocument();
   });
 });

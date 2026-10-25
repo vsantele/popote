@@ -23,7 +23,7 @@
  * directly) so that the Void Vite plugin's virtual module — which wires the
  * D1 binding and the user schema into the Drizzle instance — is used in both
  * dev and production. Schemas come from `@schema` (the canonical Void alias)
- * rather than the re-export barrel at `$lib/server/db/schema`, following the
+ * rather than the re-export barrel at `#lib/server/db/schema.js`, following the
  * same pattern as the rest of the data layer (`db/index.ts`, `auth.ts`, …).
  * Mixing import sources can result in `db` receiving column references from a
  * different module instance than it was initialised with, which causes silent

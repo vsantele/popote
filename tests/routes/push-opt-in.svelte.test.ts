@@ -69,7 +69,9 @@ describe("PushOptIn", () => {
       props: { vapidPublicKey: KEY },
     });
     await waitFor(() => {
-      expect(container.querySelector('[data-push-state="idle"]')).not.toBeNull();
+      expect(
+        container.querySelector('[data-push-state="idle"]'),
+      ).not.toBeNull();
     });
     expect(
       screen.getByRole("button", {

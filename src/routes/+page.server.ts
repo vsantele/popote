@@ -1,11 +1,11 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { getUserEvents } from "$lib/server/db";
+import { getUserEvents } from "#lib/server/db/index.js";
 import { z } from "zod";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms/server";
 import { fail, redirect } from "@sveltejs/kit";
-import * as m from "$lib/paraglide/messages";
-import { localizeHref } from "$lib/paraglide/runtime";
+import * as m from "#lib/paraglide/messages.js";
+import { localizeHref } from "#lib/paraglide/runtime.js";
 
 function shareCodeSchema() {
   return z.object({

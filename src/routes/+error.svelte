@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { getErrorPageVariant } from "$lib/error-page";
-  import * as m from "$lib/paraglide/messages";
-  import { localizeHref } from "$lib/paraglide/runtime";
+  import { getErrorPageVariant } from "#lib/error-page.js";
+  import * as m from "#lib/paraglide/messages.js";
+  import { localizeHref } from "#lib/paraglide/runtime.js";
   import { page } from "$app/state";
 
   // SvelteKit does NOT pass status/error as props to +error.svelte — they live

@@ -1,25 +1,25 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button"
+  import { Button } from "#lib/components/ui/button/index.js"
   import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card"
+  } from "#lib/components/ui/card/index.js"
   import {
     Tabs,
     TabsList,
     TabsTrigger,
     TabsContent,
-  } from "$lib/components/ui/tabs"
-  import { Input } from "$lib/components/ui/input"
-  import { Label } from "$lib/components/ui/label"
+  } from "#lib/components/ui/tabs/index.js"
+  import { Input } from "#lib/components/ui/input/index.js"
+  import { Label } from "#lib/components/ui/label/index.js"
   import { superForm } from "sveltekit-superforms/client"
-  import * as m from "$lib/paraglide/messages"
-  import { localizeHref } from "$lib/paraglide/runtime"
+  import * as m from "#lib/paraglide/messages.js"
+  import { localizeHref } from "#lib/paraglide/runtime.js"
   import type { PageProps } from "./$types"
-  import LocaleSwitcher from "$lib/components/locale-switcher.svelte"
-  import BrandMark from "$lib/components/brand-mark.svelte"
+  import LocaleSwitcher from "#lib/components/locale-switcher.svelte"
+  import BrandMark from "#lib/components/brand-mark.svelte"
 
   let { data }: PageProps = $props()
 

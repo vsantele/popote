@@ -1,5 +1,5 @@
 import { z } from "zod";
-import * as m from "$lib/paraglide/messages";
+import * as m from "#lib/paraglide/messages.js";
 
 export function createEventSchema() {
   return z.object({

@@ -4,10 +4,10 @@
     DialogContent,
     DialogHeader,
     DialogTitle,
-  } from "$lib/components/ui/dialog"
-  import { Button } from "$lib/components/ui/button"
+  } from "#lib/components/ui/dialog/index.js"
+  import { Button } from "#lib/components/ui/button/index.js"
   import { QrCode } from "@lucide/svelte"
-  import * as m from "$lib/paraglide/messages"
+  import * as m from "#lib/paraglide/messages.js"
   import QRCodeLib from "qrcode-svg"
 
   interface Props {

@@ -1,3 +1,4 @@
+import adapter from "@sveltejs/adapter-cloudflare";
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { voidPlugin } from "void";
@@ -34,10 +35,27 @@ export default defineConfig({
   plugins: [
     voidPlugin({ persistTo: ".void" }),
     tailwindcss(),
-    sveltekit(),
+    sveltekit({
+      compilerOptions: { experimental: { async: true } },
+      // adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
+      // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
+      // See https://svelte.dev/docs/kit/adapters for more information about adapters.
+      adapter: adapter({
+        config: "./.void-wrangler.jsonc",
+        platformProxy: { configPath: "./.void-wrangler.jsonc" },
+      }),
+
+      serviceWorker: {
+        register: false /* Manual registration in layout for better control */,
+      },
+      experimental: { remoteFunctions: true },
+      tracing: { server: true },
+    }),
+
     paraglideVitePlugin({
       project: "./project.inlang",
       outdir: "./src/lib/paraglide",
+      emitTsDeclarations: true,
       strategy: ["url", "cookie", "baseLocale"],
     }),
   ],
@@ -55,7 +73,7 @@ export default defineConfig({
   // `vitest.config.ts`. A client/server-aware split mirrors `sv add vitest`:
   // component / browser-facing tests run in jsdom, pure server-logic tests run
   // in node. Each project `extends` this config so the real SvelteKit plugin
-  // pipeline (and thus `$app/*`, `$lib`, paraglide) is reused.
+  // pipeline (and thus `$app/*`, `#lib`, paraglide) is reused.
   test: {
     coverage: {
       provider: "v8",

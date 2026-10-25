@@ -1,0 +1,15 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "dev.vsantele.popote.twa",
+      "sha256_cert_fingerprints": [
+        "55:16:7C:42:BE:42:22:35:B9:C2:14:C0:07:A3:5A:E4:BD:E4:58:35:81:6C:33:AF:D5:7A:A0:D9:9F:A0:32:DF",
+        "60:DF:23:BF:B2:CA:ED:6C:D3:02:51:19:07:92:47:EC:CB:0F:4C:17:03:83:FB:90:71:36:0D:8C:2C:29:63:BE",
+        "17:B5:46:FB:66:4E:4E:F8:4A:33:4F:93:66:70:63:CD:BF:42:89:EC:56:71:ED:AE:6C:6D:91:05:BD:F4:26:68",
+        "FE:70:33:AC:58:06:B6:4B:63:01:9B:62:79:11:BF:59:CC:0C:86:CE:DC:19:57:95:24:72:1E:6B:3E:A5:20:57"
+      ]
+    }
+  }
+]

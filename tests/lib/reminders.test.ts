@@ -6,7 +6,15 @@ import { describe, it, expect, vi } from "vite-plus/test";
 vi.mock("void/db", async () => {
   const actual =
     await vi.importActual<typeof import("drizzle-orm")>("drizzle-orm");
-  return { db: {}, eq: actual.eq, and: actual.and, gte: actual.gte, lte: actual.lte, isNull: actual.isNull, or: actual.or };
+  return {
+    db: {},
+    eq: actual.eq,
+    and: actual.and,
+    gte: actual.gte,
+    lte: actual.lte,
+    isNull: actual.isNull,
+    or: actual.or,
+  };
 });
 vi.mock("../../db/schema", () => ({
   events: {},

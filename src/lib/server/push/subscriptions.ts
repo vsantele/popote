@@ -26,7 +26,11 @@ export async function saveSubscription(params: {
 }): Promise<SaveResult> {
   const { userId, subscription, eventId = null } = params;
 
-  if (!subscription?.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) {
+  if (
+    !subscription?.endpoint ||
+    !subscription.keys?.p256dh ||
+    !subscription.keys?.auth
+  ) {
     return { ok: false };
   }
 

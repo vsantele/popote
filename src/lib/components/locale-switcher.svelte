@@ -1,8 +1,8 @@
 <script lang="ts">
   import { page } from "$app/state"
-  import { Button } from "$lib/components/ui/button"
-  import { getLocale, locales, localizeHref } from "$lib/paraglide/runtime"
-  import * as m from "$lib/paraglide/messages"
+  import { Button } from "#lib/components/ui/button/index.js"
+  import { getLocale, locales, localizeHref } from "#lib/paraglide/runtime.js"
+  import * as m from "#lib/paraglide/messages.js"
 
   const labels: Record<string, string> = {
     fr: m.locale_label_fr(),

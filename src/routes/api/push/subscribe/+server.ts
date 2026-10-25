@@ -1,7 +1,7 @@
 import type { RequestHandler } from "./$types";
-import { json, error } from "@sveltejs/kit";
-import { saveSubscription } from "$lib/server/push/subscriptions";
-import { log } from "$lib/utils/logger";
+import { error } from "@sveltejs/kit";
+import { saveSubscription } from "#lib/server/push/subscriptions.js";
+import { log } from "#lib/utils/logger.js";
 
 /**
  * Opt-in: store (idempotently) the caller's browser push subscription. The
@@ -42,5 +42,5 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     created: result.created,
   });
 
-  return json({ ok: true, created: result.created });
+  return Response.json({ ok: true, created: result.created });
 };

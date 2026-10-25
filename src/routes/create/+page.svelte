@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button"
+  import { Button } from "#lib/components/ui/button/index.js"
   import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card"
-  import { Input } from "$lib/components/ui/input"
-  import { Label } from "$lib/components/ui/label"
+  } from "#lib/components/ui/card/index.js"
+  import { Input } from "#lib/components/ui/input/index.js"
+  import { Label } from "#lib/components/ui/label/index.js"
   import { superForm } from "sveltekit-superforms/client"
-  import * as m from "$lib/paraglide/messages"
-  import { localizeHref } from "$lib/paraglide/runtime"
-  import BrandMark from "$lib/components/brand-mark.svelte"
+  import * as m from "#lib/paraglide/messages.js"
+  import { localizeHref } from "#lib/paraglide/runtime.js"
+  import BrandMark from "#lib/components/brand-mark.svelte"
   import type { PageProps } from "./$types"
 
   let { data }: PageProps = $props()

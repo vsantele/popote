@@ -1,8 +1,8 @@
 <script lang="ts">
-  import * as m from "$lib/paraglide/messages"
-  import { localizeHref } from "$lib/paraglide/runtime"
-  import LocaleSwitcher from "$lib/components/locale-switcher.svelte"
-  import BrandMark from "$lib/components/brand-mark.svelte"
+  import * as m from "#lib/paraglide/messages.js"
+  import { localizeHref } from "#lib/paraglide/runtime.js"
+  import LocaleSwitcher from "#lib/components/locale-switcher.svelte"
+  import BrandMark from "#lib/components/brand-mark.svelte"
 
   let { children } = $props()
 </script>

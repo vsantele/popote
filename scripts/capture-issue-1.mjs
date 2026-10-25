@@ -9,7 +9,9 @@ import { mkdirSync } from "node:fs";
 const base = process.argv[2] ?? "http://localhost:5173";
 const code = process.argv[3];
 if (!code) {
-  console.error("usage: node scripts/capture-issue-1.mjs <baseUrl> <shareCode>");
+  console.error(
+    "usage: node scripts/capture-issue-1.mjs <baseUrl> <shareCode>",
+  );
   process.exit(1);
 }
 const outDir = "docs/screenshots/issue-1";
@@ -20,7 +22,9 @@ const eventUrl = `${base}/e/${code}`;
 async function waitStatus(page, status, timeout = 15000) {
   await page.waitForFunction(
     (s) =>
-      document.querySelector("[data-live-status]")?.getAttribute("data-live-status") === s,
+      document
+        .querySelector("[data-live-status]")
+        ?.getAttribute("data-live-status") === s,
     status,
     { timeout },
   );
@@ -39,8 +43,14 @@ async function openBoard(page, name) {
 const browser = await chromium.launch();
 try {
   // Two separate contexts = two separate guests (separate cookies/sessions).
-  const ctxA = await browser.newContext({ locale: "fr-FR", viewport: { width: 430, height: 900 } });
-  const ctxB = await browser.newContext({ locale: "fr-FR", viewport: { width: 430, height: 900 } });
+  const ctxA = await browser.newContext({
+    locale: "fr-FR",
+    viewport: { width: 430, height: 900 },
+  });
+  const ctxB = await browser.newContext({
+    locale: "fr-FR",
+    viewport: { width: 430, height: 900 },
+  });
   const a = await ctxA.newPage();
   const b = await ctxB.newPage();
 
@@ -63,7 +73,9 @@ try {
   // Session A: WITHOUT any manual refresh, the item should arrive live.
   await a.waitForSelector("text=Salade César", { timeout: 10000 });
   await a.screenshot({ path: `${outDir}/03-session-a-live-update.png` });
-  console.log("captured 03-session-a-live-update.png (appeared live in A, no refresh)");
+  console.log(
+    "captured 03-session-a-live-update.png (appeared live in A, no refresh)",
+  );
 
   await browser.close();
   console.log("done");

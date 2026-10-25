@@ -1,15 +1,15 @@
 import type { PageServerLoad, Actions } from "./$types";
 import { superValidate } from "sveltekit-superforms/server";
 import { fail, redirect } from "@sveltejs/kit";
-import { createEventSchema } from "$lib/schemas/event.schema";
+import { createEventSchema } from "#lib/schemas/event.schema.js";
 import { db } from "void/db";
-import { events, participants } from "$lib/server/db/schema";
-import { generateUniqueShareCode } from "$lib/server/db/utils";
-import { log } from "$lib/utils/logger";
+import { events, participants } from "#lib/server/db/schema.js";
+import { generateUniqueShareCode } from "#lib/server/db/utils.js";
+import { log } from "#lib/utils/logger.js";
 import { zod4 } from "sveltekit-superforms/adapters";
 
-import * as m from "$lib/paraglide/messages";
-import { localizeHref } from "$lib/paraglide/runtime";
+import * as m from "#lib/paraglide/messages.js";
+import { localizeHref } from "#lib/paraglide/runtime.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
   const form = await superValidate(zod4(createEventSchema()));

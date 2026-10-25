@@ -1,6 +1,6 @@
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "void/db";
-import { events, participants, items } from "$lib/server/db/schema";
+import { events, participants, items } from "#lib/server/db/schema.js";
 import { and, eq } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms/server";
@@ -8,14 +8,14 @@ import {
   addItemSchema,
   editItemSchema,
   deleteItemSchema,
-} from "$lib/schemas/item.schema";
-import { rsvpSchema } from "$lib/schemas/rsvp.schema";
+} from "#lib/schemas/item.schema.js";
+import { rsvpSchema } from "#lib/schemas/rsvp.schema.js";
 import {
   createSlotSchema,
   editSlotSchema,
   deleteSlotSchema,
   claimSlotSchema,
-} from "$lib/schemas/slot.schema";
+} from "#lib/schemas/slot.schema.js";
 import {
   updateItem,
   deleteItem,
@@ -25,11 +25,11 @@ import {
   updateSlot,
   deleteSlot,
   claimSlot,
-} from "$lib/server/db";
-import { log } from "$lib/utils/logger";
+} from "#lib/server/db/index.js";
+import { log } from "#lib/utils/logger.js";
 import { zod4 } from "sveltekit-superforms/adapters";
-import { VALID_DIETARY_TAGS } from "$lib/types/index";
-import type { DietaryTag, ItemCategory } from "$lib/types/index";
+import { VALID_DIETARY_TAGS } from "#lib/types/index.js";
+import type { DietaryTag, ItemCategory } from "#lib/types/index.js";
 
 // Item categories reused for slots. Mirrors VALID_CATEGORIES in the schema;
 // kept as a local const so the page-server module needn't import server-only
@@ -57,8 +57,8 @@ function parseDietaryTagsJson(raw: string | null | undefined): DietaryTag[] {
   }
 }
 
-import * as m from "$lib/paraglide/messages";
-import { localizeHref } from "$lib/paraglide/runtime";
+import * as m from "#lib/paraglide/messages.js";
+import { localizeHref } from "#lib/paraglide/runtime.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const shareCode = params.code.toUpperCase();

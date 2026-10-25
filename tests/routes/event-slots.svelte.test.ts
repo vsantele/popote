@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeAll } from "vite-plus/test";
 import { render, screen } from "@testing-library/svelte";
-import { readable } from "svelte/store";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms";
 import {
@@ -18,21 +17,18 @@ import {
 import EventPage from "../../src/routes/e/[code]/+page.svelte";
 import type { ComponentProps } from "svelte";
 
-vi.mock("$app/stores", () => ({
-  page: readable({
+vi.mock("$app/state", () => ({
+  page: {
     url: new URL("http://localhost/e/ABC123"),
     form: undefined,
-  }),
-  navigating: readable(null),
-}));
-
-vi.mock("$app/state", () => ({
-  page: { url: new URL("http://localhost/e/ABC123") },
+  },
+  navigating: null,
 }));
 
 vi.mock("$app/navigation", () => ({
   goto: vi.fn(),
   invalidateAll: vi.fn(),
+  refreshAll: vi.fn(),
   beforeNavigate: vi.fn(),
   afterNavigate: vi.fn(),
 }));

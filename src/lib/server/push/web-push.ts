@@ -26,7 +26,10 @@ export function base64UrlEncode(bytes: Uint8Array): string {
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 // A Uint8Array explicitly backed by a (non-shared) ArrayBuffer. The DOM lib's
@@ -85,7 +88,9 @@ async function importVapidSigningKey(keys: VapidKeys): Promise<CryptoKey> {
   const publicBytes = base64UrlDecode(keys.publicKey);
   // Uncompressed point: 0x04 || X(32) || Y(32)
   if (publicBytes.length !== 65 || publicBytes[0] !== 0x04) {
-    throw new Error("VAPID public key must be a 65-byte uncompressed P-256 point");
+    throw new Error(
+      "VAPID public key must be a 65-byte uncompressed P-256 point",
+    );
   }
   const x = base64UrlEncode(publicBytes.slice(1, 33));
   const y = base64UrlEncode(publicBytes.slice(33, 65));
@@ -231,18 +236,8 @@ export async function encryptPayload(
   const ikm = await hkdf(authSecret, sharedSecret, keyInfo, 32);
 
   // Step 2 (RFC 8188 §2.2): derive the Content-Encryption Key and nonce.
-  const cek = await hkdf(
-    salt,
-    ikm,
-    utf8("Content-Encoding: aes128gcm\0"),
-    16,
-  );
-  const nonce = await hkdf(
-    salt,
-    ikm,
-    utf8("Content-Encoding: nonce\0"),
-    12,
-  );
+  const cek = await hkdf(salt, ikm, utf8("Content-Encoding: aes128gcm\0"), 16);
+  const nonce = await hkdf(salt, ikm, utf8("Content-Encoding: nonce\0"), 12);
 
   // Plaintext is padded with a single 0x02 delimiter (last record).
   const plaintext = concat(utf8(payload), new Uint8Array([0x02]));
@@ -299,7 +294,10 @@ export async function buildPushRequest(
   ttlSeconds = 24 * 60 * 60,
 ): Promise<Request> {
   const body = await encryptPayload(payload, target.keys);
-  const jwt = await createVapidJwt(vapid, audienceFromEndpoint(target.endpoint));
+  const jwt = await createVapidJwt(
+    vapid,
+    audienceFromEndpoint(target.endpoint),
+  );
 
   return new Request(target.endpoint, {
     method: "POST",

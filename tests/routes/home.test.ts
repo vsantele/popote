@@ -1,31 +1,24 @@
 import { describe, it, expect, vi, beforeAll } from "vite-plus/test";
 import { render, screen } from "@testing-library/svelte";
 import userEvent from "@testing-library/user-event";
-import { readable } from "svelte/store";
 import { z } from "zod";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms";
 import type { SuperValidated } from "sveltekit-superforms";
 import HomePage from "../../src/routes/+page.svelte";
 
-// `superForm` (used inside the page) reads the SvelteKit navigation/page
-// stores and calls navigation helpers. Outside a running SvelteKit app the real
-// `page` store throws on URL resolution, so we provide minimal stand-ins for
-// exactly the exports superForm consumes.
-vi.mock("$app/stores", () => ({
-  page: readable({ url: new URL("http://localhost/"), form: undefined }),
-  navigating: readable(null),
-}));
-
-// The locale switcher reads `page.url.pathname` from `$app/state`; provide a
-// real URL so paraglide's `localizeHref`/`resolve` get an absolute pathname.
+// `superForm` and the locale switcher read `page` and `navigating` from
+// `$app/state` and call navigation helpers. Outside a running SvelteKit app the
+// real `page` state throws on URL resolution, so we provide minimal stand-ins.
 vi.mock("$app/state", () => ({
-  page: { url: new URL("http://localhost/") },
+  page: { url: new URL("http://localhost/"), form: undefined },
+  navigating: null,
 }));
 
 vi.mock("$app/navigation", () => ({
   goto: vi.fn(),
   invalidateAll: vi.fn(),
+  refreshAll: vi.fn(),
   beforeNavigate: vi.fn(),
   afterNavigate: vi.fn(),
 }));

@@ -4,12 +4,13 @@
  * by the cron job and the manual trigger endpoint.
  */
 import { db, eq, and, gte, lte, isNull, or } from "void/db";
-import { events, participants, pushSubscriptions, sentReminders } from "../../../../db/schema";
 import {
-  sendWebPush,
-  type VapidKeys,
-  type WebPushTarget,
-} from "./web-push";
+  events,
+  participants,
+  pushSubscriptions,
+  sentReminders,
+} from "../../../../db/schema";
+import { sendWebPush, type VapidKeys, type WebPushTarget } from "./web-push";
 import { deleteSubscriptionByEndpoint } from "./subscriptions";
 
 export interface ReminderWindow {
@@ -93,10 +94,7 @@ export async function runDueReminders(
     })
     .from(events)
     .where(
-      and(
-        gte(events.date, new Date(fromMs)),
-        lte(events.date, new Date(toMs)),
-      ),
+      and(gte(events.date, new Date(fromMs)), lte(events.date, new Date(toMs))),
     );
 
   const result: RunRemindersResult = {

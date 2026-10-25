@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vite-plus/test";
-import { signInErrorKey, signUpErrorKey } from "../../src/lib/server/auth-error";
+import {
+  signInErrorKey,
+  signUpErrorKey,
+} from "../../src/lib/server/auth-error";
 
 /**
  * Tests for the auth error-code → semantic key mapping used in

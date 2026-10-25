@@ -1,5 +1,5 @@
 import { z } from "zod";
-import * as m from "$lib/paraglide/messages";
+import * as m from "#lib/paraglide/messages.js";
 
 // A slot's category reuses the item categories, but is OPTIONAL: a need like
 // "ice" or "plates" has no course. An empty string from the form is coerced to

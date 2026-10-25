@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button"
-  import { Card, CardContent } from "$lib/components/ui/card"
-  import * as m from "$lib/paraglide/messages"
-  import { getLocale, localizeHref } from "$lib/paraglide/runtime"
+  import { Button } from "#lib/components/ui/button/index.js"
+  import { Card, CardContent } from "#lib/components/ui/card/index.js"
+  import * as m from "#lib/paraglide/messages.js"
+  import { getLocale, localizeHref } from "#lib/paraglide/runtime.js"
   import type { PageProps } from "./$types"
 
   let { data }: PageProps = $props()

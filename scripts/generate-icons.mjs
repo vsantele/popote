@@ -7,7 +7,13 @@ const staticDir = path.join(rootDir, "static");
 const srcAssetsDir = path.join(rootDir, "src", "lib", "assets");
 
 // Base pot SVG markup (viewBox 0 0 80 80)
-function getSvg({ withBackground = false, bgColor = "#ffffff", rounded = 0, scale = 1, offsetY = 0 } = {}) {
+function getSvg({
+  withBackground = false,
+  bgColor = "#ffffff",
+  rounded = 0,
+  scale = 1,
+  offsetY = 0,
+} = {}) {
   const potContent = `
   <g transform="translate(${40 * (1 - scale)}, ${40 * (1 - scale) + offsetY}) scale(${scale})">
     <!-- steam -->
@@ -78,16 +84,34 @@ fs.writeFileSync(path.join(staticDir, "favicon.svg"), transparentSvg);
 
 // 2. Generate maskable SVG (safe zone: scale 0.72 inside 80x80 box with theme background)
 // Safe zone for maskable icon is center 80% circle (radius 40% of canvas)
-const maskableSvg = getSvg({ withBackground: true, bgColor: "#FF6B35", rounded: 0, scale: 0.72, offsetY: 2 });
+const maskableSvg = getSvg({
+  withBackground: true,
+  bgColor: "#ffffff",
+  rounded: 0,
+  scale: 0.72,
+  offsetY: 2,
+});
 fs.writeFileSync(path.join(staticDir, "icon-maskable.svg"), maskableSvg);
 
 // 3. Generate standard PWA SVG icons (icon-192.svg and icon-512.svg) with theme background and rounded squircle or transparent
-const pwaSvg = getSvg({ withBackground: true, bgColor: "#FF6B35", rounded: 16, scale: 0.8, offsetY: 2 });
+const pwaSvg = getSvg({
+  withBackground: true,
+  bgColor: "#ffffff",
+  rounded: 16,
+  scale: 0.8,
+  offsetY: 2,
+});
 fs.writeFileSync(path.join(staticDir, "icon-192.svg"), pwaSvg);
 fs.writeFileSync(path.join(staticDir, "icon-512.svg"), pwaSvg);
 
 // 4. Apple Touch Icon SVG (180x180, solid warm background)
-const appleTouchSvg = getSvg({ withBackground: true, bgColor: "#fdf5e9", rounded: 0, scale: 0.75, offsetY: 2 });
+const appleTouchSvg = getSvg({
+  withBackground: true,
+  bgColor: "#ffffff",
+  rounded: 0,
+  scale: 0.75,
+  offsetY: 2,
+});
 fs.writeFileSync(path.join(staticDir, "apple-touch-icon.svg"), appleTouchSvg);
 
 // Temp files for rasterizing
@@ -123,26 +147,46 @@ console.log("Generating PNGs with ImageMagick...");
 
 try {
   // favicon PNGs
-  execSync(`magick -density 300 -background none "${tempTransparentSvg}" -resize 16x16 "${path.join(staticDir, "favicon-16x16.png")}"`);
-  execSync(`magick -density 300 -background none "${tempTransparentSvg}" -resize 32x32 "${path.join(staticDir, "favicon-32x32.png")}"`);
-  execSync(`magick -density 300 -background none "${tempTransparentSvg}" -resize 48x48 "${path.join(staticDir, "favicon-48x48.png")}"`);
-  execSync(`magick -density 300 -background none "${tempTransparentSvg}" -resize 192x192 "${path.join(staticDir, "favicon.png")}"`);
+  execSync(
+    `magick -density 300 -background none "${tempTransparentSvg}" -resize 16x16 "${path.join(staticDir, "favicon-16x16.png")}"`,
+  );
+  execSync(
+    `magick -density 300 -background none "${tempTransparentSvg}" -resize 32x32 "${path.join(staticDir, "favicon-32x32.png")}"`,
+  );
+  execSync(
+    `magick -density 300 -background none "${tempTransparentSvg}" -resize 48x48 "${path.join(staticDir, "favicon-48x48.png")}"`,
+  );
+  execSync(
+    `magick -density 300 -background none "${tempTransparentSvg}" -resize 192x192 "${path.join(staticDir, "favicon.png")}"`,
+  );
 
   // favicon.ico (multi-size: 16, 32, 48)
-  execSync(`magick "${path.join(staticDir, "favicon-16x16.png")}" "${path.join(staticDir, "favicon-32x32.png")}" "${path.join(staticDir, "favicon-48x48.png")}" "${path.join(staticDir, "favicon.ico")}"`);
+  execSync(
+    `magick "${path.join(staticDir, "favicon-16x16.png")}" "${path.join(staticDir, "favicon-32x32.png")}" "${path.join(staticDir, "favicon-48x48.png")}" "${path.join(staticDir, "favicon.ico")}"`,
+  );
 
   // PWA standard icons
   // 1. icon-192.png (any)
-  execSync(`magick -density 300 -background none "${tempTransparentSvg}" -resize 192x192 "${path.join(staticDir, "icon-192.png")}"`);
+  execSync(
+    `magick -density 300 -background none "${tempTransparentSvg}" -resize 192x192 "${path.join(staticDir, "icon-192.png")}"`,
+  );
   // 2. icon-512.png (any)
-  execSync(`magick -density 300 -background none "${tempTransparentSvg}" -resize 512x512 "${path.join(staticDir, "icon-512.png")}"`);
+  execSync(
+    `magick -density 300 -background none "${tempTransparentSvg}" -resize 512x512 "${path.join(staticDir, "icon-512.png")}"`,
+  );
 
   // 3. icon-maskable-192.png & icon-maskable-512.png
-  execSync(`magick -density 300 "${path.join(staticDir, "icon-maskable.svg")}" -resize 192x192 "${path.join(staticDir, "icon-maskable-192.png")}"`);
-  execSync(`magick -density 300 "${path.join(staticDir, "icon-maskable.svg")}" -resize 512x512 "${path.join(staticDir, "icon-maskable-512.png")}"`);
+  execSync(
+    `magick -density 300 "${path.join(staticDir, "icon-maskable.svg")}" -resize 192x192 "${path.join(staticDir, "icon-maskable-192.png")}"`,
+  );
+  execSync(
+    `magick -density 300 "${path.join(staticDir, "icon-maskable.svg")}" -resize 512x512 "${path.join(staticDir, "icon-maskable-512.png")}"`,
+  );
 
   // 4. apple-touch-icon.png (180x180)
-  execSync(`magick -density 300 "${path.join(staticDir, "apple-touch-icon.svg")}" -resize 180x180 "${path.join(staticDir, "apple-touch-icon.png")}"`);
+  execSync(
+    `magick -density 300 "${path.join(staticDir, "apple-touch-icon.svg")}" -resize 180x180 "${path.join(staticDir, "apple-touch-icon.png")}"`,
+  );
 
   console.log("Successfully generated all icons!");
 } catch (err) {

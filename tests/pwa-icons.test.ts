@@ -26,15 +26,17 @@ describe("PWA and Favicon standard compliance", () => {
     // Must have 192x192 and 512x512 icons
     const icon192 = icons.find(
       (i: { sizes: string; purpose?: string }) =>
-        i.sizes === "192x192" && (i.purpose === "any" || i.purpose === "any maskable" || !i.purpose)
+        i.sizes === "192x192" &&
+        (i.purpose === "any" || i.purpose === "any maskable" || !i.purpose),
     );
     const icon512 = icons.find(
       (i: { sizes: string; purpose?: string }) =>
-        i.sizes === "512x512" && (i.purpose === "any" || i.purpose === "any maskable" || !i.purpose)
+        i.sizes === "512x512" &&
+        (i.purpose === "any" || i.purpose === "any maskable" || !i.purpose),
     );
     const iconMaskable = icons.find(
       (i: { purpose?: string }) =>
-        i.purpose === "maskable" || i.purpose === "any maskable"
+        i.purpose === "maskable" || i.purpose === "any maskable",
     );
 
     expect(icon192).toBeDefined();
@@ -65,7 +67,13 @@ describe("PWA and Favicon standard compliance", () => {
   });
 
   it("src/lib/assets/favicon.svg contains the Popote brand pot (not default svelte logo)", () => {
-    const faviconSvgPath = path.join(rootDir, "src", "lib", "assets", "favicon.svg");
+    const faviconSvgPath = path.join(
+      rootDir,
+      "src",
+      "lib",
+      "assets",
+      "favicon.svg",
+    );
     expect(fs.existsSync(faviconSvgPath)).toBe(true);
     const content = fs.readFileSync(faviconSvgPath, "utf-8");
     expect(content).not.toContain("svelte-logo");

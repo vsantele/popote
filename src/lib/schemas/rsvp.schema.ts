@@ -1,5 +1,5 @@
 import { z } from "zod";
-import * as m from "$lib/paraglide/messages";
+import * as m from "#lib/paraglide/messages.js";
 
 /**
  * A participant's RSVP update: their attendance status plus the number of
