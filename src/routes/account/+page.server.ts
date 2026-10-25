@@ -77,7 +77,10 @@ function localizeSignUpError(code: string | undefined): string {
 export const actions: Actions = {
   signUp: async ({ request, locals }) => {
     const form = await superValidate(request, zod4(signUpSchema()));
-    if (!form.valid) return fail(400, { form });
+    if (!form.valid) {
+      form.data.password = "";
+      return fail(400, { form });
+    }
 
     try {
       // The anonymous plugin's onLinkAccount callback will migrate the
@@ -91,6 +94,7 @@ export const actions: Actions = {
         },
       });
     } catch (err) {
+      form.data.password = "";
       if (err instanceof APIError) {
         const msg = localizeSignUpError(
           (err.body as { code?: string } | undefined)?.code,
@@ -106,7 +110,10 @@ export const actions: Actions = {
 
   signIn: async ({ request, locals }) => {
     const form = await superValidate(request, zod4(signInSchema()));
-    if (!form.valid) return fail(400, { form });
+    if (!form.valid) {
+      form.data.password = "";
+      return fail(400, { form });
+    }
 
     try {
       await locals.auth.api.signInEmail({
@@ -117,6 +124,7 @@ export const actions: Actions = {
         },
       });
     } catch (err) {
+      form.data.password = "";
       if (err instanceof APIError) {
         const msg = localizeSignInError(
           (err.body as { code?: string } | undefined)?.code,

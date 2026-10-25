@@ -16,7 +16,7 @@ export const user = sqliteTable("user", {
     .default(false)
     .notNull(),
   role: text("role"),
-  banned: integer("banned"),
+  banned: integer("banned", { mode: "boolean" }),
   banReason: text("ban_reason"),
   banExpires: integer("ban_expires", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
@@ -45,6 +45,7 @@ export const session = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    impersonatedBy: text("impersonated_by"),
   },
   (table) => [index("session_userId_idx").on(table.userId)],
 );

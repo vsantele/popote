@@ -5,7 +5,9 @@ import { z } from "zod";
 import { zod4 } from "sveltekit-superforms/adapters";
 import { superValidate } from "sveltekit-superforms";
 import type { SuperValidated } from "sveltekit-superforms";
+import { APIError } from "better-auth/api";
 import AccountPage from "../../src/routes/account/+page.svelte";
+import { actions } from "../../src/routes/account/+page.server";
 
 // `superForm` and the locale switcher read `page` and `navigating` from
 // `$app/state` and call navigation helpers. Outside a running SvelteKit app the
@@ -13,6 +15,10 @@ import AccountPage from "../../src/routes/account/+page.svelte";
 vi.mock("$app/state", () => ({
   page: { url: new URL("http://localhost/account"), form: undefined },
   navigating: null,
+}));
+
+vi.mock("$app/server", () => ({
+  getRequestEvent: vi.fn(),
 }));
 
 vi.mock("$app/navigation", () => ({
@@ -234,6 +240,109 @@ describe("Account Page Component", () => {
       });
 
       expect(screen.getByText("Email déjà utilisé")).toBeInTheDocument();
+    });
+  });
+
+  describe("Server actions — password clearing on error", () => {
+    function makeFormRequest(fields: Record<string, string>): Request {
+      const fd = new FormData();
+      for (const [k, v] of Object.entries(fields)) {
+        fd.set(k, v);
+      }
+      return new Request("http://localhost/account", {
+        method: "POST",
+        body: fd,
+      });
+    }
+
+    it("clears form.data.password on signUp validation failure while preserving name and email", async () => {
+      const request = makeFormRequest({
+        name: "Marie",
+        email: "marie@example.fr",
+        password: "short",
+      });
+      const result = (await actions.signUp({
+        request,
+        locals: {} as App.Locals,
+      } as never)) as { status: number; data: { form: { data: { name: string; email: string; password: string } } } };
+
+      expect(result.status).toBe(400);
+      expect(result.data.form.data.name).toBe("Marie");
+      expect(result.data.form.data.email).toBe("marie@example.fr");
+      expect(result.data.form.data.password).toBe("");
+    });
+
+    it("clears form.data.password on signUp APIError while preserving name and email", async () => {
+      const request = makeFormRequest({
+        name: "Marie",
+        email: "marie@example.fr",
+        password: "super-secret-password",
+      });
+      const locals = {
+        auth: {
+          api: {
+            signUpEmail: vi.fn().mockRejectedValue(
+              new APIError("UNPROCESSABLE_ENTITY", {
+                code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL",
+                message: "User already exists",
+              }),
+            ),
+          },
+        },
+      } as unknown as App.Locals;
+
+      const result = (await actions.signUp({
+        request,
+        locals,
+      } as never)) as { status: number; data: { form: { data: { name: string; email: string; password: string }; message?: string } } };
+
+      expect(result.status).toBe(400);
+      expect(result.data.form.data.name).toBe("Marie");
+      expect(result.data.form.data.email).toBe("marie@example.fr");
+      expect(result.data.form.data.password).toBe("");
+    });
+
+    it("clears form.data.password on signIn validation failure while preserving email", async () => {
+      const request = makeFormRequest({
+        email: "not-an-email",
+        password: "super-secret-password",
+      });
+      const result = (await actions.signIn({
+        request,
+        locals: {} as App.Locals,
+      } as never)) as { status: number; data: { form: { data: { email: string; password: string } } } };
+
+      expect(result.status).toBe(400);
+      expect(result.data.form.data.email).toBe("not-an-email");
+      expect(result.data.form.data.password).toBe("");
+    });
+
+    it("clears form.data.password on signIn APIError while preserving email", async () => {
+      const request = makeFormRequest({
+        email: "marie@example.fr",
+        password: "wrong-password-123",
+      });
+      const locals = {
+        auth: {
+          api: {
+            signInEmail: vi.fn().mockRejectedValue(
+              new APIError("UNAUTHORIZED", {
+                code: "INVALID_EMAIL_OR_PASSWORD",
+                message: "Invalid email or password",
+              }),
+            ),
+          },
+        },
+      } as unknown as App.Locals;
+
+      const result = (await actions.signIn({
+        request,
+        locals,
+      } as never)) as { status: number; data: { form: { data: { email: string; password: string }; message?: string } } };
+
+      expect(result.status).toBe(400);
+      expect(result.data.form.data.email).toBe("marie@example.fr");
+      expect(result.data.form.data.password).toBe("");
     });
   });
 });

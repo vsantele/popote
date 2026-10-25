@@ -4,7 +4,9 @@ import { sveltekitCookies } from "better-auth/svelte-kit";
 import { ORIGIN, BETTER_AUTH_URL, BETTER_AUTH_SECRET } from "$app/env/private";
 import { getRequestEvent } from "$app/server";
 import { db, eq } from "void/db";
-import { admin, anonymous, username } from "better-auth/plugins";
+import { admin } from "better-auth/plugins/admin";
+import { anonymous } from "better-auth/plugins/anonymous";
+import { username } from "better-auth/plugins/username";
 import { events, participants } from "@schema";
 import * as schema from "@schema";
 

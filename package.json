@@ -62,7 +62,7 @@
     "void": "^1.2.1"
   },
   "dependencies": {
-    "@better-auth/drizzle-adapter": "1.7.12",
+    "@better-auth/drizzle-adapter": "^1.7.12",
     "@opentelemetry/api": "^1.10.0",
     "@opentelemetry/exporter-logs-otlp-grpc": "^0.300.0",
     "@opentelemetry/exporter-metrics-otlp-grpc": "^0.300.0",
@@ -73,7 +73,7 @@
     "@opentelemetry/sdk-metrics": "^3.0.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.43.0",
-    "better-auth": "^1.6.29",
+    "better-auth": "^1.7.12",
     "drizzle-orm": "^0.45.4",
     "qrcode-svg": "^1.1.0",
     "sveltekit-superforms": "^3.0.0",
