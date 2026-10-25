@@ -144,6 +144,6 @@ export const actions: Actions = {
     } catch (err) {
       console.error("Sign-out failed:", err);
     }
-    throw redirect(303, localizeHref("/"));
+    throw redirect(303, localizeHref("/account"));
   },
 };

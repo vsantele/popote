@@ -14,6 +14,8 @@
   } from "#lib/components/ui/tabs/index.js"
   import { Input } from "#lib/components/ui/input/index.js"
   import { Label } from "#lib/components/ui/label/index.js"
+  import { enhance } from "$app/forms"
+  import { page } from "$app/state"
   import { superForm } from "sveltekit-superforms/client"
   import * as m from "#lib/paraglide/messages.js"
   import { localizeHref } from "#lib/paraglide/runtime.js"
@@ -47,13 +49,16 @@
     resetForm: false,
   })
 
-  const isLoggedIn = $derived(!!data.user && !data.user.isAnonymous)
-  const isAnonymous = $derived(!!data.user && data.user.isAnonymous)
+  const user = $derived(
+    page.data?.user !== undefined ? page.data.user : data.user,
+  )
+  const isLoggedIn = $derived(!!user && !user.isAnonymous)
+  const isAnonymous = $derived(!!user && user.isAnonymous)
 
   // Anonymous guests benefit most from creating an account (it keeps their
   // existing events); fully logged-out visitors most likely already have one.
   // svelte-ignore state_referenced_locally
-  let activeTab = $state(data.user && !data.user.isAnonymous ? "signin" : "signup")
+  let activeTab = $state(user && !user.isAnonymous ? "signin" : "signup")
 </script>
 
 <div class="min-h-screen px-4 pb-16">
@@ -88,11 +93,11 @@
     {#if isLoggedIn}
       <Card class="animate-pop-in" style="animation-delay:60ms">
         <CardHeader>
-          <CardTitle>{data.user?.name}</CardTitle>
-          <p class="text-sm text-muted-foreground">{data.user?.email}</p>
+          <CardTitle>{user?.name}</CardTitle>
+          <p class="text-sm text-muted-foreground">{user?.email}</p>
         </CardHeader>
         <CardContent>
-          <form method="POST" action="?/signOut">
+          <form method="POST" action="?/signOut" use:enhance>
             <Button type="submit" variant="outline" class="w-full">
               {m.account_signout_button()}
             </Button>

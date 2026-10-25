@@ -17,6 +17,10 @@ vi.mock("$app/state", () => ({
   navigating: null,
 }));
 
+vi.mock("$app/forms", () => ({
+  enhance: vi.fn(() => ({ destroy: vi.fn() })),
+}));
+
 vi.mock("$app/server", () => ({
   getRequestEvent: vi.fn(),
 }));
@@ -55,21 +59,23 @@ beforeAll(async () => {
   signInForm = await superValidate(zod4(signInSchema), { id: "signIn" });
 });
 
-function renderAccount(user: User | null) {
-  return render(AccountPage, {
-    props: {
-      params: {},
-      form: null,
-      data: {
-        user,
-        signUpForm,
-        signInForm,
-        // Provided by the root layout load; the component ignores them.
-        vapidPublicKey: null,
-        pushEnabled: false,
-      },
+function accountProps(user: User | null) {
+  return {
+    params: {},
+    form: null,
+    data: {
+      user,
+      signUpForm,
+      signInForm,
+      // Provided by the root layout load; the component ignores them.
+      vapidPublicKey: null,
+      pushEnabled: false,
     },
-  });
+  };
+}
+
+function renderAccount(user: User | null) {
+  return render(AccountPage, { props: accountProps(user) });
 }
 
 describe("Account Page Component", () => {
@@ -191,6 +197,41 @@ describe("Account Page Component", () => {
 
       expect(screen.queryByRole("tab")).not.toBeInTheDocument();
     });
+
+    it("updates the account view when the user changes to anonymous or logged out", async () => {
+      const view = renderAccount(realUser);
+
+      await view.rerender(
+        accountProps({
+          id: "anon-123",
+          name: "Invité",
+          email: "",
+          isAnonymous: true,
+        }),
+      );
+
+      expect(
+        screen.getByRole("heading", { name: "Bienvenue" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Se déconnecter" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getAllByRole("tab")).toHaveLength(2);
+      expect(
+        screen.getByText(/resteront liés à votre compte/),
+      ).toBeInTheDocument();
+
+      await view.rerender(accountProps(null));
+
+      expect(
+        screen.getByText(
+          "Connectez-vous ou créez un compte pour retrouver vos soirées.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(/resteront liés à votre compte/),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe("Login error display", () => {
@@ -264,7 +305,12 @@ describe("Account Page Component", () => {
       const result = (await actions.signUp({
         request,
         locals: {} as App.Locals,
-      } as never)) as { status: number; data: { form: { data: { name: string; email: string; password: string } } } };
+      } as never)) as {
+        status: number;
+        data: {
+          form: { data: { name: string; email: string; password: string } };
+        };
+      };
 
       expect(result.status).toBe(400);
       expect(result.data.form.data.name).toBe("Marie");
@@ -294,7 +340,15 @@ describe("Account Page Component", () => {
       const result = (await actions.signUp({
         request,
         locals,
-      } as never)) as { status: number; data: { form: { data: { name: string; email: string; password: string }; message?: string } } };
+      } as never)) as {
+        status: number;
+        data: {
+          form: {
+            data: { name: string; email: string; password: string };
+            message?: string;
+          };
+        };
+      };
 
       expect(result.status).toBe(400);
       expect(result.data.form.data.name).toBe("Marie");
@@ -310,7 +364,10 @@ describe("Account Page Component", () => {
       const result = (await actions.signIn({
         request,
         locals: {} as App.Locals,
-      } as never)) as { status: number; data: { form: { data: { email: string; password: string } } } };
+      } as never)) as {
+        status: number;
+        data: { form: { data: { email: string; password: string } } };
+      };
 
       expect(result.status).toBe(400);
       expect(result.data.form.data.email).toBe("not-an-email");
@@ -338,11 +395,36 @@ describe("Account Page Component", () => {
       const result = (await actions.signIn({
         request,
         locals,
-      } as never)) as { status: number; data: { form: { data: { email: string; password: string }; message?: string } } };
+      } as never)) as {
+        status: number;
+        data: {
+          form: { data: { email: string; password: string }; message?: string };
+        };
+      };
 
       expect(result.status).toBe(400);
       expect(result.data.form.data.email).toBe("marie@example.fr");
       expect(result.data.form.data.password).toBe("");
+    });
+
+    it("redirects to the account page after sign-out", async () => {
+      const request = new Request("http://localhost/account", {
+        method: "POST",
+      });
+      const locals = {
+        auth: {
+          api: {
+            signOut: vi.fn().mockResolvedValue(undefined),
+          },
+        },
+      } as unknown as App.Locals;
+
+      await expect(
+        actions.signOut({ request, locals } as never),
+      ).rejects.toMatchObject({
+        status: 303,
+        location: expect.stringMatching(/account/),
+      });
     });
   });
 });
