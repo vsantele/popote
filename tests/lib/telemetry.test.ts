@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import {
   ensureCloudflareTelemetry,
@@ -50,6 +50,53 @@ describe("Cloudflare telemetry config", () => {
     });
   });
 
+  it("sends a SigNoz Cloud ingestion key as signoz-ingestion-key", () => {
+    expect(
+      resolveCloudflareTelemetryConfig({
+        SIGNOZ_ENDPOINT: "https://ingest.eu.signoz.cloud:443",
+        SIGNOZ_INGESTION_KEY: "ingestion-key-12345",
+      }),
+    ).toMatchObject({
+      exporter: {
+        url: "https://ingest.eu.signoz.cloud/v1/traces",
+        headers: {
+          "signoz-ingestion-key": "ingestion-key-12345",
+        },
+      },
+    });
+  });
+
+  it("keeps ingestion key and access token headers separate", () => {
+    expect(
+      resolveCloudflareTelemetryConfig({
+        SIGNOZ_ENDPOINT: "https://ingest.eu.signoz.cloud:443",
+        SIGNOZ_INGESTION_KEY: "ingestion-key-12345",
+        SIGNOZ_ACCESS_TOKEN: "access-token-67890",
+      }),
+    ).toMatchObject({
+      exporter: {
+        headers: {
+          "signoz-ingestion-key": "ingestion-key-12345",
+          "signoz-access-token": "access-token-67890",
+        },
+      },
+    });
+  });
+
+  it("prefers an explicitly configured OTLP header over a SigNoz variable", () => {
+    expect(
+      resolveCloudflareTelemetryConfig({
+        SIGNOZ_ENDPOINT: "https://ingest.eu.signoz.cloud:443",
+        SIGNOZ_INGESTION_KEY: "from-binding",
+        OTEL_EXPORTER_OTLP_HEADERS: "signoz-ingestion-key=from-header",
+      }),
+    ).toMatchObject({
+      exporter: {
+        headers: { "signoz-ingestion-key": "from-header" },
+      },
+    });
+  });
+
   it("supports self-hosted SigNoz endpoint without token", () => {
     expect(
       resolveCloudflareTelemetryConfig({
@@ -87,13 +134,21 @@ describe("Cloudflare telemetry config", () => {
     });
     expect(provider).not.toBeNull();
 
-    let flushed = false;
-    flushCloudflareTelemetry({
-      waitUntil(promise) {
-        promise.finally(() => {
-          flushed = true;
-        });
-      },
+    const handedToWaitUntil: Promise<unknown>[] = [];
+    flushCloudflareTelemetry((promise) => {
+      handedToWaitUntil.push(promise);
     });
+
+    expect(handedToWaitUntil).toHaveLength(1);
+    await expect(handedToWaitUntil[0]).resolves.toBeUndefined();
+  });
+
+  it("does nothing when telemetry is not configured", async () => {
+    await ensureCloudflareTelemetry({});
+
+    const waitUntil = vi.fn();
+    flushCloudflareTelemetry(waitUntil);
+
+    expect(waitUntil).not.toHaveBeenCalled();
   });
 });
