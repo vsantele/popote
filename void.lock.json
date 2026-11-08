@@ -6,6 +6,9 @@
     "compatibility_flags": [
       "nodejs_compat"
     ],
+    "routes": [],
+    "workers_dev": true,
+    "preview_urls": true,
     "vars": {
       "VAPID_PUBLIC_KEY": "BB1tnxU58COeKyFCGubAVzmykjZItFzQKFfi-XUOL3RpZuFajz3bqjnF-CjG5lyfsPFD9t57Lf-5XFWOQobkj7Q",
       "VAPID_SUBJECT": "mailto:popote@vsantele.dev"
@@ -30,7 +33,10 @@
         "database_id": "cda7989e-b15a-4a9a-82cc-4ada77cc61a4",
         "migrations_dir": "./db/migrations"
       }
-    ]
+    ],
+    "routes": [],
+    "workers_dev": true,
+    "preview_urls": true
   },
-  "text": "{\n  \"name\": \"popote\",\n  \"compatibility_date\": \"2026-02-24\",\n  \"compatibility_flags\": [\n    \"nodejs_compat\",\n    \"nodejs_als\"\n  ],\n  \"vars\": {\n    \"VAPID_PUBLIC_KEY\": \"BB1tnxU58COeKyFCGubAVzmykjZItFzQKFfi-XUOL3RpZuFajz3bqjnF-CjG5lyfsPFD9t57Lf-5XFWOQobkj7Q\",\n    \"VAPID_SUBJECT\": \"mailto:popote@vsantele.dev\"\n  },\n  \"account_id\": \"c2c11396c378fbe1cff5d619a2578883\",\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"popote-db\",\n      \"database_id\": \"cda7989e-b15a-4a9a-82cc-4ada77cc61a4\",\n      \"migrations_dir\": \"./db/migrations\"\n    }\n  ]\n}\n"
+  "text": "{\n  \"name\": \"popote\",\n  \"compatibility_date\": \"2026-02-24\",\n  \"compatibility_flags\": [\n    \"nodejs_compat\",\n    \"nodejs_als\"\n  ],\n  \"vars\": {\n    \"VAPID_PUBLIC_KEY\": \"BB1tnxU58COeKyFCGubAVzmykjZItFzQKFfi-XUOL3RpZuFajz3bqjnF-CjG5lyfsPFD9t57Lf-5XFWOQobkj7Q\",\n    \"VAPID_SUBJECT\": \"mailto:popote@vsantele.dev\"\n  },\n  \"account_id\": \"c2c11396c378fbe1cff5d619a2578883\",\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"popote-db\",\n      \"database_id\": \"cda7989e-b15a-4a9a-82cc-4ada77cc61a4\",\n      \"migrations_dir\": \"./db/migrations\"\n    }\n  ],\n  \"routes\": [],\n  \"workers_dev\": true,\n  \"preview_urls\": true\n}\n"
 }
