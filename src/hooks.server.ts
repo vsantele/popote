@@ -2,11 +2,12 @@ import { sequence, type Handle } from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { SpanStatusCode, trace } from "@opentelemetry/api";
 import { building } from "$app/env";
+import * as env from "$app/env/private";
+import { waitUntil } from "cloudflare:workers";
 import { createAuth } from "#lib/server/auth.js";
 import {
   ensureCloudflareTelemetry,
   flushCloudflareTelemetry,
-  type TelemetryBindings,
 } from "#lib/server/telemetry.js";
 import { paraglideMiddleware } from "#lib/paraglide/server.js";
 import {
@@ -84,25 +85,13 @@ function getRequestAttributes(event: Parameters<Handle>[0]["event"]) {
   };
 }
 
-function getWaitUntil(
-  platform: App.Platform | undefined,
-): { waitUntil(promise: Promise<unknown>): void } | null {
-  if (!platform) {
-    return null;
-  }
-
-  if ("ctx" in platform && platform.ctx) {
-    return platform.ctx;
-  }
-
-  return null;
-}
-
 export const handle: Handle = async ({ event, resolve }) => {
-  const telemetryBindings = event.platform?.env ?? {};
-  const provider = await ensureCloudflareTelemetry(
-    telemetryBindings as TelemetryBindings,
-  );
+  // SvelteKit 3 exposes Cloudflare bindings through `cloudflare:workers` and
+  // `$app/env/*`, not `event.platform` (adapter-cloudflare no longer populates
+  // it). Telemetry therefore reads its config from the same source as
+  // `src/instrumentation.server.js`, and `waitUntil` keeps the OTLP export
+  // alive after the response is returned.
+  const provider = await ensureCloudflareTelemetry(env);
   const tracer = trace.getTracer("popote.server");
 
   return tracer.startActiveSpan(
@@ -124,7 +113,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       } finally {
         span.end();
         if (provider) {
-          flushCloudflareTelemetry(getWaitUntil(event.platform));
+          flushCloudflareTelemetry(waitUntil);
         }
       }
     },

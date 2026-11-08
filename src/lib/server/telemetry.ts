@@ -25,15 +25,17 @@ type TelemetryConfig = {
   };
 };
 
-type WaitUntilLike = {
-  waitUntil(promise: Promise<unknown>): void;
-};
+/**
+ * `waitUntil` from `cloudflare:workers`, which keeps the OTLP export alive
+ * after the response has been returned.
+ */
+type WaitUntil = (promise: Promise<unknown>) => void;
 
 type TelemetryState = {
   configKey?: string;
-  provider?: import("@opentelemetry/sdk-trace-base").BasicTracerProvider | null;
+  provider?: import("@opentelemetry/sdk-trace").TracerProvider | null;
   initPromise?: Promise<
-    import("@opentelemetry/sdk-trace-base").BasicTracerProvider | null
+    import("@opentelemetry/sdk-trace").TracerProvider | null
   >;
 };
 
@@ -97,12 +99,18 @@ export function resolveCloudflareTelemetryConfig(
   }
 
   const headers = parseOtelHeaders(bindings.OTEL_EXPORTER_OTLP_HEADERS);
-  const signozToken =
-    bindings.SIGNOZ_ACCESS_TOKEN?.trim() ||
-    bindings.SIGNOZ_INGESTION_KEY?.trim();
+  // SigNoz Cloud authenticates OTLP ingestion with `signoz-ingestion-key`, while
+  // a self-hosted SigNoz behind an API key uses `signoz-access-token`. They are
+  // distinct headers, so each variable maps to its own.
+  const sigNozHeaders = {
+    "signoz-ingestion-key": bindings.SIGNOZ_INGESTION_KEY?.trim(),
+    "signoz-access-token": bindings.SIGNOZ_ACCESS_TOKEN?.trim(),
+  };
 
-  if (signozToken && !headers["signoz-access-token"]) {
-    headers["signoz-access-token"] = signozToken;
+  for (const [name, value] of Object.entries(sigNozHeaders)) {
+    if (value && !headers[name]) {
+      headers[name] = value;
+    }
   }
 
   return {
@@ -129,7 +137,7 @@ function getConfigKey(config: TelemetryConfig): string {
 
 export async function ensureCloudflareTelemetry(
   bindings: TelemetryBindings,
-): Promise<import("@opentelemetry/sdk-trace-base").BasicTracerProvider | null> {
+): Promise<import("@opentelemetry/sdk-trace").TracerProvider | null> {
   const config = resolveCloudflareTelemetryConfig(bindings);
   if (!config) {
     telemetryState.provider = null;
@@ -148,12 +156,12 @@ export async function ensureCloudflareTelemetry(
   telemetryState.initPromise = (async () => {
     const [
       { OTLPTraceExporter },
-      { BasicTracerProvider, BatchSpanProcessor },
+      { TracerProvider, BatchSpanProcessor },
       { resourceFromAttributes },
       { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION },
     ] = await Promise.all([
       import("@opentelemetry/exporter-trace-otlp-http"),
-      import("@opentelemetry/sdk-trace-base"),
+      import("@opentelemetry/sdk-trace"),
       import("@opentelemetry/resources"),
       import("@opentelemetry/semantic-conventions"),
     ]);
@@ -170,9 +178,9 @@ export async function ensureCloudflareTelemetry(
         : {}),
     });
 
-    const provider = new BasicTracerProvider({
+    const provider = new TracerProvider({
       resource,
-      spanProcessors: [new BatchSpanProcessor(exporter)],
+      spanProcessors: [new BatchSpanProcessor({ exporter })],
     });
 
     trace.setGlobalTracerProvider(provider);
@@ -187,7 +195,7 @@ export async function ensureCloudflareTelemetry(
   return telemetryState.initPromise;
 }
 
-export function flushCloudflareTelemetry(waitUntil?: WaitUntilLike | null) {
+export function flushCloudflareTelemetry(waitUntil?: WaitUntil | null) {
   if (!telemetryState.provider) {
     return;
   }
@@ -196,5 +204,5 @@ export function flushCloudflareTelemetry(waitUntil?: WaitUntilLike | null) {
     console.error("Failed to flush Cloudflare telemetry", error);
   });
 
-  waitUntil?.waitUntil(flushPromise);
+  waitUntil?.(flushPromise);
 }
