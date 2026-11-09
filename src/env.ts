@@ -10,6 +10,12 @@ export const variables = defineEnvVars({
     schema: z.string().optional(),
   },
   BETTER_AUTH_SECRET: {
+    // Not optional in practice: better-auth throws on every request when the
+    // secret is missing, and Void only provisions it automatically for apps
+    // that wire auth through a project `auth.ts`. This app builds the auth
+    // instance in `src/lib/server/auth.ts`, so set it yourself:
+    //   void secret put BETTER_AUTH_SECRET    (production)
+    //   BETTER_AUTH_SECRET=... in .env        (local)
     schema: z.string().optional(),
   },
   PUSH_CRON_SECRET: {
